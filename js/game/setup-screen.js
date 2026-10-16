@@ -29,8 +29,9 @@ function syncSetup() {
 }
 function begin(k) {
   $('loading').classList.add('on');
-  setTimeout(() => {
+  setTimeout(async () => {
     useLevel(k || LV.key);
+    await modelsReady();
     $('introH').textContent = LV.intro.h; $('introWhen').textContent = LV.intro.when;
     $('introBody').innerHTML = LV.intro.body; $('introBtn').textContent = LV.intro.btn;
     newGame();

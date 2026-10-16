@@ -278,7 +278,7 @@ function buildRubicon() {
   torch(-3.3, -16.6, 26); torch(3.3, 19.5, 0);
 
   // ── Tents in rows ──
-  const keepOut = [[-17, -9, -7, 1], [7, -8, 16, 2], [-6.5, 2.5, 6.5, 19], [12, 11, 24, 21], [20, 3, 29, 13], [-3, -18, 3, 30], [-30, -1.8, 30, 1.8], [-22, 11, -17, 17]];
+  const keepOut = [[-17, -9, -7, 1], [7, -8, 16, 2], [-6.5, 2.5, 6.5, 19], [12, 11, 24, 21], [20, 3, 29, 13], [-3, -18, 3, 30], [-30, -1.8, 30, 1.8], [-22, 11, -17, 17], [6, 20.5, 16, 28]];
   for (let x = -26; x <= 26; x += 5.2) for (let z = -13; z <= 26; z += 6.5) {
     if (keepOut.some(([a, b, c, d]) => x > a - 1.6 && x < c + 1.6 && z > b - 1.8 && z < d + 1.8)) continue;
     tent(x + (Math.random() - 0.5) * 0.3, z, 2.6, 3.2, 2.1, MAT.leather, 0);
@@ -295,9 +295,13 @@ function buildRubicon() {
   const sh = new THREE.Shape(); sh.moveTo(-4.9, 0); sh.lineTo(4.9, 0); sh.lineTo(0, 2.2); sh.closePath();
   const rg = new THREE.ExtrudeGeometry(sh, { depth: 7.6, bevelEnabled: false }); rg.translate(0, 0, -3.8);
   mesh(rg, MAT.redLeather, 0, 2.2, 0, hq);
-  mesh(boxGeo(2.2, 0.08, 1.2, 1), MAT.wood, -1.6, 0.9, 1.6, hq); for (const [a, b] of [[-0.95, -0.5], [0.95, -0.5], [-0.95, 0.5], [0.95, 0.5]]) mesh(boxGeo(0.07, 0.86, 0.07, 1), MAT.wood, -1.6 + a, 0.43, 1.6 + b, hq);
+  prop('wooden_table_02', -1.6, 0, 14.6, { scale: [1.45, 1.05, 1.5] });
+  prop('wooden_stool_01', -1.6, 0, 15.75, { rot: 0.3 });
+  prop('jug_01', -2.05, 0.84, 15.05, { rot: 1.2 });
+  prop('wine_barrel_01', 3.7, 0, 15.7, { solid: 0.4 });
+  prop('wooden_crate_02', 3.5, 0, 11.4, { rot: Math.PI / 2, solid: 0.6 });
   solid(-2.8, 13.9, -0.4, 15.3);
-  const map = mesh(new THREE.PlaneGeometry(1.6, 0.9), std({ map: inscription(['ITALIA', 'RVBICO · ARIMINVM · ROMA'], 1.6, 0.9, C.plCream, 'rgba(90,40,20,.9)'), roughness: 0.9 }), -1.6, 0.95, 14.6, WORLD);
+  const map = mesh(new THREE.PlaneGeometry(1.6, 0.9), std({ map: inscription(['ITALIA', 'RVBICO · ARIMINVM · ROMA'], 1.6, 0.9, C.plCream, 'rgba(90,40,20,.9)'), roughness: 0.9 }), -1.6, 0.855, 14.6, WORLD);
   map.rotation.x = -Math.PI / 2;
   readable(map, { title: 'Caesar’s map', lat: 'Italia. Rubico, Ariminum, Roma.', en: 'Italy. The Rubicon, Ariminum, Rome.',
     about: 'A map of the road south. Once across the Rubicon, Caesar would take Ariminum, then march on Rome. Pompey and most of the Senate fled before him.' });
@@ -326,16 +330,16 @@ function buildRubicon() {
 
   // ── Cooking fire, writer's table, the officers' tents and the horse lines ──
   makeFire(-12, 0.15, -4.2, 0.85, 34, 22);
-  for (let i = 0; i < 9; i++) { const a = i / 9 * Math.PI * 2; mesh(new THREE.DodecahedronGeometry(0.16, 0), MAT.rock, -12 + Math.cos(a) * 0.7, 0.1, -4.2 + Math.sin(a) * 0.7); }
+  prop('stone_fire_pit', -12, 0, -4.2, { rot: 0.4 });
   for (let i = 0; i < 3; i++) { const a = i / 3 * Math.PI * 2; const l = mesh(new THREE.CylinderGeometry(0.03, 0.03, 1.9, 6), MAT.iron, -12 + Math.cos(a) * 0.45, 0.9, -4.2 + Math.sin(a) * 0.45); l.rotation.set(Math.sin(a) * 0.25, 0, -Math.cos(a) * 0.25); }
   mesh(new THREE.SphereGeometry(0.33, 16, 10, 0, Math.PI * 2, Math.PI / 2, Math.PI / 2), MAT.iron, -12, 1.15, -4.2);
   solid(-12.8, -5, -11.2, -3.4);
   tent(-14.5, -7.2, 2.6, 3.2, 2.1, MAT.leather, Math.PI / 2);
   tent(12.5, -4, 3.2, 3.6, 2.4, MAT.leather, -Math.PI / 2);
-  mesh(boxGeo(1.4, 0.08, 0.8, 1), MAT.wood, 10.1, 0.85, -1.9); solid(9.4, -2.3, 10.8, -1.5);
-  for (const [a, b] of [[-0.6, -0.3], [0.6, -0.3], [-0.6, 0.3], [0.6, 0.3]]) mesh(boxGeo(0.06, 0.82, 0.06, 1), MAT.wood, 10.1 + a, 0.41, -1.9 + b);
-  makeFire(10.6, 0.95, -2.1, 0.18, 9, 8);
-  for (let i = 0; i < 3; i++) { const sc2 = mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.3, 8), MAT.cream, 9.6 + i * 0.2, 0.93, -1.8); sc2.rotation.z = Math.PI / 2; }
+  prop('wooden_table_02', 10.1, 0, -1.9, { solid: 0.6 });
+  prop('wooden_stool_01', 10.9, 0, -1.0, { rot: 0.5 });
+  makeFire(10.55, 0.86, -2.1, 0.16, 9, 8);
+  for (let i = 0; i < 3; i++) { const sc2 = mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.3, 8), MAT.cream, 9.6 + i * 0.2, 0.83, -1.8); sc2.rotation.z = Math.PI / 2; }
   tent(18.5, 17.5, 3.4, 4, 2.5, MAT.redLeather, -Math.PI / 2);
   torch(15.6, 13.4, 16);
   mesh(boxGeo(0.5, 0.45, 0.5, 1), MAT.wood, 16.3, 0.22, 16.8);
@@ -343,6 +347,7 @@ function buildRubicon() {
   mesh(new THREE.CylinderGeometry(0.05, 0.05, 7, 6), MAT.wood, 22, 1.1, 8.5).rotation.x = Math.PI / 2;
   // soldiers' campfires among the tents
   makeFire(-21, 0.15, 14, 0.6, 22, 16); makeFire(21, 0.15, -10, 0.6, 0, 14); makeFire(-23.4, 0.15, -9.8, 0.55, 0, 14);
+  [[-21, 14], [21, -10], [-23.4, -9.8]].forEach(([x, z], i) => { prop('stone_fire_pit', x, 0, z, { rot: i * 2, scale: 0.8 }); prop('dry_branches_medium_01', x + 1.1, 0, z + 0.4, { rot: i, detail: true }); });
 
   // ── Trees along the river and the hills ──
   for (let i = 0; i < 70; i++) {
@@ -356,6 +361,33 @@ function buildRubicon() {
   for (let i = 0; i < 14; i++) {
     const m = new THREE.Sprite(new THREE.SpriteMaterial({ map: TEX.glow, color: 0x7d8ca8, transparent: true, opacity: 0.08, depthWrite: false }));
     m.position.set((Math.random() - 0.5) * 110, 0.6, RUBI_Z + (Math.random() - 0.5) * 6); m.scale.set(26, 5, 1); WORLD.add(m);
+  }
+
+  // ── Real props (scanned models from Poly Haven, CC0) ──
+  prop('tree_stump_01', -13.9, 0, -5.3, { scale: 0.45, rot: 1, detail: true });
+  prop('tree_stump_01', -10.2, 0, -5.0, { scale: 0.4, rot: 3, detail: true });
+  prop('dry_branches_medium_01', -14.4, 0, -2.2, { rot: 0.8, detail: true });
+  prop('wooden_bucket_01', -10.6, 0, -2.4, { rot: 2, solid: 0.25 });
+  prop('wooden_bowl_01', -10.9, 0, -3.0, { rot: 1 });
+  prop('wine_barrel_01', -15.8, 0, -3.4, { solid: 0.4 }); prop('wine_barrel_01', -15.9, 0, -2.5, { rot: 1.4, solid: 0.4 });
+  prop('wine_barrel_01', -4.9, 0, -16.4, { rot: 0.5, solid: 0.4 });
+  prop('wooden_bucket_01', 22.0, 0, 6.9, { solid: 0.25 }); prop('wooden_bucket_01', 22.0, 0, 10.1, { rot: 2, solid: 0.25 });
+  // the supply dump
+  [[8, 23, 0.1], [9.25, 23.2, 1.7]].forEach(([x, z, r]) => prop('wooden_crate_02', x, 0, z, { rot: r, solid: 0.6 }));
+  prop('wooden_crate_01', 8.6, 0.47, 23.1, { rot: 0.4 });
+  [[12, 22.5], [12.8, 23.3], [13.4, 22.4], [12.6, 24.3]].forEach(([x, z], i) => prop('wine_barrel_01', x, 0, z, { rot: i, solid: 0.4 }));
+  prop('wooden_crate_01', 14.8, 0, 25.5, { rot: 2.2, solid: 0.45 });
+  // mossy rocks along the river, boulders on the hills
+  [[14, -22.9], [-16, -22.8], [28, -23.2], [-30, -23.0], [10, -38.2], [-12, -38.6], [25, -39], [-38, -38.4]].forEach(([x, z], i) =>
+    prop(i % 2 ? 'rock_moss_set_02' : 'rock_moss_set_01', x, terrain2(x, z) - 0.2, z, { scale: 0.8 + (i % 3) * 0.2, rot: i * 1.7, detail: true }));
+  for (let i = 0; i < 8; i++) { const a = i / 8 * Math.PI * 2 + 0.4, r = 50 + (i % 3) * 8, x = Math.cos(a) * r, z = 5 + Math.sin(a) * r; if (z < -18 && z > -44) continue; prop('boulder_01', x, terrain2(x, z) - 0.3, z, { scale: 1.6 + (i % 3) * 0.5, rot: i }); }
+  // shrubs, ferns and grass outside the palisade and along the bank
+  for (let i = 0; i < 12; i++) { const a = Math.random() * Math.PI * 2, r = 34 + Math.random() * 14, x = Math.cos(a) * r, z = 5 + Math.sin(a) * r; if (z < -19 && z > -42) continue; prop(i % 3 ? 'shrub_02' : 'shrub_04', x, terrain2(x, z), z, { scale: i % 3 ? 0.9 + Math.random() * 0.5 : 2.5, rot: Math.random() * 6.3, detail: true }); }
+  for (let i = 0; i < 18; i++) { const x = (Math.random() - 0.5) * 90, z = -21.2 - Math.random() * 2.6; if (Math.abs(x) < 6) continue; prop('fern_02', x, terrain2(x, z), z, { scale: 0.9 + Math.random() * 0.6, rot: Math.random() * 6.3, detail: true }); }
+  for (let i = 0; i < 45; i++) {
+    const x = (Math.random() - 0.5) * 100, z = -21 - Math.random() * 3 + (i % 3 === 0 ? 20 + Math.random() * 40 : 0);
+    if ((x > -31 && x < 31 && z > -19 && z < 31) || Math.abs(x) < 4) continue;
+    prop('grass_medium_02', x, terrain2(x, z), z, { scale: 1.2 + Math.random() * 0.8, rot: Math.random() * 6.3, detail: true });
   }
 
   // ── People ──

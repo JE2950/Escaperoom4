@@ -33,6 +33,7 @@ const SCRIPTS = [
   'js/levels/sepulta/terrain.js',
   'js/engine/lights-and-fire.js',
   'js/engine/buildings.js',
+  'js/engine/models.js',
   'js/engine/people.js',
   'js/levels/sepulta/world.js',
   'js/levels/sepulta/people.js',

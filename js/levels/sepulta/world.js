@@ -17,7 +17,7 @@ function buildWorld() {
     v.multiplyScalar(1 + n * 0.05 + (Math.random() - 0.5) * 0.012); p.setXYZ(i, v.x, v.y, v.z);
   }
   cave.computeVertexNormals();
-  const cm = mesh(cave, MAT.rock, 0, -6, -10, scene, true); cm.scale.set(1, 0.55, 0.92); cm.material = MAT.rock.clone(); cm.material.side = THREE.BackSide; cm.material.map = cm.material.map.clone(); cm.material.map.repeat.set(10, 5); cm.material.bumpMap = cm.material.map; cm.receiveShadow = true;
+  const cm = mesh(cave, MAT.rock, 0, -6, -10, WORLD, true); cm.scale.set(1, 0.55, 0.92); cm.material = MAT.rock.clone(); cm.material.side = THREE.BackSide; cm.material.map = cm.material.map.clone(); cm.material.map.repeat.set(10, 5); cm.material.bumpMap = cm.material.map; cm.receiveShadow = true;
 
   // ── Ground ──
   const gg = planeGeo(220, 220, 4, 160, 160), gp = gg.attributes.position;
@@ -33,7 +33,7 @@ function buildWorld() {
     const a = Math.random() * Math.PI * 2, r = 10 + Math.random() * 80, x = Math.cos(a) * r, z = -10 + Math.sin(a) * r * 0.92;
     const e = 1 - (x * x + ((z + 10) / 0.92) ** 2) / 10000; if (e <= 0.05) continue;
     const yTop = -6 + 55 * Math.sqrt(e) - 1, h = 3 + Math.random() * 9;
-    const s = mesh(new THREE.ConeGeometry(0.6 + Math.random() * 1.6, h, 7), MAT.rock, x, yTop - h / 2 + 1, z, scene, true); s.rotation.x = Math.PI;
+    const s = mesh(new THREE.ConeGeometry(0.6 + Math.random() * 1.6, h, 7), MAT.rock, x, yTop - h / 2 + 1, z, WORLD, true); s.rotation.x = Math.PI;
   }
   for (let i = 0; i < 70; i++) {
     const a = Math.random() * Math.PI * 2, r = 58 + Math.random() * 26, x = Math.cos(a) * r / 0.9, z = -10 + Math.sin(a) * r;
@@ -43,7 +43,7 @@ function buildWorld() {
   }
 
   // ── The river and the jetty ──
-  const water = mesh(planeGeo(240, 16, 8), MAT.water, 0, -0.7, RIVER_Z, scene, true); water.receiveShadow = true; anim.water = water;
+  const water = mesh(planeGeo(240, 16, 8), MAT.water, 0, -0.7, RIVER_Z, WORLD, true); water.receiveShadow = true; anim.water = water;
   mesh(boxGeo(6, 0.3, 10.5, 1.5), MAT.wood, -30, 0.1, 41.75);
   for (const zz of [37.5, 41, 44.5, 46.8]) for (const xx of [-32.8, -27.2]) mesh(new THREE.CylinderGeometry(0.16, 0.18, 2.4, 8), MAT.wood, xx, -0.6, zz);
   const hull = new THREE.CylinderGeometry(1.25, 1.25, 7, 18, 1, true, Math.PI / 2, Math.PI); hull.rotateX(Math.PI / 2);
@@ -51,7 +51,7 @@ function buildWorld() {
   mesh(boxGeo(2.3, 0.08, 0.35, 1), MAT.wood, -35.2, -0.25, 41.3); mesh(boxGeo(2.3, 0.08, 0.35, 1), MAT.wood, -35.2, -0.25, 43.8);
   const oar = mesh(new THREE.CylinderGeometry(0.04, 0.04, 3.4, 6), MAT.wood, -34.2, 0.1, 43); oar.rotation.z = 1.2;
   mesh(new THREE.CylinderGeometry(0.06, 0.06, 1.6, 6), MAT.wood, -28.2, 0.95, 39.8);
-  const lantern = mesh(boxGeo(0.22, 0.3, 0.22, 1), MAT.ember, -28.2, 1.8, 39.8, scene, true); lantern.material = std({ color: 0x331a06, emissive: 0xffaa44, emissiveIntensity: 2 });
+  const lantern = mesh(boxGeo(0.22, 0.3, 0.22, 1), MAT.ember, -28.2, 1.8, 39.8, WORLD, true); lantern.material = std({ color: 0x331a06, emissive: 0xffaa44, emissiveIntensity: 2 });
   const ll = new THREE.PointLight(0xffaa55, 14, 16, 1.5); ll.position.set(-28.2, 1.9, 39.8); WORLD.add(ll);
   // tombstone
   const stone = mesh(boxGeo(0.9, 1.4, 0.22, 1), MAT.marble, -24.5, 0.7, 35.4); stone.rotation.y = -0.25;
@@ -68,7 +68,7 @@ function buildWorld() {
 
   // ── Forum ──
   const basin = mesh(new THREE.CylinderGeometry(2.3, 2.4, 0.6, 40), MAT.marble, 0, 0.3, 0);
-  mesh(new THREE.CylinderGeometry(2.05, 2.05, 0.05, 40), MAT.water, 0, 0.52, 0, scene, true);
+  mesh(new THREE.CylinderGeometry(2.05, 2.05, 0.05, 40), MAT.water, 0, 0.52, 0, WORLD, true);
   mesh(new THREE.CylinderGeometry(0.22, 0.3, 1.5, 16), MAT.marble, 0, 0.9, 0);
   mesh(new THREE.CylinderGeometry(0.7, 0.25, 0.3, 20), MAT.marble, 0, 1.7, 0);
   solid(-2.4, -2.4, 2.4, 2.4, 0.6); void basin;
@@ -94,7 +94,7 @@ function buildWorld() {
   // ── The bakery (south), Fabia's shop ──
   house(-6, 22, 9, 7, 4.3, MAT.ochre, null, 'n');
   const oven = mesh(new THREE.SphereGeometry(1.6, 24, 14, 0, Math.PI * 2, 0, Math.PI / 2), MAT.rock, -7.5, 0, 24); oven.scale.y = 0.85; solid(-9.1, 22.4, -5.9, 25.6);
-  mesh(boxGeo(0.9, 0.7, 0.3, 1), MAT.ember, -7.5, 0.5, 22.45, scene, true);
+  mesh(boxGeo(0.9, 0.7, 0.3, 1), MAT.ember, -7.5, 0.5, 22.45, WORLD, true);
   makeFire(-7.5, 0.25, 22.6, 0.45, 22, 14);
   mesh(boxGeo(3.4, 1, 0.8, 1), MAT.wood, -2.6, 0.5, 20.6); solid(-4.3, 20.2, -0.9, 21);
   for (let i = 0; i < 6; i++) { const b = mesh(new THREE.SphereGeometry(0.17, 12, 8), MAT.bread, -3.9 + i * 0.5, 1.07, 20.6); b.scale.y = 0.55; }
@@ -106,7 +106,7 @@ function buildWorld() {
   // ── The smithy (east), Marcus's forge ──
   house(22, 2, 7, 9, 4.3, MAT.grey, null, 'w');
   mesh(boxGeo(1.8, 1, 1.8, 1), MAT.rock, 23.8, 0.5, 0); solid(22.9, -0.9, 24.7, 0.9);
-  mesh(boxGeo(1.5, 0.12, 1.5, 1), MAT.ember, 23.8, 1.02, 0, scene, true);
+  mesh(boxGeo(1.5, 0.12, 1.5, 1), MAT.ember, 23.8, 1.02, 0, WORLD, true);
   makeFire(23.8, 1.05, 0, 0.5, 26, 16);
   mesh(boxGeo(0.35, 0.6, 0.8, 1), MAT.wood, 21.2, 0.3, 3.2); mesh(boxGeo(0.4, 0.18, 0.9, 1), MAT.iron, 21.2, 0.69, 3.2); solid(20.9, 2.7, 21.5, 3.7);
   for (let i = 0; i < 4; i++) { const tl = mesh(boxGeo(0.06, 0.7, 0.06, 1), MAT.iron, 25.2, 2.1, -2.2 + i * 0.5); tl.rotation.z = 0.1; }
@@ -140,7 +140,7 @@ function buildWorld() {
   // the sacred fire in its bronze bowl
   for (let i = 0; i < 3; i++) { const a = i / 3 * Math.PI * 2; const leg = mesh(new THREE.CylinderGeometry(0.06, 0.06, 1.3, 6), MAT.bronze, Math.cos(a) * 0.55, 3.6, -42.5 + Math.sin(a) * 0.55); leg.rotation.set(Math.sin(a) * 0.25, 0, -Math.cos(a) * 0.25); }
   mesh(new THREE.CylinderGeometry(1.15, 0.5, 0.6, 24), MAT.bronze, 0, 4.4, -42.5); solid(-1.2, -43.7, 1.2, -41.3);
-  mesh(new THREE.CylinderGeometry(1.0, 1.0, 0.05, 24), MAT.ember, 0, 4.68, -42.5, scene, true);
+  mesh(new THREE.CylinderGeometry(1.0, 1.0, 0.05, 24), MAT.ember, 0, 4.68, -42.5, WORLD, true);
   templeFire = makeFire(0, 4.7, -42.5, 1.6, 120, 45);
   // the Law, carved on the front of the podium
   const law = mesh(boxGeo(5.2, 1.5, 0.08, 1), MAT.marble, -7, 1.6, -37.95);
@@ -149,12 +149,12 @@ function buildWorld() {
     about: 'Two hundred years ago Vulcan saved the people of this city when the mountain swallowed it. His fire must never go out. If it dies, the mountain wakes.' });
 
   // ── Lava behind the temple ──
-  anim.lava = mesh(planeGeo(110, 12, 8), MAT.lava, 0, -1.0, LAVA_Z, scene, true);
+  anim.lava = mesh(planeGeo(110, 12, 8), MAT.lava, 0, -1.0, LAVA_Z, WORLD, true);
   const lavaLight = new THREE.PointLight(0xff4a14, 70, 60, 1.2); lavaLight.position.set(0, 3, LAVA_Z); WORLD.add(lavaLight); anim.lavaLight = lavaLight;
   for (let i = 0; i < 6; i++) {
     const pts = []; let x = -40 + i * 16 + Math.random() * 6, y = 4;
     for (let k = 0; k < 6; k++) { pts.push(new THREE.Vector3(x, y, -84 + Math.sin(k + i) * 1.5)); x += (Math.random() - 0.5) * 6; y += 3 + Math.random() * 3; }
-    mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 30, 0.35 + Math.random() * 0.3, 6), MAT.lava, 0, 0, 0, scene, true);
+    mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 30, 0.35 + Math.random() * 0.3, 6), MAT.lava, 0, 0, 0, WORLD, true);
   }
 
   // ── Torches ──
@@ -167,11 +167,46 @@ function buildWorld() {
   shaftMesh.position.copy(top).add(bot).multiplyScalar(0.5);
   shaftMesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), top.clone().sub(bot).normalize());
   WORLD.add(shaftMesh);
-  const hole = mesh(new THREE.CircleGeometry(3.2, 24), new THREE.MeshBasicMaterial({ color: 0xe8f0ff, fog: false }), top.x, top.y + 0.5, top.z, scene, true); hole.rotation.x = Math.PI / 2;
+  const hole = mesh(new THREE.CircleGeometry(3.2, 24), new THREE.MeshBasicMaterial({ color: 0xe8f0ff, fog: false }), top.x, top.y + 0.5, top.z, WORLD, true); hole.rotation.x = Math.PI / 2;
   // dust drifting in the light
   const dn = 500, dp = new Float32Array(dn * 3);
   for (let i = 0; i < dn; i++) { const t = Math.random(), r = Math.random() * lerp(2.2, 8, t); const a = Math.random() * 6.3; const c = top.clone().lerp(bot, t); dp[i * 3] = c.x + Math.cos(a) * r; dp[i * 3 + 1] = c.y; dp[i * 3 + 2] = c.z + Math.sin(a) * r; }
   const dg = new THREE.BufferGeometry(); dg.setAttribute('position', new THREE.BufferAttribute(dp, 3));
   anim.dust = new THREE.Points(dg, new THREE.PointsMaterial({ size: 0.09, map: TEX.glow, color: 0xfff1d0, transparent: true, opacity: 0.7, blending: THREE.AdditiveBlending, depthWrite: false }));
   WORLD.add(anim.dust);
+
+  // ── Real props (scanned models from Poly Haven, CC0) ──
+  // the bakery: storage jars, a water bucket and a barrel
+  [['ceramic_vase_01', -2.6, 24.6, 2.4], ['antique_ceramic_vase_01', -3.4, 24.8, 2.1], ['ceramic_vase_04', -4.2, 24.7, 2.4]].forEach(([id, x, z, s]) => prop(id, x, 0, z, { scale: s, rot: x * 2, solid: 0.25 }));
+  prop('wooden_bucket_01', -9.6, 0, 21.2, { rot: 0.4, solid: 0.25 });
+  prop('wine_barrel_01', -9.5, 0, 19.6, { rot: 1.2, solid: 0.4 });
+  // the smithy
+  prop('wooden_bucket_01', 22.2, 0, 4.3, { rot: 1, solid: 0.25 });
+  prop('wine_barrel_01', 24.6, 0, 5.4, { solid: 0.4 });
+  prop('wooden_crate_01', 24.7, 0, 3.4, { rot: Math.PI / 2, solid: 0.45 });
+  prop('wooden_axe', 25.0, 0, 1.9, { rot: -Math.PI / 2, tilt: 0.12 });
+  // the forum: a bronze horse and two marble busts on pedestals, tall jars by the tribunal
+  mesh(boxGeo(2.4, 1.3, 1.3, 1), MAT.marble, 5.5, 0.65, 4); solid(4.3, 3.35, 6.7, 4.65, 1.3);
+  prop('horse_statue_01', 5.5, 1.3, 4, { scale: 8.5 });
+  for (const s of [-1, 1]) {
+    mesh(boxGeo(0.7, 1.25, 0.7, 1), MAT.marble, 12.6, 0.62, s * 10.4); solid(12.25, s * 10.4 - 0.35, 12.95, s * 10.4 + 0.35, 1.25);
+    prop('marble_bust_01', 12.6, 1.25, s * 10.4, { rot: -Math.PI / 2, scale: 1.4 });
+  }
+  [-5, 5].forEach(z => prop('antique_ceramic_vase_01', -11.9, 0, z, { scale: 2.2, rot: z, solid: 0.35 }));
+  // the temple: bronze vessels on the podium
+  prop('brass_pot_01', -3.4, 3, -43.6, { scale: 1.6, solid: 0.3 });
+  [-2.5, 2.5].forEach(x => prop('brass_vase_01', x, 3, -44.9, { scale: 2, rot: x, solid: 0.2 }));
+  // the jetty and the riverbank
+  prop('wooden_crate_02', -32.1, 0.25, 45.2, { rot: 0.15, solid: 0.6 });
+  prop('wooden_crate_01', -32.0, 0.72, 45.2, { rot: 1.4 });
+  prop('wine_barrel_01', -27.9, 0.25, 45.9, { rot: 0.7, solid: 0.4 });
+  prop('wooden_crate_02', -25.8, 0, 32.4, { rot: 0.6, solid: 0.6 });
+  prop('wine_barrel_01', -24.6, 0, 31.6, { solid: 0.4 });
+  // great scanned rocks around the edge of the cavern
+  for (let i = 0; i < 16; i++) {
+    const a = i / 16 * Math.PI * 2 + Math.random() * 0.3, r = 64 + Math.random() * 8, x = Math.cos(a) * r / 0.9, z = -10 + Math.sin(a) * r;
+    if (Math.abs(z - RIVER_Z) < 8 || Math.abs(z - LAVA_Z) < 7) continue;
+    const big = i % 3 === 0;
+    prop(big ? 'rock_face_01' : 'boulder_01', x, terrain(x, z) - 0.4, z, { scale: big ? 2.2 + Math.random() : 2.5 + Math.random() * 2, rot: Math.random() * 6.3 });
+  }
 }
