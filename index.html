@@ -280,7 +280,7 @@ kbd { border-color:#d8c49c66;border-radius:3px;background:#111a;padding:2px 6px;
       <button class="btn small" data-q="low">Low: faster on tablets</button>
     </div>
   </div>
-  <div class="row-c"><button class="btn big" id="startBtn">Begin</button></div>
+  <div class="row-c"><button class="btn big" data-level="1">Level 1: The Buried City</button><button class="btn big" data-level="2">Level 2: The Rubicon</button></div>
   <div class="controls-line">
     <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> walk · mouse: look · <kbd>Shift</kbd> run · <kbd>E</kbd> or click: talk and read · <kbd>J</kbd> journal · <kbd>1</kbd>–<kbd>6</kbd> choose a reply<br>
     On a tablet: move with the left stick, drag to look, and tap USE.
@@ -291,11 +291,9 @@ kbd { border-color:#d8c49c66;border-radius:3px;background:#111a;padding:2px 6px;
 <!-- INTRO -->
 <div class="screen" id="sIntro">
   <div class="story">
-    <h2>Pompeii</h2>
-    <div class="when">A.D. LXXIX · IX KAL. SEPT.</div>
-    <p>You run from the falling ash. The ground opens under your feet, and you fall into the dark.</p>
-    <p>You wake on a cold riverbank deep inside the mountain. Torches burn along the water. Ahead stands a city that no map has ever shown.</p>
-    <p>An old man with a lantern is watching you from the jetty.</p>
+    <h2 id="introH"></h2>
+    <div class="when" id="introWhen"></div>
+    <div id="introBody"></div>
     <button class="btn big" id="introBtn">Surge · Get up</button>
   </div>
 </div>
@@ -332,11 +330,12 @@ kbd { border-color:#d8c49c66;border-radius:3px;background:#111a;padding:2px 6px;
 
 <!-- ENDING -->
 <div class="screen" id="sEnd">
-  <h2>LIBERTAS</h2>
+  <h2 id="endH">LIBERTAS</h2>
   <div class="sub" id="endSub"></div>
   <div class="score" id="endScore"></div>
   <div class="panel" id="endBody"></div>
   <div class="row-c">
+    <button class="btn big" id="nextBtn">Level 2: The Rubicon ▶</button>
     <button class="btn big" id="againBtn">Play again</button>
     <button class="btn big" id="titleBtn">Back to the title screen</button>
   </div>
@@ -1168,6 +1167,8 @@ scene.background = new THREE.Color(0x090604);
 scene.fog = new THREE.FogExp2(0x191b20, 0.0105);
 const camera = new THREE.PerspectiveCamera(68, innerWidth / innerHeight, 0.05, 500);
 camera.rotation.order = 'YXZ';
+const L1G = new THREE.Group(); scene.add(L1G);   // each level builds into its own group
+let WORLD = L1G;
 let composer = null;
 function applyQuality() {
   if (!renderer) return;
@@ -1367,13 +1368,13 @@ function planeGeo(w, d, unit, sx, sz) {
 function mesh(geo, mat, x, y, z, parent, noShadow) {
   const m = new THREE.Mesh(geo, mat); m.position.set(x, y, z);
   if (!noShadow) { m.castShadow = true; m.receiveShadow = true; }
-  (parent || scene).add(m); return m;
+  (parent || WORLD).add(m); return m;
 }
 
 // ════════════════════════════════════════════════════════════════
 // THE GROUND: heights and what you can walk on
 // ════════════════════════════════════════════════════════════════
-const COL = [];   // solid boxes: { x0, x1, z0, z1, top }
+let COL = [];   // solid boxes: { x0, x1, z0, z1, top }
 function solid(x0, z0, x1, z1, top) { COL.push({ x0: Math.min(x0, x1), x1: Math.max(x0, x1), z0: Math.min(z0, z1), z1: Math.max(z0, z1), top: top === undefined ? 99 : top }); }
 const RIVER_Z = 45.5, LAVA_Z = -70;
 function terrain(x, z) {
@@ -1385,13 +1386,13 @@ function terrain(x, z) {
   return y;
 }
 const TRIB = { x0: -16.5, x1: -12.5, z0: -4, z1: 4, top: 1.4 };
-function groundY(x, z) {
+function groundY1(x, z) {
   if (x > -33 && x < -27 && z > 36.5 && z < 47) return 0.25;                       // jetty
   if (x > -9 && x < 9 && z > -60 && z < -38) return 3;                              // temple podium
   if (x > -5 && x < 5 && z >= -38 && z < -31) return 3 * (-31 - z) / 7;             // temple steps
   return terrain(x, z);
 }
-function walkable(x, z) {
+function walkable1(x, z) {
   if (z > 38.3 && !(x > -32.6 && x < -27.4 && z < 46.4)) return false;
   if (z < -61.2) return false;
   if (Math.hypot(x * 0.9, z + 10) > 74) return false;
@@ -1401,8 +1402,8 @@ function walkable(x, z) {
 // ════════════════════════════════════════════════════════════════
 // LIGHTS
 // ════════════════════════════════════════════════════════════════
-scene.add(new THREE.HemisphereLight(0x7d8ea6, 0x3a2414, 0.7));
-scene.add(new THREE.AmbientLight(0x656d79, 0.32));
+WORLD.add(new THREE.HemisphereLight(0x7d8ea6, 0x3a2414, 0.7));
+WORLD.add(new THREE.AmbientLight(0x656d79, 0.32));
 // Low strength image-based bounce light gives stone and metal grounded reflections.
 if (renderer) {
   const pmrem = new THREE.PMREMGenerator(renderer);
@@ -1415,13 +1416,13 @@ const shaftLight = new THREE.SpotLight(0xd8e4ff, 9, 0, 0.36, 0.7, 0);   // dayli
 shaftLight.position.set(10, 52, 4); shaftLight.target.position.set(0, 0, -1);
 shaftLight.castShadow = true; shaftLight.shadow.mapSize.set(2048, 2048); shaftLight.shadow.bias = -0.0004; shaftLight.shadow.normalBias = 0.05;
 shaftLight.shadow.camera.near = 20; shaftLight.shadow.camera.far = 90;
-scene.add(shaftLight, shaftLight.target);
-const fill = new THREE.DirectionalLight(0xffb070, 0.35); fill.position.set(-20, 30, -40); scene.add(fill);
+WORLD.add(shaftLight, shaftLight.target);
+const fill = new THREE.DirectionalLight(0xffb070, 0.35); fill.position.set(-20, 30, -40); WORLD.add(fill);
 
 // ── Fire: additive sprites plus one flickering light ──
-const fires = [];
+let fires = [];
 function makeFire(x, y, z, s, power, dist) {
-  const grp = new THREE.Group(); grp.position.set(x, y, z); scene.add(grp);
+  const grp = new THREE.Group(); grp.position.set(x, y, z); WORLD.add(grp);
   const sprites = [];
   const n = Math.round(10 + 10 * s);
   for (let i = 0; i < n; i++) {
@@ -1468,7 +1469,7 @@ function roof(g, w, d, h) {
 }
 // A house: plaster walls, red dado, tiled roof. open = the side left open (a shop front).
 function house(x, z, w, d, h, wall, door, open) {
-  const g = new THREE.Group(); g.position.set(x, 0, z); g.userData.wall = wall; scene.add(g);
+  const g = new THREE.Group(); g.position.set(x, 0, z); g.userData.wall = wall; WORLD.add(g);
   const t = 0.35;
   const sides = { n: [0, -d / 2 + t / 2, w, t], s: [0, d / 2 - t / 2, w, t], w: [-w / 2 + t / 2, 0, t, d], e: [w / 2 - t / 2, 0, t, d] };
   for (const [side, [cx, cz, sw, sd]] of Object.entries(sides)) {
@@ -1495,7 +1496,7 @@ function house(x, z, w, d, h, wall, door, open) {
   return g;
 }
 function column(x, y, z, h, r, parent) {
-  const g = new THREE.Group(); g.position.set(x, y, z); (parent || scene).add(g);
+  const g = new THREE.Group(); g.position.set(x, y, z); (parent || WORLD).add(g);
   mesh(new THREE.CylinderGeometry(r * 1.3, r * 1.35, 0.32, 20), MAT.marble, 0, 0.16, 0, g);
   mesh(new THREE.CylinderGeometry(r * 0.85, r, h - 0.74, 22), MAT.marble, 0, 0.32 + (h - 0.74) / 2, 0, g);
   mesh(new THREE.CylinderGeometry(r * 1.15, r * 0.85, 0.18, 20), MAT.marble, 0, h - 0.33, 0, g);
@@ -1728,6 +1729,8 @@ function animatePerson(p, t, st) {
   if (st.talk) {
     p.arms[1].sh.rotation.x = -0.45 - 0.18 * Math.sin(t * 2.6 + p.seed);
     p.arms[1].elbow.rotation.x = -0.8 + 0.25 * Math.sin(t * 3.4);
+  } else if (st.pose === 'pipe') {
+    for (const a of p.arms) { a.sh.rotation.x = -1.15 + Math.sin(t * 2 + p.seed) * 0.03; a.elbow.rotation.x = -1.75; }
   } else if (st.pose === 'hammer') {
     p.arms[1].sh.rotation.x = -0.9 - 0.5 * Math.max(0, Math.sin(t * 2.4)); p.arms[1].elbow.rotation.x = -0.9;
   } else { p.arms[1].sh.rotation.x = Math.sin(ph) * 0.45 * w - idle; p.arms[1].elbow.rotation.x = -0.15 - 0.2 * w; }
@@ -1745,7 +1748,7 @@ function animatePerson(p, t, st) {
 // ════════════════════════════════════════════════════════════════
 // BUILD THE BURIED CITY
 // ════════════════════════════════════════════════════════════════
-const READ = [];        // readable meshes
+let READ = [];        // readable meshes
 const anim = { water: null, lava: null, dust: null, statueShine: [] };
 let templeFire = null, shaftMesh = null;
 function readable(m, note) { m.userData.read = note; READ.push(m); }
@@ -1795,7 +1798,7 @@ function buildWorld() {
   const oar = mesh(new THREE.CylinderGeometry(0.04, 0.04, 3.4, 6), MAT.wood, -34.2, 0.1, 43); oar.rotation.z = 1.2;
   mesh(new THREE.CylinderGeometry(0.06, 0.06, 1.6, 6), MAT.wood, -28.2, 0.95, 39.8);
   const lantern = mesh(boxGeo(0.22, 0.3, 0.22, 1), MAT.ember, -28.2, 1.8, 39.8, scene, true); lantern.material = std({ color: 0x331a06, emissive: 0xffaa44, emissiveIntensity: 2 });
-  const ll = new THREE.PointLight(0xffaa55, 14, 16, 1.5); ll.position.set(-28.2, 1.9, 39.8); scene.add(ll);
+  const ll = new THREE.PointLight(0xffaa55, 14, 16, 1.5); ll.position.set(-28.2, 1.9, 39.8); WORLD.add(ll);
   // tombstone
   const stone = mesh(boxGeo(0.9, 1.4, 0.22, 1), MAT.marble, -24.5, 0.7, 35.4); stone.rotation.y = -0.25;
   stone.material = std({ map: inscription(['D · M', 'GAIVS', 'NAVTA', 'VIX · ANN · CCXX'], 0.9, 1.4, C.marble, 'rgba(70,40,25,.92)'), roughness: 0.5 });
@@ -1828,7 +1831,7 @@ function buildWorld() {
   // the golden statue
   mesh(boxGeo(1.5, 1.7, 2.2, 1), MAT.marble, 8, 0.85, -6); solid(7.25, -7.1, 8.75, -4.9);
   const statue = makePerson({ metal: MAT.gold, toga: 1, tunic: 1, hair: 1, scale: 1.25 }); statue.root.position.set(8, 1.7, -6); statue.root.rotation.y = -0.6;
-  statue.arms[1].sh.rotation.x = -1.6; statue.arms[1].elbow.rotation.x = -0.3; scene.add(statue.root);
+  statue.arms[1].sh.rotation.x = -1.6; statue.arms[1].elbow.rotation.x = -0.3; WORLD.add(statue.root);
   const plq = mesh(boxGeo(1.2, 0.6, 0.04, 1), MAT.marble, 8, 0.95, -4.88);
   plq.material = std({ map: inscription(['VVLCANO', 'SERVATORI'], 1.2, 0.6, C.marble, 'rgba(80,40,20,.92)'), roughness: 0.5 });
   readable(plq, { title: 'On the statue’s base', lat: 'Vulcano servatori.', en: 'To Vulcan the saviour.',
@@ -1874,12 +1877,12 @@ function buildWorld() {
   mesh(boxGeo(2.4, 2.3, 0.6, 2.5), MAT.cream, 0, 8.85, -45.5);
   solid(-5.8, -58, -5.2, -45.2, 10); solid(5.2, -58, 5.8, -45.2, 10); solid(-5.8, -45.8, -1.2, -45.2, 10); solid(1.2, -45.8, 5.8, -45.2, 10); solid(-5.8, -58, 5.8, -57.4, 10);
   mesh(boxGeo(19, 0.9, 22, 2), MAT.marble, 0, 10.45, -49);
-  const tg = new THREE.Group(); tg.position.set(0, 0.9, -49); tg.userData.wall = MAT.marble; scene.add(tg); roof(tg, 18.4, 22, 10);
+  const tg = new THREE.Group(); tg.position.set(0, 0.9, -49); tg.userData.wall = MAT.marble; WORLD.add(tg); roof(tg, 18.4, 22, 10);
   // Vulcan in bronze, inside the cella
   mesh(boxGeo(1.6, 1.2, 1.6, 1), MAT.marble, 0, 3.6, -55.5);
   const vulcan = makePerson({ metal: MAT.bronze, tunic: 1, hair: 1, beard: 1, belt: 1, hammer: 1, scale: 1.7 });
-  vulcan.root.position.set(0, 4.2, -55.5); vulcan.arms[1].sh.rotation.x = -0.6; vulcan.arms[1].elbow.rotation.x = -1.1; scene.add(vulcan.root);
-  const vl = new THREE.PointLight(0xff9a50, 10, 12, 1.5); vl.position.set(0, 7, -52); scene.add(vl);
+  vulcan.root.position.set(0, 4.2, -55.5); vulcan.arms[1].sh.rotation.x = -0.6; vulcan.arms[1].elbow.rotation.x = -1.1; WORLD.add(vulcan.root);
+  const vl = new THREE.PointLight(0xff9a50, 10, 12, 1.5); vl.position.set(0, 7, -52); WORLD.add(vl);
   // the sacred fire in its bronze bowl
   for (let i = 0; i < 3; i++) { const a = i / 3 * Math.PI * 2; const leg = mesh(new THREE.CylinderGeometry(0.06, 0.06, 1.3, 6), MAT.bronze, Math.cos(a) * 0.55, 3.6, -42.5 + Math.sin(a) * 0.55); leg.rotation.set(Math.sin(a) * 0.25, 0, -Math.cos(a) * 0.25); }
   mesh(new THREE.CylinderGeometry(1.15, 0.5, 0.6, 24), MAT.bronze, 0, 4.4, -42.5); solid(-1.2, -43.7, 1.2, -41.3);
@@ -1893,7 +1896,7 @@ function buildWorld() {
 
   // ── Lava behind the temple ──
   anim.lava = mesh(planeGeo(110, 12, 8), MAT.lava, 0, -1.0, LAVA_Z, scene, true);
-  const lavaLight = new THREE.PointLight(0xff4a14, 70, 60, 1.2); lavaLight.position.set(0, 3, LAVA_Z); scene.add(lavaLight); anim.lavaLight = lavaLight;
+  const lavaLight = new THREE.PointLight(0xff4a14, 70, 60, 1.2); lavaLight.position.set(0, 3, LAVA_Z); WORLD.add(lavaLight); anim.lavaLight = lavaLight;
   for (let i = 0; i < 6; i++) {
     const pts = []; let x = -40 + i * 16 + Math.random() * 6, y = 4;
     for (let k = 0; k < 6; k++) { pts.push(new THREE.Vector3(x, y, -84 + Math.sin(k + i) * 1.5)); x += (Math.random() - 0.5) * 6; y += 3 + Math.random() * 3; }
@@ -1909,14 +1912,14 @@ function buildWorld() {
   shaftMesh = new THREE.Mesh(sg, new THREE.MeshBasicMaterial({ map: TEX.shaft, color: 0x9fb4d8, transparent: true, opacity: 0.16, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide, fog: false }));
   shaftMesh.position.copy(top).add(bot).multiplyScalar(0.5);
   shaftMesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), top.clone().sub(bot).normalize());
-  scene.add(shaftMesh);
+  WORLD.add(shaftMesh);
   const hole = mesh(new THREE.CircleGeometry(3.2, 24), new THREE.MeshBasicMaterial({ color: 0xe8f0ff, fog: false }), top.x, top.y + 0.5, top.z, scene, true); hole.rotation.x = Math.PI / 2;
   // dust drifting in the light
   const dn = 500, dp = new Float32Array(dn * 3);
   for (let i = 0; i < dn; i++) { const t = Math.random(), r = Math.random() * lerp(2.2, 8, t); const a = Math.random() * 6.3; const c = top.clone().lerp(bot, t); dp[i * 3] = c.x + Math.cos(a) * r; dp[i * 3 + 1] = c.y; dp[i * 3 + 2] = c.z + Math.sin(a) * r; }
   const dg = new THREE.BufferGeometry(); dg.setAttribute('position', new THREE.BufferAttribute(dp, 3));
   anim.dust = new THREE.Points(dg, new THREE.PointsMaterial({ size: 0.09, map: TEX.glow, color: 0xfff1d0, transparent: true, opacity: 0.7, blending: THREE.AdditiveBlending, depthWrite: false }));
-  scene.add(anim.dust);
+  WORLD.add(anim.dust);
 }
 
 // ════════════════════════════════════════════════════════════════
@@ -1924,7 +1927,7 @@ function buildWorld() {
 // Each of the five has three Latin tasks (15 questions in all) and
 // one clue they will share once you have helped them.
 // ════════════════════════════════════════════════════════════════
-const PEOPLE = [
+const PEOPLE1 = [
   { id: 'gaius', name: 'Gaius', role: 'the ferryman', at: [-30, 0.25, 40.6], face: Math.PI,
     look: { tunic: 0x4e4234, skin: 0xc49470, hair: 0x9c9890, beard: '#8a8680', old: true, belt: true } },
   { id: 'fabia', name: 'Fabia', role: 'the baker', at: [-5.5, 0, 17.6], face: Math.PI,
@@ -1936,9 +1939,9 @@ const PEOPLE = [
   { id: 'livia', name: 'Livia', role: 'priestess of Vulcan', at: [3.2, 3, -42.2], face: 0.3,
     look: { tunic: 0xece4d4, palla: 0x7a1a14, veil: 0x7a1a14, skin: 0xd8a888, hair: 0x1a120c, female: true, eye: '#2a1a10' } },
 ];
-const SUSPECTS = ['gaius', 'fabia', 'marcus', 'aulus', 'livia'];
+const SUSPECTS1 = ['gaius', 'fabia', 'marcus', 'aulus', 'livia'];
 // Dialogue. Plain English with a little Latin, for Years 5 to 8.
-const D = {
+const D1 = {
   gaius: {
     greet: 'Ah. You are awake. You fell from the sky with the ash. Salve, stranger.',
     again: 'Ah. You are awake. You fell from the sky with... wait. Have we done this before?',
@@ -1987,6 +1990,7 @@ const D = {
     intros: ['Read this petition to me. My secretary has a cold.', 'This new law tablet needs checking before I nail it up.', 'A citizen has written to complain. Help me with it.'],
     thanks: ['Good. That will do.', 'Hm. Correct. You are useful, stranger.', 'Excellent. Rome lost a fine clerk when you fell down here.'],
     clueLabel: 'What are you planning?',
+    locked: 'Planning? I am planning nothing. Make yourself useful, and perhaps I will have time for questions.',
     clue: 'Aulus waves you away and hurries off. A wax tablet slips from his toga. Scratched on it is a map of old tunnels and four words: <em>ignis mortuus, porta aperta</em>. The fire dead, the gate open.',
     clueShort: 'Aulus dropped a wax tablet: a map of old tunnels and the words “ignis mortuus, porta aperta” (the fire dead, the gate open).',
     narrate: true,
@@ -2004,7 +2008,8 @@ const D = {
     clueShort: 'Livia: two keys open the temple’s inner door. Hers carries a flame. The other belongs to the city treasury and carries an owl.',
   },
 };
-const AMBIENT_LINES = ['Another day. The same as the last.', 'Have you seen my brother? He went to the river. Or will go. I forget.', 'Salve. I am sorry, I am busy. I am always busy.', 'The fire is warm today. It is always warm today.'];
+const AMBIENT1 = ['Another day. The same as the last.', 'Have you seen my brother? He went to the river. Or will go. I forget.', 'Salve. I am sorry, I am busy. I am always busy.', 'The fire is warm today. It is always warm today.'];
+let PEOPLE = PEOPLE1, SUSPECTS = SUSPECTS1, D = D1, AMBIENT_LINES = AMBIENT1;
 
 // ════════════════════════════════════════════════════════════════
 // STATE
@@ -2015,11 +2020,11 @@ let mode = 'title';                  // title | intro | play | talk | question |
 let game = null;
 const P = { x: START.x, y: 0, z: START.z, yaw: START.yaw, pitch: 0 };
 const keys = {};
-const NPCS = [];
+let NPCS = [];
 let talkN = null, curQ = null, toastT = null, locT = null, lastZone = '';
 
 function addNpc(def) {
-  const p = makePerson(def.look); p.root.position.set(...def.at); p.root.rotation.y = def.face; scene.add(p.root);
+  const p = makePerson(def.look); p.root.position.set(...def.at); p.root.rotation.y = def.face; WORLD.add(p.root);
   const n = { def, id: def.id, p, x: def.at[0], y: def.at[1], z: def.at[2], yaw: def.face, phase: 0, walk: 0, path: null, talking: false };
   p.root.traverse(m => { m.userData.npc = n; });
   NPCS.push(n); return n;
@@ -2035,15 +2040,19 @@ function newGame() {
 }
 function resetDay() {
   game.clock = 0; game.accused = false; game.met = {};
-  Object.assign(P, { x: START.x, y: groundY(START.x, START.z), z: START.z, yaw: START.yaw, pitch: -0.05 });
+  const st = LV.start;
+  Object.assign(P, { x: st.x, y: groundY(st.x, st.z), z: st.z, yaw: st.yaw, pitch: -0.05 });
   for (const n of NPCS) {
     if (n.loop) continue;
     n.x = n.def.at[0]; n.y = n.def.at[1]; n.z = n.def.at[2]; n.yaw = n.def.face; n.path = null; n.walk = 0; n.gone = false; n.done = false;
     n.p.root.visible = true;
   }
-  templeFire.on = true; templeFire.level = 1;
+  LV.reset();
 }
 const npc = id => NPCS.find(n => n.id === id);
+function groundY(x, z) { return LV.groundY(x, z); }
+function walkable(x, z) { return LV.walkable(x, z); }
+function zoneAt(x, z) { return LV.zoneAt(x, z); }
 const solvedCount = id => { const b = PEOPLE.findIndex(p => p.id === id) * 3; let k = 0; for (let i = 0; i < 3; i++) if (game.results[b + i]) k++; return k; };
 const clueCount = () => Object.keys(game.clues).length;
 const helpedCount = () => PEOPLE.filter(p => solvedCount(p.id) === 3).length;
@@ -2103,11 +2112,12 @@ function banner(l, s) { $('locL').textContent = l; $('locS').textContent = s; co
 const ROMAN = n => ['', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII', 'XIII', 'XIV', 'XV', 'XVI', 'XVII', 'XVIII', 'XIX', 'XX'][n] || String(n);
 function updateClock() {
   const h = Math.min(12, Math.floor(game.clock / HOUR) + 1);
-  $('clockT').textContent = `HORA ${ROMAN(h)} · DIES ${ROMAN(game.loop)}`;
-  $('clockS').textContent = h >= 11 ? 'The twelfth hour is close.' : `${12 - h} hours until the twelfth hour`;
+  const ct = LV.clock(h, game.loop);
+  $('clockT').textContent = ct[0];
+  $('clockS').textContent = ct[1];
   $('clockFill').style.width = (game.clock / (12 * HOUR) * 100) + '%';
 }
-function zoneAt(x, z) {
+function zoneAt1(x, z) {
   if (z > 28) return ['The Riverbank', 'ripa'];
   if (z < -31) return ['The Temple of Vulcan', 'templum Vulcani'];
   if (Math.abs(x) < 16 && Math.abs(z) < 12) return ['The Forum', 'forum'];
@@ -2128,7 +2138,7 @@ function say(who, html, choices) {
   $('dlgOpts').innerHTML = opts.map((o, i) => `<button class="opt${o.key ? ' key' : ''}" data-o="${i}"><span class="k">${i + 1}</span>${esc(o.label)}</button>`).join('');
 }
 function startTalk(n) {
-  if (n.id === 'walker') { mode = 'talk'; unlockPointer(); talkN = n; say(null, `<em>The citizen looks straight through you.</em> “${esc(pick(AMBIENT_LINES))}”`, [{ label: 'Leave them be.', fn: endTalk }]); return; }
+  if (n.id === 'walker') { mode = 'talk'; unlockPointer(); talkN = n; say(null, `${LV.walker[1]} “${esc(pick(AMBIENT_LINES))}”`, [{ label: LV.walker[2], fn: endTalk }]); return; }
   mode = 'talk'; unlockPointer(); talkN = n; n.talking = true;
   const d = D[n.id];
   const first = !game.met[n.id];
@@ -2140,11 +2150,11 @@ function line(n, html) { say(n, html, menu(n)); }
 function menu(n) {
   const d = D[n.id], ch = [];
   ch.push({ label: 'Who are you?', fn: () => line(n, esc(d.who)) });
-  for (const e of d.extra || []) ch.push({ label: e.label, fn: () => line(n, esc(e.text)) });
+  for (const e of d.extra || []) ch.push({ label: e.label, fn: () => line(n, e.html ? e.text : esc(e.text)) });
   const done = solvedCount(n.id);
-  if (done < 3) ch.push({ label: done ? 'Can I help with anything else?' : 'Can I help you with anything?', fn: () => offerTask(n), key: true });
-  ch.push({ label: d.clueLabel || 'Have you seen anything strange today?', fn: () => askClue(n), key: done === 3 && !game.clues[n.id] });
-  if (n.id === 'livia') ch.push({ label: 'Someone will put out the fire tonight. I know who.', fn: () => accuseStart(n), key: clueCount() >= 3 });
+  if (d.intros && done < 3) ch.push({ label: done ? 'Can I help with anything else?' : 'Can I help you with anything?', fn: () => offerTask(n), key: true });
+  if (d.clue) ch.push({ label: d.clueLabel || (LV.key === 2 ? 'Have you seen anything strange tonight?' : 'Have you seen anything strange today?'), fn: () => askClue(n), key: done === 3 && !game.clues[n.id] });
+  if (n.id === LV.judge) ch.push({ label: LV.accuseLabel, fn: () => accuseStart(n), key: clueCount() >= 3 });
   ch.push({ label: 'Goodbye.', fn: endTalk });
   return ch;
 }
@@ -2163,7 +2173,7 @@ function offerTask(n) {
 function askClue(n) {
   const d = D[n.id];
   if (solvedCount(n.id) < 3) {
-    line(n, esc(n.id === 'aulus' ? 'Planning? I am planning nothing. Make yourself useful, and perhaps I will have time for questions.' : 'Strange? Everything down here is strange. Help me first. Then perhaps I will talk.'));
+    line(n, esc(d.locked || (LV.key === 2 ? 'Strange? It is an army camp at night. Everything is strange. Help me first, then perhaps I will talk.' : 'Strange? Everything down here is strange. Help me first. Then perhaps I will talk.')));
     return;
   }
   const fresh = !game.clues[n.id];
@@ -2172,19 +2182,19 @@ function askClue(n) {
   if (fresh) { sfx.clue(); toast(`<span class="g">NEW CLUE</span><br>Written in your journal. You now have ${clueCount()} of 5.`, 3800); }
 }
 function accuseStart(n) {
-  if (game.accused) { line(n, 'You have named someone already today. We shall see what the night brings.'); return; }
-  if (clueCount() < 3) { line(n, 'Words are cheap, stranger. Bring me proof from at least three witnesses. Then name the guilty one.'); return; }
-  say(n, 'Then name them. Choose with care. If you are wrong, the city pays.', [
+  if (game.accused) { line(n, LV.txt.already); return; }
+  if (clueCount() < 3) { line(n, LV.txt.proof); return; }
+  say(n, LV.txt.name, [
     ...SUSPECTS.map(id => ({ label: `${PEOPLE.find(p => p.id === id).name}, ${PEOPLE.find(p => p.id === id).role}.`, fn: () => accuse(n, id) })),
-    { label: 'Not yet.', fn: () => line(n, 'Then go, and come back when you are sure.') },
+    { label: 'Not yet.', fn: () => line(n, LV.txt.notYet) },
   ]);
 }
 function accuse(n, id) {
   game.accused = true;
-  if (id === 'aulus') return ending();
+  if (id === LV.culprit) return ending();
   game.wrongAccuse++;
   const nm = PEOPLE.find(p => p.id === id).name;
-  line(n, esc(id === 'livia' ? 'Me? I have tended this fire for two hundred years. Go, before I lose my patience.' : `${nm}? I will watch ${nm} tonight. Pray to Vulcan that you are right.`));
+  line(n, esc(LV.wrongLine(id, nm)));
 }
 
 // ════════════════════════════════════════════════════════════════
@@ -2301,7 +2311,7 @@ function openRead(note) {
   if (note.title === 'The Law of Vulcan') game.seenLaw = true;
   $('qPanel').innerHTML = `<div class="q-head"><span>Something to read</span><span class="nm">${esc(note.title)}</span></div>` +
     `<div class="q-latin">${esc(note.lat)}</div><div class="q-en">${esc(note.en)}</div><div class="note-about">${esc(note.about)}</div>` +
-    `<div class="q-done show"><button class="wbtn" id="readClose">Back to the city ▶</button></div>`;
+    `<div class="q-done show"><button class="wbtn" id="readClose">Carry on ▶</button></div>`;
   show('sQ');
 }
 
@@ -2310,9 +2320,9 @@ function openJournal() {
   if (!game) return;
   const prev = mode; mode = 'journal'; unlockPointer();
   const h = Math.min(12, Math.floor(game.clock / HOUR) + 1);
-  let b = `<h2>Diarium</h2><p class="empty">Day ${game.loop}, hour ${h} of 12. ${game.loop > 1 ? 'You have lived this day before. You remember everything.' : ''}</p>`;
-  b += `<h4>THE LAW</h4><div class="law">DUM IGNIS ARDET, URBS VIVIT</div><p style="text-align:center">As long as the fire burns, the city lives.</p>`;
-  b += `<h4>WHAT YOU MUST DO</h4><p>Someone will put out Vulcan’s fire at the twelfth hour. Help the people of the city, collect clues, then tell Livia at the temple who it is. She wants proof from at least three witnesses.</p>`;
+  let b = `<h2>Diarium</h2><p class="empty">${LV.when(h, game.loop)} ${game.loop > 1 ? `You have lived this ${LV.key === 2 ? 'night' : 'day'} before. You remember everything.` : ''}</p>`;
+  b += `<h4>THE LAW</h4>${LV.lawHtml}`;
+  b += `<h4>WHAT YOU MUST DO</h4><p>${LV.mustDo}</p>`;
   const cl = PEOPLE.filter(p => game.clues[p.id]);
   b += `<h4>CLUES (${cl.length} of 5)</h4>` + (cl.length ? `<ul>${cl.map(p => `<li>${esc(D[p.id].clueShort)}</li>`).join('')}</ul>` : '<p class="empty">No clues yet. People only share secrets with those who help them.</p>');
   b += `<h4>PEOPLE</h4><ul>${PEOPLE.map(p => { const s = solvedCount(p.id); return `<li><span class="who">${esc(p.name)}</span>, ${esc(p.role)}. <span class="ticks3">${'●'.repeat(s)}${'○'.repeat(3 - s)}</span> ${s === 3 ? (game.clues[p.id] ? 'Helped. Clue found.' : 'Helped. Ask what they have seen.') : `${3 - s} task${3 - s === 1 ? '' : 's'} left.`}</li>`; }).join('')}</ul>`;
@@ -2334,52 +2344,46 @@ function tickDay(dt) {
   const hr = Math.floor(game.clock / HOUR);
   if (hr !== before && hr < 12) {
     sfx.bell();
-    if (hr === 10) toast('<span class="g">HORA XI</span><br>The eleventh hour. Something stirs near the forum.', 4000);
-    else if (hr === 6) toast('<span class="g">HORA VII</span><br>Half the day is gone.', 3000);
+    const tt = LV.hourToast(hr); if (tt) toast(tt, 4000);
   }
-  if (hr >= 10) { const a = npc('aulus'); if (!a.path && !a.done) { a.path = AULUS_PATH.slice(); a.walk = 1; } }
+  if (hr >= 10) { const a = npc(LV.culprit); if (a && !a.path && !a.done) { a.path = LV.culpritPath.slice(); a.walk = 1; } }
   if (game.clock >= 12 * HOUR) loopEnd();
 }
 function loopEnd() {
   mode = 'loopend'; unlockPointer(); $('dlg').classList.remove('on');
-  templeFire.on = false; sfx.rumble();
-  $('flash').style.opacity = 1; shake = 0.25;
+  LV.loopEnd();
+  $('flash').style.opacity = 1;
   setTimeout(() => { $('veil').style.opacity = 1; }, 1800);
   setTimeout(() => {
     $('flash').style.opacity = 0;
     game.loop++;
-    $('loopH').textContent = 'The fire dies';
-    $('loopWhen').textContent = `DIES ${ROMAN(game.loop)}`;
-    $('loopP1').textContent = 'At the twelfth hour the sacred fire goes out. The mountain wakes, the ground splits, and the city vanishes in fire and ash.';
-    $('loopP2').textContent = `Then you wake on the cold riverbank again. It is the same morning. Everyone has forgotten. You have not: your clues and your Latin stay with you.${clueCount() >= 3 ? ' You have enough proof. Find Livia before the twelfth hour.' : ''}`;
+    const lt = LV.loopText(clueCount() >= 3);
+    $('loopH').textContent = lt[0];
+    $('loopWhen').textContent = `${LV.dayWord.toUpperCase()} ${ROMAN(game.loop)}`;
+    $('loopP1').textContent = lt[1];
+    $('loopP2').textContent = lt[2];
     resetDay();
     show('sLoop'); $('veil').style.opacity = 0;
   }, 3800);
 }
 function ending() {
   mode = 'end';
-  const n = npc('livia');
-  const seq = [
-    [n, 'The owl. The treasury key. Aulus.'],
-    [null, '<em>At the eleventh hour Aulus climbs the temple steps with a bronze key and a jar of water. Livia is waiting for him.</em>'],
-    [npc('aulus'), '“Let me through! When the fire dies, the mountain opens. We could see the sky again!”'],
-    [n, '“When the fire dies, the mountain wakes, and we all die with it. You have read the law, Aulus. Read it again.”'],
-    [null, '<em>Aulus drops the key. The twelfth hour comes, and the fire still burns. For the first time in two hundred years, tomorrow arrives.</em>'],
-    [null, '<em>At dawn a crack of daylight opens in the roof of the cave. Gaius rows you to the foot of a long stair, and you climb toward the sky.</em>'],
-  ];
+  const seq = LV.ending();
   let i = 0;
-  const next = () => { if (i >= seq.length) { $('dlg').classList.remove('on'); return showEnd(); } const [who, txt] = seq[i++]; say(who, txt, [{ label: i < seq.length ? 'Continue' : 'Climb into the light', fn: next }]); };
+  const next = () => { if (i >= seq.length) { $('dlg').classList.remove('on'); return showEnd(); } const [who, txt] = seq[i++]; say(who, txt, [{ label: i < seq.length ? 'Continue' : LV.lastBtn, fn: next }]); };
   next();
 }
 function showEnd() {
   sfx.win(); mode = 'end';
   const mins = Math.round((performance.now() - game.t0) / 60000);
-  $('endSub').textContent = `You broke the curse of the buried city in ${game.loop === 1 ? 'a single day' : game.loop + ' days'}. ${helpedCount()} of 5 citizens trusted you with their secrets.`;
+  $('endH').textContent = LV.endH;
+  $('endSub').textContent = LV.endSub(game.loop, helpedCount());
+  $('nextBtn').style.display = LV.next ? '' : 'none';
   const answered = game.results.filter(Boolean).length;
   $('endScore').innerHTML = `${game.score} / 15<small>Latin tasks right first time · ${answered} of 15 attempted · about ${mins} minute${mins === 1 ? '' : 's'}</small>`;
   const missed = {};
   game.results.forEach(r => { if (r && !r.first) missed[r.q.focus] = (missed[r.q.focus] || 0) + 1; });
-  let h = '';
+  let h = LV.fact;
   const ks = GRAMMAR.filter(g => missed[g.k]);
   if (ks.length) h += `<h3>GRAMMAR TO REVISE</h3><ul>` + ks.map(g => `<li>${esc(g.name)} <span class="ch">· ${esc(g.ch)} · ${missed[g.k]} ${missed[g.k] === 1 ? 'question' : 'questions'}</span></li>`).join('') + `</ul><div style="height:18px"></div>`;
   h += `<h3>YOUR ANSWERS</h3><table class="rev">`;
@@ -2416,7 +2420,7 @@ function pauseGame() {
   if (mode !== 'play') return;
   mode = 'pause'; unlockPointer();
   const h = Math.min(12, Math.floor(game.clock / HOUR) + 1);
-  $('pauseInfo').textContent = `Day ${game.loop}, hour ${h}. Clues found: ${clueCount()} of 5. Time stands still while you rest here.`;
+  $('pauseInfo').textContent = `${LV.when(h, game.loop)} Clues found: ${clueCount()} of 5. Time stands still while you rest here.`;
   show('sPause');
 }
 function blocked(nx, nz, y) {
@@ -2457,7 +2461,7 @@ function updateTarget() {
   }
   const verb = isTouch ? 'USE' : 'E';
   let msg = '';
-  if (target && target.npc) msg = target.npc.id === 'walker' ? `<b>${verb}</b>Speak to the citizen` : `<b>${verb}</b>Talk to ${target.npc.def.name}, ${target.npc.def.role}`;
+  if (target && target.npc) msg = target.npc.id === 'walker' ? `<b>${verb}</b>Speak to the ${LV.walker[0]}` : `<b>${verb}</b>Talk to ${target.npc.def.name}, ${target.npc.def.role}`;
   else if (target && target.read) msg = `<b>${verb}</b>Read: ${target.read.title}`;
   $('prompt').innerHTML = msg; $('dot').classList.toggle('hot', !!target);
 }
@@ -2532,13 +2536,14 @@ $('tPause').addEventListener('click', () => pauseGame());
 document.addEventListener('click', e => {
   const t = e.target;
   const o = t.closest('.opt'); if (o && $('dlg').classList.contains('on')) { const f = opts[+o.dataset.o]; if (f) { sfx.click(); f.fn(); } return; }
-  if (t.closest('#startBtn')) { initAudio(); sfx.click(); begin(); return; }
-  if (t.closest('#introBtn')) { sfx.click(); $('veil').style.opacity = 0; enterPlay(); setTimeout(() => banner('The Riverbank', 'ripa'), 400); setTimeout(() => toast('The old man on the jetty is watching you. Walk up to him and press <b>E</b> to talk.', 5000), 1500); return; }
-  if (t.closest('#loopBtn')) { sfx.click(); enterPlay(); setTimeout(() => banner(`Dies ${ROMAN(game.loop)}`, 'the same day, again'), 300); return; }
+  const lvb = t.closest('[data-level]'); if (lvb && mode === 'title') { initAudio(); sfx.click(); begin(+lvb.dataset.level); return; }
+  if (t.closest('#introBtn')) { sfx.click(); $('veil').style.opacity = 0; enterPlay(); setTimeout(() => banner(LV.arrive[0], LV.arrive[1]), 400); setTimeout(() => toast(LV.arrive[2], 5000), 1500); return; }
+  if (t.closest('#loopBtn')) { sfx.click(); enterPlay(); setTimeout(() => banner(`${LV.dayWord} ${ROMAN(game.loop)}`, LV.again), 300); return; }
   if (t.closest('#resumeBtn')) { sfx.click(); enterPlay(); return; }
   if (t.closest('#journalBtn2')) { sfx.click(); openJournal(); return; }
   if (t.closest('#quitBtn') || t.closest('#titleBtn')) { sfx.click(); mode = 'title'; game = null; $('dlg').classList.remove('on'); show('sTitle'); return; }
-  if (t.closest('#againBtn')) { sfx.click(); begin(); return; }
+  if (t.closest('#againBtn')) { sfx.click(); begin(LV.key); return; }
+  if (t.closest('#nextBtn')) { sfx.click(); begin(LV.next); return; }
   if (t.closest('#jClose')) { sfx.click(); closeJournal(); return; }
   if (t.closest('#readClose')) { sfx.click(); enterPlay(); return; }
   if (mode !== 'question' || !curQ) return;
@@ -2573,21 +2578,502 @@ function syncSetup() {
   const keyStr = [...ticked].sort().join('');
   document.querySelectorAll('[data-preset]').forEach(b => b.classList.toggle('on', b.dataset.preset !== 'clear' && PRESETS[+b.dataset.preset].keys === keyStr));
   store.set('grammar', [...ticked]); store.set('types', [...types]);
-  const st = $('setupStatus'), btn = $('startBtn');
-  const warn = m => { st.textContent = m; st.className = 'status warn'; btn.disabled = true; };
+  const st = $('setupStatus'), btns = document.querySelectorAll('[data-level]');
+  const warn = m => { st.textContent = m; st.className = 'status warn'; btns.forEach(b => b.disabled = true); };
   if (!ticked.size) return warn('Tick at least one grammar point.');
   if (!types.size) return warn('Tick at least one question type.');
   const n = availableItems().length;
   if (n < 15) return warn(`The game needs 15 sentences, but only ${n} in the book use just this grammar. Tick more grammar points.`);
-  st.textContent = `${n} sentences from the book use only the ticked grammar.`; st.className = 'status'; btn.disabled = false;
+  st.textContent = `${n} sentences from the book use only the ticked grammar.`; st.className = 'status'; btns.forEach(b => b.disabled = false);
 }
-function begin() {
+function begin(k) {
   $('loading').classList.add('on');
   setTimeout(() => {
+    useLevel(k || LV.key);
+    $('introH').textContent = LV.intro.h; $('introWhen').textContent = LV.intro.when;
+    $('introBody').innerHTML = LV.intro.body; $('introBtn').textContent = LV.intro.btn;
     newGame();
     $('loading').classList.remove('on');
     mode = 'intro'; show('sIntro');
   }, 40);
+}
+
+// ════════════════════════════════════════════════════════════════
+// LEVEL 2: THE RUBICON, NIGHT OF 10 JANUARY 49 BC
+// Caesar's camp on the bank of the river. Someone plans to steal the
+// eagle of the Thirteenth Legion before dawn.
+// ════════════════════════════════════════════════════════════════
+const RUBI_Z = -30;
+function terrain2(x, z) {
+  let y = 0;
+  const r = Math.hypot(x, z - 5);
+  if (r > 42) y += (fbm(N2, (x + 300) / 30, (z + 300) / 30, 16, 3) - 0.35) * 4.5 * smooth(42, 80, r) + Math.pow(Math.max(0, r - 88) / 12, 2) * 3;
+  y -= 2.1 * (1 - smooth(4.5, 8, Math.abs(z - RUBI_Z)));
+  return y;
+}
+function groundY2(x, z) {
+  if (x > -1.9 && x < 1.9 && z > -37 && z < -23) return 0.32;                 // the bridge
+  return terrain2(x, z);
+}
+function walkable2(x, z) {
+  if (Math.hypot(x, z - 5) > 92) return false;
+  if (z < -24.6 && !(x > -1.5 && x < 1.5 && z > -35.6)) return false;       // the river, and Italy beyond it
+  return true;
+}
+function zoneAt2(x, z) {
+  if (z < -18) return ['The Rubicon', 'flumen Rubico'];
+  if (Math.abs(x) < 6 && z > 3 && z < 18) return ['Caesar’s Headquarters', 'praetorium'];
+  if (x < -8 && x > -17 && z > -8 && z < 1) return ['The Cooking Fire', 'focus'];
+  if (x > 20 && z > 4 && z < 13) return ['The Horse Lines', 'equi'];
+  return ['The Camp of the Thirteenth', 'castra'];
+}
+
+const PEOPLE2 = [
+  { id: 'rufus', name: 'Rufus', role: 'the sentry', at: [2.9, 0, -16.2], face: Math.PI,
+    look: { tunic: 0x8a2a1e, skin: 0xd6a482, hair: 0x7a3418, belt: true } },
+  { id: 'tertia', name: 'Tertia', role: 'the camp cook', at: [-12, 0, -2], face: Math.PI,
+    look: { tunic: 0x6e604a, skin: 0xc89670, hair: 0x2a1a10, female: true, apron: 0xd8ccb0 } },
+  { id: 'lucius', name: 'Lucius', role: 'the eagle-bearer', at: [1.9, 0, 4.4], face: Math.PI,
+    look: { tunic: 0x8a2a1e, skin: 0xb07a58, hair: 0x1a120c, beard: '#1a120c', belt: true, veil: 0x9a7a40 } },
+  { id: 'pollio', name: 'Pollio', role: 'officer and writer', at: [9.6, 0, -0.4], face: -Math.PI / 2,
+    look: { tunic: 0xe6dfd0, skin: 0xe4bc9a, hair: 0x4a3020, belt: true } },
+  { id: 'labienus', name: 'Labienus', role: 'commander of the cavalry', at: [15, 0, 15.2], face: -Math.PI / 2,
+    look: { tunic: 0x8a2420, palla: 0x7a1a14, skin: 0xc8a080, hair: 0x5a5650, old: true, belt: true } },
+];
+const EXTRAS2 = [
+  { id: 'caesar', name: 'Caesar', role: 'proconsul of Gaul', at: [0, 0, 14.4], face: Math.PI,
+    look: { tunic: 0xece6d8, palla: 0x6a1430, skin: 0xe0b896, hair: 0x3a3632, laurel: true, belt: true, old: true } },
+  { id: 'piper', name: 'The Piper', role: 'a stranger by the river', at: [-6.5, 0, -22.3], face: Math.PI, pose: 'pipe',
+    look: { tunic: 0x3a4a3a, skin: 0xe8c8a8, hair: 0xd8c088, scale: 1.12 } },
+];
+const SUSPECTS2 = ['rufus', 'tertia', 'lucius', 'pollio', 'labienus'];
+const D2 = {
+  rufus: {
+    greet: 'Halt! Who goes there? Nobody walks out of the river at night. Give the password, or give your name.',
+    again: 'Halt! Who goes... Wait. I know your face. How do I know your face?',
+    who: 'Rufus, of the Thirteenth Legion. I guard this gate until dawn. Then I march, if Caesar says march.',
+    extra: [
+      { label: 'Where am I?', text: 'The camp of Gaius Julius Caesar, on the river Rubicon. Across that bridge lies Italy. Caesar’s province ends here, at the water.' },
+      { label: 'Why does this river matter?', text: 'Roman law says no general may lead his army out of his province and into Italy. If Caesar crosses with us, it means war with Pompey and the Senate. Civil war.' },
+    ],
+    intros: ['Tonight’s password is written on this tablet, and I can never remember it. Help me read it.', 'My girl in Ariminum sent me a letter. I am not much of a reader.', 'The centurion left orders for the watch. Help me make sense of them.'],
+    thanks: ['Gratias! Now I will not get flogged.', 'Ha! She misses me. Or so you say.', 'Good. Now I know what to do, at least.'],
+    clue: 'Something strange? At the second watch an officer walked past my post toward the river, carrying an empty sack. Red cloak, and a gold brooch shaped like a horse. He gave the password, so I let him pass.',
+    clueShort: 'Rufus: at the second watch an officer in a red cloak with a gold horse brooch went to the river with an empty sack.',
+  },
+  tertia: {
+    greet: 'Mind the pot, it bites. You look half frozen. Warm your hands, if you like.',
+    again: 'Mind the pot, it... Have you stood by my fire before? I could swear you have.',
+    who: 'Tertia. I cook for the officers of the Thirteenth. Eight years in Gaul, and still they complain about my porridge.',
+    extra: [
+      { label: 'What will happen tomorrow?', text: 'If Caesar crosses, we march on Rome. If he does not, we sit here and freeze. Either way, they will want breakfast.' },
+    ],
+    intros: ['A merchant wrote me a bill on this tablet. I think he is cheating me. Help me check it.', 'The officers left this scrawled on my table. Help me with it.', 'My recipe for the general’s stew has a smudge on it. Help me.'],
+    thanks: ['I knew it! The thief. Thank you.', 'Pah. Officers. Thank you all the same.', 'Good. Caesar likes his stew just so.'],
+    clue: 'Labienus came to my fire tonight and did not eat. Labienus always eats. He asked me for a sack big enough to hold a goose. “A big goose,” he said, “with wings.” Then he laughed.',
+    clueShort: 'Tertia: Labienus did not eat. He asked her for a sack “big enough for a goose, with wings”.',
+  },
+  lucius: {
+    greet: 'Step back from the standards, stranger. That is the eagle of the Thirteenth. Men have died for less than a closer look.',
+    again: 'Step back from the... You again? No. We have never met. Have we?',
+    who: 'Lucius, eagle-bearer of the Thirteenth Legion. I carry the eagle. Where it goes, the legion follows. If it is ever lost, the legion is shamed for ever.',
+    extra: [
+      { label: 'Why the lion skin?', text: 'Every eagle-bearer wears one. It shows the men who carries the eagle. It also keeps my ears warm.' },
+    ],
+    intros: ['The words on the eagle’s plaque are worn. Help me read them.', 'My mother taught me a prayer to Mars. I have muddled the words.', 'A new recruit painted this on his shield. Is it right?'],
+    thanks: ['Good. The eagle is proud of you.', 'Mars will thank you. So do I.', 'I will tell the boy. He will be furious.'],
+    clue: 'Tonight an officer ordered me to sleep in my tent and leave the eagle alone during the last watch. I could not see his face in the dark. But his brooch caught the firelight: a golden horse.',
+    clueShort: 'Lucius: an officer ordered him to leave the eagle unguarded in the last watch. The officer wore a golden horse brooch.',
+  },
+  pollio: {
+    greet: 'Ah. A stranger with a strange look about him. Forgive me, I am a writer. I notice things.',
+    again: 'Ah. A stranger with... Odd. I feel I have already written about you.',
+    who: 'Gaius Asinius Pollio, officer of Caesar and, one day, I hope, a historian. Tonight I write everything down. Tomorrow might be worth remembering.',
+    extra: [
+      { label: 'What will Caesar do?', text: 'He has been staring at that river for an hour. If he crosses, the whole world changes. I would not want to be the man who decides.' },
+    ],
+    intros: ['I have written a sentence for my history and I do not trust it. Check it for me.', 'A messenger brought this note from Rome. Help me read it.', 'A line of Latin keeps running through my head. Help me pin it down.'],
+    thanks: ['Excellent. You would make a fine editor.', 'Hm. Bad news from Rome. But thank you.', 'Yes! That is it. You have an ear for Latin.'],
+    clue: 'I notice things, as I said. Tonight Labienus sent a rider south with a letter. I saw the seal on it: a lion holding a sword. That is the seal of Pompey the Great, Caesar’s enemy.',
+    clueShort: 'Pollio: Labienus sent a rider south with a letter. It carried Pompey’s seal, a lion holding a sword.',
+  },
+  labienus: {
+    greet: 'Who let you in? I am Caesar’s right hand, stranger. Speak quickly, or not at all.',
+    again: 'Who let you... Have you been following me? I have seen you before.',
+    who: 'Titus Labienus. I have led Caesar’s cavalry for nine years in Gaul. I have won him more battles than he likes to admit.',
+    extra: [
+      { label: 'Will you follow Caesar across the river?', text: 'Across the river lies Italy, and Rome. Caesar calls it justice. Pompey calls it treason. I call it a cold night. Goodnight.' },
+      { label: 'That is a fine brooch.', text: 'A golden horse, for Caesar’s horseman. He gave it to me after Alesia. He likes to remind me what I owe him.' },
+    ],
+    intros: ['Read this report from my scouts. Their spelling is a crime.', 'Check this order before I send it to the cavalry.', 'This message came in code, they tell me. It looks like plain Latin to me.'],
+    thanks: ['Fine. Go away.', 'Correct. You are cleverer than you look.', 'Good. Now leave me be.'],
+    clueLabel: 'What are you hiding?', narrate: true,
+    locked: 'Hiding? Nothing. Make yourself useful, and perhaps I will waste some time on you.',
+    clue: 'Labienus turns away too fast. Folded under his red cloak is an empty sack, big enough to hold a goose. Or an eagle. On the stool by his tent lies a sealed letter addressed to <em>Gnaeus Pompeius Magnus</em>.',
+    clueShort: 'Labienus hides an empty sack under his cloak, and has a sealed letter addressed to Pompey the Great.',
+  },
+  caesar: {
+    greet: 'A stranger in my camp at night, on the edge of my province. Speak quickly. I have a river to think about.',
+    again: 'A stranger in my... No. Not a stranger. I have seen you before, and I never forget a face.',
+    who: 'Gaius Julius Caesar, proconsul of Gaul. Tonight, perhaps, a criminal. Tomorrow, perhaps, the master of Rome.',
+    extra: [
+      { label: 'Will you cross the Rubicon?', text: 'If I cross, it is war with Pompey and the Senate. If I stay, my enemies will destroy me in the courts. Either way, good men will suffer. Leave me to think.' },
+      { label: 'Who do you trust?', text: 'My legions. My eagle. Labienus, my oldest friend in Gaul. Trust is a luxury, stranger, but tonight I must afford it.' },
+    ],
+  },
+  piper: {
+    greet: 'You came out of the river with the moonlight on you. Out of tomorrow, I think. Sit. Listen.',
+    again: 'You again. The river brings you back, and back. It will keep bringing you until the die is cast.',
+    who: 'Who am I? A shepherd. A traveller. A rumour. At dawn, when Caesar stands still at the water, perhaps I will remind him how to cross a river.',
+    extra: [
+      { label: 'What do you know about the eagle?', text: 'Eagles do not fly at night. Someone will carry this one. Look for the one who rides with horses.' },
+      { label: 'Play me a tune.', text: '<em>He plays a few soft notes. The tune drifts over the water, and the sentries on the gate look up.</em>', html: true },
+    ],
+  },
+};
+const AMBIENT2 = ['Cold night. My feet are ice.', 'They say Caesar will cross at dawn. Or not. Nobody knows.', 'The Thirteenth follows its eagle. Wherever it goes.', 'Mind the fire, stranger. And mind the centurion.', 'Rome, they say. I have never seen Rome.'];
+
+// ── Night textures ──
+function nightTextures() {
+  C.grass = paintTex(512, (u, v) => {
+    const n = fbm(N1, u * 16, v * 16, 16, 5), m = fbm(N2, u * 4, v * 4, 4, 4);
+    let c = mix3([34, 40, 24], [70, 78, 44], n); c = mix3(c, [62, 52, 36], smooth(0.5, 0.75, m) * 0.7);
+    return N2(u * 128, v * 128, 128) > 0.8 ? mul3(c, 1.25) : c;
+  });
+  C.mud = paintTex(512, (u, v) => {
+    const n = fbm(N1, u * 16, v * 16, 16, 5), m = fbm(N2, u * 8, v * 8, 8, 4);
+    const c = mix3([52, 40, 30], [96, 78, 58], n); return m > 0.62 ? mul3(c, 0.62) : c;
+  });
+  C.leather = paintTex(256, (u, v) => {
+    const pu = Math.floor(u * 4), pv = Math.floor(v * 3), n = fbm(N2, u * 8, v * 8, 8, 4);
+    let c = mul3(mix3([92, 66, 42], [146, 108, 70], n), 0.85 + ((pu * 7 + pv * 3) % 5) * 0.06);
+    const eu = Math.min((u * 4) % 1, 1 - (u * 4) % 1), ev = Math.min((v * 3) % 1, 1 - (v * 3) % 1);
+    if (eu < 0.012 || ev < 0.016) c = mul3(c, 0.55);
+    return c;
+  });
+  C.sky = (() => {
+    const c = document.createElement('canvas'); c.width = 8; c.height = 256; const x = c.getContext('2d');
+    const g = x.createLinearGradient(0, 0, 0, 256);
+    g.addColorStop(0, '#02040a'); g.addColorStop(0.42, '#08101e'); g.addColorStop(0.5, '#152036'); g.addColorStop(0.56, '#0c1220'); g.addColorStop(1, '#05070c');
+    x.fillStyle = g; x.fillRect(0, 0, 8, 256); return c;
+  })();
+  const t = (c, r) => { const tx = texFrom(c); tx.repeat.set(r, r); return tx; };
+  MAT.grass = std({ map: t(C.grass, 1), bumpMap: texFrom(C.grass, false), bumpScale: 0.05, roughness: 1, envMapIntensity: 0 });
+  MAT.mud = std({ map: texFrom(C.mud), bumpMap: texFrom(C.mud, false), bumpScale: 0.06, roughness: 0.95, envMapIntensity: 0 });
+  MAT.leather = std({ map: texFrom(C.leather), roughness: 0.85, side: THREE.DoubleSide, envMapIntensity: 0 });
+  MAT.redLeather = std({ map: texFrom(C.leather), color: 0xc05a48, roughness: 0.85, side: THREE.DoubleSide, envMapIntensity: 0 });
+  MAT.leaf = std({ color: 0x1e2a18, roughness: 1, envMapIntensity: 0 });
+  MAT.bark = std({ color: 0x2a2018, roughness: 1, envMapIntensity: 0 });
+  MAT.silver = std({ color: 0xc8ccd4, metalness: 1, roughness: 0.3 });
+}
+
+// A leather tent: a ridge tent with a dark door at one end (ridge runs along z)
+function tent(x, z, w, d, h, mat, rot) {
+  const g = new THREE.Group(); g.position.set(x, 0, z); g.rotation.y = rot || 0; WORLD.add(g);
+  const sh = new THREE.Shape(); sh.moveTo(-w / 2, 0); sh.lineTo(w / 2, 0); sh.lineTo(0, h); sh.closePath();
+  const geo = new THREE.ExtrudeGeometry(sh, { depth: d, bevelEnabled: false }); geo.translate(0, 0, -d / 2);
+  const uv = geo.attributes.uv; for (let i = 0; i < uv.count; i++) uv.setXY(i, uv.getX(i) * 0.5, uv.getY(i) * 0.5);
+  mesh(geo, mat, 0, 0, 0, g);
+  const door = new THREE.Shape(); door.moveTo(-w * 0.18, 0); door.lineTo(w * 0.18, 0); door.lineTo(0, h * 0.62); door.closePath();
+  mesh(new THREE.ShapeGeometry(door), MAT.dark, 0, 0.01, d / 2 + 0.02, g, true);
+  for (const s of [-1, 1]) mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.4, 6), MAT.wood, 0, h + 0.1, s * d / 2, g);
+  const sw = (rot && Math.abs(Math.sin(rot)) > 0.5) ? d : w, sd = (rot && Math.abs(Math.sin(rot)) > 0.5) ? w : d;
+  solid(x - sw / 2, z - sd / 2, x + sw / 2, z + sd / 2);
+  return g;
+}
+function tree(x, z, s, tall) {
+  const y = terrain2(x, z);
+  const h = (tall ? 5 : 2.6) * s;
+  mesh(new THREE.CylinderGeometry(0.12 * s, 0.2 * s, h, 7), MAT.bark, x, y + h / 2, z);
+  if (tall) { const c = mesh(new THREE.ConeGeometry(1.3 * s, 7 * s, 9), MAT.leaf, x, y + h + 2.2 * s, z); c.scale.x = 0.8; }
+  else for (let i = 0; i < 3; i++) mesh(new THREE.DodecahedronGeometry((1.6 + Math.random()) * s, 1), MAT.leaf, x + (Math.random() - 0.5) * 2 * s, y + h + Math.random() * 1.4 * s, z + (Math.random() - 0.5) * 2 * s);
+  solid(x - 0.3 * s, z - 0.3 * s, x + 0.3 * s, z + 0.3 * s);
+}
+function horse(x, z, rot, col) {
+  const g = new THREE.Group(); g.position.set(x, terrain2(x, z), z); g.rotation.y = rot; WORLD.add(g);
+  const m = std({ color: col, roughness: 0.75, envMapIntensity: 0.1 }), dark = std({ color: 0x15100c, roughness: 0.9 });
+  const body = mesh(new THREE.CapsuleGeometry(0.36, 1.1, 6, 14), m, 0, 1.35, 0, g); body.rotation.x = Math.PI / 2;
+  const neck = mesh(new THREE.CylinderGeometry(0.17, 0.27, 0.9, 10), m, 0, 1.85, 0.8, g); neck.rotation.x = 0.6;
+  const head = mesh(boxGeo(0.24, 0.26, 0.62, 1), m, 0, 2.18, 1.18, g); head.rotation.x = 0.55;
+  mesh(boxGeo(0.06, 0.4, 0.22, 1), dark, 0, 2.05, 0.82, g).rotation.x = 0.6;            // mane
+  for (const s of [-1, 1]) mesh(new THREE.ConeGeometry(0.04, 0.14, 5), m, s * 0.08, 2.45, 1.0, g);
+  for (const [lx, lz] of [[-0.2, 0.6], [0.2, 0.6], [-0.2, -0.6], [0.2, -0.6]]) mesh(new THREE.CylinderGeometry(0.06, 0.05, 1.05, 8), m, lx, 0.53, lz, g);
+  const tail = mesh(new THREE.CylinderGeometry(0.05, 0.1, 0.8, 6), dark, 0, 1.2, -0.95, g); tail.rotation.x = -0.4;
+  g.userData.head = head;
+  const sw = Math.abs(Math.sin(rot)) > 0.5 ? [1.3, 0.5] : [0.5, 1.3];
+  solid(x - sw[0], z - sw[1], x + sw[0], z + sw[1]);
+  return g;
+}
+
+let eagleStd = null, moon = null, horses2 = [];
+function buildRubicon() {
+  nightTextures();
+  // ── Sky, stars and moon ──
+  const sky = new THREE.Mesh(new THREE.SphereGeometry(330, 32, 16), new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(C.sky), side: THREE.BackSide, fog: false, depthWrite: false }));
+  sky.material.map.colorSpace = THREE.SRGBColorSpace; WORLD.add(sky);
+  const sn = 1800, sp = new Float32Array(sn * 3);
+  for (let i = 0; i < sn; i++) { const a = Math.random() * Math.PI * 2, e = Math.asin(0.05 + Math.random() * 0.95); sp[i * 3] = Math.cos(a) * Math.cos(e) * 300; sp[i * 3 + 1] = Math.sin(e) * 300; sp[i * 3 + 2] = Math.sin(a) * Math.cos(e) * 300; }
+  const sg = new THREE.BufferGeometry(); sg.setAttribute('position', new THREE.BufferAttribute(sp, 3));
+  WORLD.add(new THREE.Points(sg, new THREE.PointsMaterial({ size: 1.6, sizeAttenuation: false, color: 0xdfe6ff, fog: false, transparent: true, opacity: 0.85, depthWrite: false })));
+  const moonDir = new THREE.Vector3(-0.45, 0.62, -0.64).normalize();
+  moon = new THREE.Mesh(new THREE.CircleGeometry(9, 32), new THREE.MeshBasicMaterial({ color: 0xf2f0e6, fog: false }));
+  moon.position.copy(moonDir).multiplyScalar(290); moon.lookAt(0, 0, 0); WORLD.add(moon);
+  const halo = new THREE.Sprite(new THREE.SpriteMaterial({ map: TEX.glow, color: 0x9fb2e0, blending: THREE.AdditiveBlending, depthWrite: false, fog: false, opacity: 0.6 }));
+  halo.position.copy(moon.position); halo.scale.set(90, 90, 1); WORLD.add(halo);
+
+  // ── Light ──
+  WORLD.add(new THREE.HemisphereLight(0x3a4a70, 0x120e0a, 0.55));
+  WORLD.add(new THREE.AmbientLight(0x1c2436, 0.35));
+  const ml = new THREE.DirectionalLight(0xb0c2ff, 1.1);
+  ml.position.copy(moonDir).multiplyScalar(80).add(new THREE.Vector3(0, 0, 5)); ml.target.position.set(0, 0, 5);
+  ml.castShadow = true; ml.shadow.mapSize.set(2048, 2048); const sc = ml.shadow.camera; sc.left = -48; sc.right = 48; sc.top = 48; sc.bottom = -48; sc.near = 10; sc.far = 200;
+  ml.shadow.bias = -0.0005; ml.shadow.normalBias = 0.05; WORLD.add(ml, ml.target);
+
+  // ── Ground and river ──
+  const gg = planeGeo(260, 260, 5, 170, 170), gp = gg.attributes.position;
+  for (let i = 0; i < gp.count; i++) gp.setY(i, terrain2(gp.getX(i), gp.getZ(i) + 5));
+  gg.computeVertexNormals();
+  const gm = mesh(gg, MAT.grass, 0, 0, 5); gm.castShadow = false;
+  const water = mesh(planeGeo(300, 15, 8), MAT.water, 0, -0.62, RUBI_Z, WORLD, true); water.receiveShadow = true;
+  // camp roads
+  mesh(planeGeo(4.5, 28, 4), MAT.mud, 0, 0.03, -4.5);
+  mesh(planeGeo(60, 3.5, 4), MAT.mud, 0, 0.035, 0);
+  mesh(planeGeo(3.5, 7, 4), MAT.mud, 0, 0.03, -21.5);
+
+  // ── The bridge ──
+  mesh(boxGeo(3.6, 0.22, 14.5, 1.5), MAT.wood, 0, 0.2, -30);
+  for (const zz of [-35.5, -32.5, -29.5, -26.5, -23.8]) for (const xx of [-1.8, 1.8]) {
+    mesh(new THREE.CylinderGeometry(0.13, 0.15, 2.6, 8), MAT.wood, xx, -0.5, zz);
+    mesh(new THREE.CylinderGeometry(0.06, 0.06, 1.0, 6), MAT.wood, xx, 0.8, zz);
+  }
+  for (const xx of [-1.8, 1.8]) mesh(boxGeo(0.1, 0.1, 14, 1), MAT.wood, xx, 1.25, -30);
+  solid(-2.2, -37, -1.7, -23.5, 99); solid(1.7, -37, 2.2, -23.5, 99);
+  // the boundary stone and a milestone
+  const stone = mesh(boxGeo(0.75, 1.35, 0.26, 1), MAT.marble, 3.4, 0.62, -23.4); stone.rotation.y = 0.15;
+  stone.material = std({ map: inscription(['FINIS', 'PROVINCIAE'], 0.75, 1.35, C.marble, 'rgba(70,40,25,.92)'), roughness: 0.6 });
+  readable(stone, { title: 'A boundary stone', lat: 'Finis provinciae.', en: 'The end of the province.',
+    about: 'The Rubicon was the border between Caesar’s province, Cisalpine Gaul, and Italy itself. Roman law banned a general from leading his army out of his province. Crossing this river with soldiers meant civil war.' });
+  solid(3.0, -23.6, 3.8, -23.2);
+  const ms = mesh(new THREE.CylinderGeometry(0.32, 0.36, 1.5, 20), std({ map: inscription(['ARIMINVM', 'M · P · XIII'], 2.2, 1.5, C.marble, 'rgba(60,40,25,.9)'), roughness: 0.7 }), -3.6, 0.75, -21.4);
+  ms.rotation.y = Math.PI;
+  readable(ms, { title: 'A milestone', lat: 'Ariminum, m(ilia) p(assuum) XIII.', en: 'Ariminum, thirteen miles.',
+    about: 'A Roman mile was a thousand paces: mille passus. The town of Ariminum, on the Italian side of the river, was Caesar’s first target once he crossed.' });
+  solid(-4, -21.8, -3.2, -21);
+
+  // ── The palisade: a ring of sharpened stakes with gates north and south ──
+  const stakes = [], add = (x, z) => stakes.push([x, z]);
+  for (let x = -30; x <= 30; x += 0.45) { if (Math.abs(x) > 3) { add(x, -18); add(x, 30); } }
+  for (let z = -18; z <= 30; z += 0.45) { add(-30, z); add(30, z); }
+  const sm = new THREE.InstancedMesh(new THREE.CylinderGeometry(0.015, 0.11, 2.7, 6), MAT.wood, stakes.length), dm = new THREE.Object3D();
+  stakes.forEach(([x, z], i) => { dm.position.set(x, 1.3, z); dm.rotation.set((Math.random() - 0.5) * 0.06, Math.random() * 3, (Math.random() - 0.5) * 0.06); dm.scale.y = 0.9 + Math.random() * 0.2; dm.updateMatrix(); sm.setMatrixAt(i, dm.matrix); });
+  sm.castShadow = sm.receiveShadow = true; WORLD.add(sm);
+  solid(-30.3, -18.3, -3, -17.7); solid(3, -18.3, 30.3, -17.7); solid(-30.3, 29.7, -3, 30.3); solid(3, 29.7, 30.3, 30.3);
+  solid(-30.3, -18.3, -29.7, 30.3); solid(29.7, -18.3, 30.3, 30.3);
+  for (const s of [-1, 1]) {                                  // gate towers
+    mesh(boxGeo(1.6, 4.2, 1.6, 1.5), MAT.wood, s * 3.9, 2.1, -18); solid(s * 3.9 - 0.8, -18.8, s * 3.9 + 0.8, -17.2);
+    mesh(boxGeo(2, 0.2, 2, 1.5), MAT.wood, s * 3.9, 4.3, -18);
+  }
+  mesh(boxGeo(9.4, 0.3, 0.5, 1.5), MAT.wood, 0, 4.1, -18);
+  torch(-3.3, -16.6, 26); torch(3.3, 19.5, 0);
+
+  // ── Tents in rows ──
+  const keepOut = [[-17, -9, -7, 1], [7, -8, 16, 2], [-6.5, 2.5, 6.5, 19], [12, 11, 24, 21], [20, 3, 29, 13], [-3, -18, 3, 30], [-30, -1.8, 30, 1.8], [-22, 11, -17, 17]];
+  for (let x = -26; x <= 26; x += 5.2) for (let z = -13; z <= 26; z += 6.5) {
+    if (keepOut.some(([a, b, c, d]) => x > a - 1.6 && x < c + 1.6 && z > b - 1.8 && z < d + 1.8)) continue;
+    tent(x + (Math.random() - 0.5) * 0.3, z, 2.6, 3.2, 2.1, MAT.leather, 0);
+  }
+  // ── Caesar's headquarters: a large red tent, open at the front ──
+  const hq = new THREE.Group(); hq.position.set(0, 0, 13); WORLD.add(hq);
+  mesh(boxGeo(9, 2.2, 0.12, 2), MAT.redLeather, 0, 1.1, 3.5, hq);
+  for (const s of [-1, 1]) {
+    mesh(boxGeo(0.12, 2.2, 7, 2), MAT.redLeather, s * 4.5, 1.1, 0, hq);
+    mesh(boxGeo(3.2, 2.2, 0.12, 2), MAT.redLeather, s * 2.9, 1.1, -3.5, hq);
+    solid(s * 4.5 - 0.2, 9.5, s * 4.5 + 0.2, 16.5); solid(s > 0 ? 1.3 : -4.5, 9.3, s > 0 ? 4.5 : -1.3, 9.7);
+  }
+  solid(-4.5, 16.3, 4.5, 16.7);
+  const sh = new THREE.Shape(); sh.moveTo(-4.9, 0); sh.lineTo(4.9, 0); sh.lineTo(0, 2.2); sh.closePath();
+  const rg = new THREE.ExtrudeGeometry(sh, { depth: 7.6, bevelEnabled: false }); rg.translate(0, 0, -3.8);
+  mesh(rg, MAT.redLeather, 0, 2.2, 0, hq);
+  mesh(boxGeo(2.2, 0.08, 1.2, 1), MAT.wood, -1.6, 0.9, 1.6, hq); for (const [a, b] of [[-0.95, -0.5], [0.95, -0.5], [-0.95, 0.5], [0.95, 0.5]]) mesh(boxGeo(0.07, 0.86, 0.07, 1), MAT.wood, -1.6 + a, 0.43, 1.6 + b, hq);
+  solid(-2.8, 13.9, -0.4, 15.3);
+  const map = mesh(new THREE.PlaneGeometry(1.6, 0.9), std({ map: inscription(['ITALIA', 'RVBICO · ARIMINVM · ROMA'], 1.6, 0.9, C.plCream, 'rgba(90,40,20,.9)'), roughness: 0.9 }), -1.6, 0.95, 14.6, WORLD);
+  map.rotation.x = -Math.PI / 2;
+  readable(map, { title: 'Caesar’s map', lat: 'Italia. Rubico, Ariminum, Roma.', en: 'Italy. The Rubicon, Ariminum, Rome.',
+    about: 'A map of the road south. Once across the Rubicon, Caesar would take Ariminum, then march on Rome. Pompey and most of the Senate fled before him.' });
+  makeFire(1.9, 1.05, 15.6, 0.22, 10, 9);
+  mesh(new THREE.CylinderGeometry(0.12, 0.08, 1.0, 8), MAT.bronze, 1.9, 0.5, 15.6);
+
+  // ── The standards, with the eagle of the Thirteenth ──
+  eagleStd = new THREE.Group(); eagleStd.position.set(0, 0, 6.2); WORLD.add(eagleStd);
+  mesh(new THREE.CylinderGeometry(0.045, 0.05, 3.1, 8), MAT.wood, 0, 1.55, 0, eagleStd);
+  mesh(boxGeo(0.5, 0.36, 0.04, 1), MAT.gold, 0, 2.3, 0.05, eagleStd);
+  const ring = mesh(new THREE.TorusGeometry(0.2, 0.03, 8, 20), MAT.gold, 0, 3.1, 0, eagleStd); ring.rotation.x = Math.PI / 2;
+  const eb = mesh(new THREE.SphereGeometry(0.16, 16, 12), MAT.gold, 0, 3.32, 0, eagleStd); eb.scale.set(0.8, 1.2, 1);
+  mesh(new THREE.SphereGeometry(0.08, 12, 10), MAT.gold, 0, 3.58, 0.06, eagleStd);
+  for (const s of [-1, 1]) { const w = mesh(boxGeo(0.5, 0.05, 0.22, 1), MAT.gold, s * 0.3, 3.5, -0.02, eagleStd); w.rotation.z = s * 0.7; }
+  readable(eagleStd, { title: 'The eagle of the Thirteenth', lat: 'S(enatus) P(opulus)q(ue) R(omanus). Leg(io) XIII.', en: 'The Senate and People of Rome. The Thirteenth Legion.',
+    about: 'Every legion carried a golden eagle on a pole. Losing it was the worst disgrace a legion could suffer, and soldiers would die rather than let it be taken. The Thirteenth crossed the Rubicon with Caesar.' });
+  for (const s of [-1, 1]) {
+    const sg2 = new THREE.Group(); sg2.position.set(s * 1.3, 0, 6.6); WORLD.add(sg2);
+    mesh(new THREE.CylinderGeometry(0.035, 0.04, 2.8, 8), MAT.wood, 0, 1.4, 0, sg2);
+    for (let k = 0; k < 4; k++) mesh(new THREE.CylinderGeometry(0.12, 0.12, 0.04, 16), MAT.silver, 0, 1.6 + k * 0.22, 0.04, sg2).rotation.x = Math.PI / 2;
+    mesh(boxGeo(0.12, 0.2, 0.02, 1), MAT.silver, 0, 2.75, 0, sg2);
+    solid(s * 1.3 - 0.15, 6.45, s * 1.3 + 0.15, 6.75);
+  }
+  solid(-0.2, 6.0, 0.2, 6.4);
+  mesh(boxGeo(0.9, 0.8, 0.6, 1), MAT.marble, 0, 0.4, 7.6); solid(-0.45, 7.3, 0.45, 7.9);
+
+  // ── Cooking fire, writer's table, the officers' tents and the horse lines ──
+  makeFire(-12, 0.15, -4.2, 0.85, 34, 22);
+  for (let i = 0; i < 9; i++) { const a = i / 9 * Math.PI * 2; mesh(new THREE.DodecahedronGeometry(0.16, 0), MAT.rock, -12 + Math.cos(a) * 0.7, 0.1, -4.2 + Math.sin(a) * 0.7); }
+  for (let i = 0; i < 3; i++) { const a = i / 3 * Math.PI * 2; const l = mesh(new THREE.CylinderGeometry(0.03, 0.03, 1.9, 6), MAT.iron, -12 + Math.cos(a) * 0.45, 0.9, -4.2 + Math.sin(a) * 0.45); l.rotation.set(Math.sin(a) * 0.25, 0, -Math.cos(a) * 0.25); }
+  mesh(new THREE.SphereGeometry(0.33, 16, 10, 0, Math.PI * 2, Math.PI / 2, Math.PI / 2), MAT.iron, -12, 1.15, -4.2);
+  solid(-12.8, -5, -11.2, -3.4);
+  tent(-14.5, -7.2, 2.6, 3.2, 2.1, MAT.leather, Math.PI / 2);
+  tent(12.5, -4, 3.2, 3.6, 2.4, MAT.leather, -Math.PI / 2);
+  mesh(boxGeo(1.4, 0.08, 0.8, 1), MAT.wood, 10.1, 0.85, -1.9); solid(9.4, -2.3, 10.8, -1.5);
+  for (const [a, b] of [[-0.6, -0.3], [0.6, -0.3], [-0.6, 0.3], [0.6, 0.3]]) mesh(boxGeo(0.06, 0.82, 0.06, 1), MAT.wood, 10.1 + a, 0.41, -1.9 + b);
+  makeFire(10.6, 0.95, -2.1, 0.18, 9, 8);
+  for (let i = 0; i < 3; i++) { const sc2 = mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.3, 8), MAT.cream, 9.6 + i * 0.2, 0.93, -1.8); sc2.rotation.z = Math.PI / 2; }
+  tent(18.5, 17.5, 3.4, 4, 2.5, MAT.redLeather, -Math.PI / 2);
+  torch(15.6, 13.4, 16);
+  mesh(boxGeo(0.5, 0.45, 0.5, 1), MAT.wood, 16.3, 0.22, 16.8);
+  [[23.5, 6, Math.PI / 2, 0x3a2416], [23.5, 8.5, Math.PI / 2, 0x6a4a2e], [23.5, 11, Math.PI / 2, 0x1a1410], [27, 7.2, -Math.PI / 2, 0x8a7a68]].forEach(([x, z, r, c]) => horses2.push(horse(x, z, r, c)));
+  mesh(new THREE.CylinderGeometry(0.05, 0.05, 7, 6), MAT.wood, 22, 1.1, 8.5).rotation.x = Math.PI / 2;
+  // soldiers' campfires among the tents
+  makeFire(-21, 0.15, 14, 0.6, 22, 16); makeFire(21, 0.15, -10, 0.6, 0, 14); makeFire(-23.4, 0.15, -9.8, 0.55, 0, 14);
+
+  // ── Trees along the river and the hills ──
+  for (let i = 0; i < 70; i++) {
+    let x, z;
+    if (i < 40) { x = (Math.random() - 0.5) * 200; z = Math.random() < 0.5 ? -40 - Math.random() * 10 : -21.5 - Math.random() * 2.5; if (Math.abs(x) < 8) continue; }
+    else { const a = Math.random() * Math.PI * 2, r = 40 + Math.random() * 45; x = Math.cos(a) * r; z = 5 + Math.sin(a) * r; if (z < -20 && z > -40) continue; }
+    if (x > -32 && x < 32 && z > -20 && z < 32) continue;
+    tree(x, z, 0.8 + Math.random() * 0.6, Math.random() < 0.45);
+  }
+  // mist on the water
+  for (let i = 0; i < 14; i++) {
+    const m = new THREE.Sprite(new THREE.SpriteMaterial({ map: TEX.glow, color: 0x7d8ca8, transparent: true, opacity: 0.08, depthWrite: false }));
+    m.position.set((Math.random() - 0.5) * 110, 0.6, RUBI_Z + (Math.random() - 0.5) * 6); m.scale.set(26, 5, 1); WORLD.add(m);
+  }
+
+  // ── People ──
+  PEOPLE2.forEach(addNpc); EXTRAS2.forEach(addNpc);
+  const lab = npc('labienus');
+  mesh(new THREE.SphereGeometry(0.028, 10, 8), MAT.gold, -0.12, 1.33, 0.16, lab.p.body);    // the golden horse brooch
+  const piper = npc('piper');
+  const pipe = mesh(new THREE.CylinderGeometry(0.008, 0.013, 0.34, 8), MAT.wood, 0, -0.07, 0.24, piper.p.head); pipe.rotation.x = Math.PI / 2 - 0.55;
+  mesh(new THREE.DodecahedronGeometry(0.5, 1), MAT.rock, -6.5, 0.1, -21.6).scale.set(1.2, 0.5, 1);
+  const soldier = () => ({ tunic: pick([0x8a2a1e, 0x7a2418, 0x96301f]), skin: pick([0xd6a482, 0xb07a58, 0xe0b896, 0x8e5e40]), hair: pick([0x1a120c, 0x3a2414, 0x6a4a2a]), belt: true });
+  addWalker([[-7.8, -12], [-7.8, 2.6], [7.8, 2.6], [7.8, -12]], soldier());
+  addWalker([[-26, 0.9], [26, 0.9]], soldier());
+  addWalker([[25, 22.8], [-25, 22.8]], soldier());
+  [[-20.2, 15.2, 2.5], [-21.8, 12.8, 0.4], [20.4, -9, -2.2], [-23.4, -11.0, 0]].forEach(([x, z, f]) => addNpc({ id: 'walker', name: 'A soldier', role: '', at: [x, 0, z], face: f, look: soldier() }));
+  for (const n of NPCS) n.p.root.traverse(m => { if (m.material && m.material.envMapIntensity !== undefined && !m.material.metalness) m.material.envMapIntensity = 0.05; });
+}
+
+// ════════════════════════════════════════════════════════════════
+// THE TWO LEVELS
+// ════════════════════════════════════════════════════════════════
+const LEVELS = {
+  1: {
+    key: 1, group: L1G, built: false, people: PEOPLE1, extras: [], d: D1, suspects: SUSPECTS1, ambient: AMBIENT1,
+    culprit: 'aulus', judge: 'livia', culpritPath: AULUS_PATH, start: START,
+    groundY: groundY1, walkable: walkable1, zoneAt: zoneAt1, fog: [0x191b20, 0.0105], bg: 0x090604, env: true,
+    title: { r: 34, rz: 30, cx: 0, cz: -8, h: 13, look: [0, 3, -16] },
+    walker: ['citizen', '<em>The citizen looks straight through you.</em>', 'Leave them be.'],
+    intro: { h: 'Pompeii', when: 'A.D. LXXIX · IX KAL. SEPT.', btn: 'Surge · Get up',
+      body: '<p>You run from the falling ash. The ground opens under your feet, and you fall into the dark.</p><p>You wake on a cold riverbank deep inside the mountain. Torches burn along the water. Ahead stands a city that no map has ever shown.</p><p>An old man with a lantern is watching you from the jetty.</p>' },
+    arrive: ['The Riverbank', 'ripa', 'The old man on the jetty is watching you. Walk up to him and press <b>E</b> to talk.'],
+    clock: (h, loop) => [`HORA ${ROMAN(h)} · DIES ${ROMAN(loop)}`, h >= 11 ? 'The twelfth hour is close.' : `${12 - h} hours until the twelfth hour`],
+    when: (h, loop) => `Day ${loop}, hour ${h} of 12.`, dayWord: 'Dies', again: 'the same day, again',
+    lawHtml: '<div class="law">DUM IGNIS ARDET, URBS VIVIT</div><p style="text-align:center">As long as the fire burns, the city lives.</p>',
+    mustDo: 'Someone will put out Vulcan’s fire at the twelfth hour. Help the people of the city, collect clues, then tell Livia at the temple who it is. She wants proof from at least three witnesses.',
+    accuseLabel: 'Someone will put out the fire tonight. I know who.',
+    txt: { already: 'You have named someone already today. We shall see what the night brings.', proof: 'Words are cheap, stranger. Bring me proof from at least three witnesses. Then name the guilty one.',
+      name: 'Then name them. Choose with care. If you are wrong, the city pays.', notYet: 'Then go, and come back when you are sure.' },
+    wrongLine: (id, nm) => id === 'livia' ? 'Me? I have tended this fire for two hundred years. Go, before I lose my patience.' : `${nm}? I will watch ${nm} tonight. Pray to Vulcan that you are right.`,
+    hourToast: hr => hr === 10 ? '<span class="g">HORA XI</span><br>The eleventh hour. Something stirs near the forum.' : hr === 6 ? '<span class="g">HORA VII</span><br>Half the day is gone.' : '',
+    reset() { templeFire.on = true; templeFire.level = 1; },
+    onArrive() {},
+    loopEnd() { templeFire.on = false; sfx.rumble(); shake = 0.25; },
+    loopText: (proof) => ['The fire dies', 'At the twelfth hour the sacred fire goes out. The mountain wakes, the ground splits, and the city vanishes in fire and ash.',
+      `Then you wake on the cold riverbank again. It is the same morning. Everyone has forgotten. You have not: your clues and your Latin stay with you.${proof ? ' You have enough proof. Find Livia before the twelfth hour.' : ''}`],
+    ending: () => [
+      [npc('livia'), 'The owl. The treasury key. Aulus.'],
+      [null, '<em>At the eleventh hour Aulus climbs the temple steps with a bronze key and a jar of water. Livia is waiting for him.</em>'],
+      [npc('aulus'), '“Let me through! When the fire dies, the mountain opens. We could see the sky again!”'],
+      [npc('livia'), '“When the fire dies, the mountain wakes, and we all die with it. You have read the law, Aulus. Read it again.”'],
+      [null, '<em>Aulus drops the key. The twelfth hour comes, and the fire still burns. For the first time in two hundred years, tomorrow arrives.</em>'],
+      [null, '<em>At dawn a crack of daylight opens in the roof of the cave. Gaius rows you to the foot of a long stair, and you climb toward the sky.</em>'],
+    ], lastBtn: 'Climb into the light',
+    endH: 'LIBERTAS', endSub: (loops, helped) => `You broke the curse of the buried city in ${loops === 1 ? 'a single day' : loops + ' days'}. ${helped} of 5 citizens trusted you with their secrets.`,
+    fact: '', next: 2,
+  },
+  2: {
+    key: 2, group: null, built: false, people: PEOPLE2, extras: EXTRAS2, d: D2, suspects: SUSPECTS2, ambient: AMBIENT2,
+    culprit: 'labienus', judge: 'caesar', culpritPath: [[13, 12], [8, 9.2], [3.2, 7.8], [0.9, 6.9]], start: { x: 4.6, z: -21.6, yaw: Math.PI },
+    groundY: groundY2, walkable: walkable2, zoneAt: zoneAt2, fog: [0x0b1018, 0.0125], bg: 0x05080d, env: false, build: buildRubicon,
+    title: { r: 36, rz: 32, cx: 0, cz: 2, h: 15, look: [0, 1, 2] },
+    walker: ['soldier', '<em>The soldier stamps his feet against the cold.</em>', 'Leave him be.'],
+    intro: { h: 'The Rubicon', when: 'A.U.C. DCCV · A.D. IV ID. IAN.', btn: 'Surge · Get up',
+      body: '<p>You climb the long stair out of the buried city toward the daylight. The light grows and grows, until it swallows you.</p><p>When it fades, it is night and bitterly cold. You stand on the bank of a small river. A wooden bridge leads across into the dark. Behind you burn the campfires of an army.</p><p>This is the river Rubicon, the edge of Julius Caesar’s province. At dawn, history says, he will lead his army across and start a civil war. But tonight someone plans to steal the eagle of his legion.</p>' },
+    arrive: ['The Rubicon', 'flumen Rubico', 'A sentry at the camp gate has seen you. Walk up to him and press <b>E</b> to talk.'],
+    clock: (h, loop) => [`VIGILIA ${ROMAN(Math.ceil(h / 3))} · NOX ${ROMAN(loop)}`, h >= 11 ? 'Dawn is close.' : `${12 - h} hours until dawn`],
+    when: (h, loop) => `Night ${loop}, watch ${Math.ceil(h / 3)} of 4.`, dayWord: 'Nox', again: 'the same night, again',
+    lawHtml: '<div class="law">NE QUIS EXERCITUM EX PROVINCIA EDUCAT</div><p style="text-align:center">No general may lead an army out of his province.</p>',
+    mustDo: 'Someone will steal the eagle of the Thirteenth Legion before dawn. Without its eagle the legion will not march, Caesar will never cross, and history will break. Help the people of the camp, collect clues, then tell Caesar in his tent who it is. He wants proof from at least three witnesses.',
+    accuseLabel: 'Someone will steal the eagle tonight. I know who.',
+    txt: { already: 'You have named someone already tonight. We shall see what dawn brings.', proof: 'Accusations are cheap in an army camp. Bring me proof from at least three witnesses. Then name the thief.',
+      name: 'Then name the thief. Choose carefully. My men will act on your word.', notYet: 'Then come back when you are sure.' },
+    wrongLine: (id, nm) => `${nm}? Very well. My guards will watch ${nm} until dawn. If you are wrong, stranger, Rome pays the price.`,
+    hourToast: hr => hr === 3 ? '<span class="g">VIGILIA II</span><br>The second watch. The camp grows quiet.' : hr === 6 ? '<span class="g">VIGILIA III</span><br>The third watch. Most of the camp is asleep.' : hr === 9 ? '<span class="g">VIGILIA IV</span><br>The last watch. Dawn is coming.' : hr === 10 ? '<span class="g">VIGILIA IV</span><br>Someone is moving toward the standards.' : '',
+    reset() { if (eagleStd) eagleStd.visible = true; },
+    onArrive(n) { if (n.id === 'labienus' && eagleStd) { eagleStd.visible = false; } },
+    loopEnd() { if (eagleStd) eagleStd.visible = false; sfx.bell(); shake = 0.05; },
+    loopText: (proof) => ['The eagle is gone', 'At dawn the eagle-bearer finds an empty pole. Without its eagle the Thirteenth refuses to march. Caesar never crosses the Rubicon, and history begins to come apart.',
+      `The light swallows you, and you wake on the frozen riverbank at nightfall. Nobody remembers. You do: your clues and your Latin stay with you.${proof ? ' You have enough proof. Find Caesar in his tent before dawn.' : ''}`],
+    ending: () => [
+      [npc('caesar'), 'Labienus. My oldest friend in Gaul.'],
+      [null, '<em>In the last watch Labienus creeps toward the standards with an empty sack. Caesar’s guards are waiting for him.</em>'],
+      [npc('labienus'), '“You will start a war, Caesar! Pompey will crush you. I will not help you do it.”'],
+      [npc('caesar'), '“Then go to Pompey, Titus. Take your horse. Leave my eagle.”'],
+      [null, '<em>At dawn Caesar stands on the bank of the Rubicon and does not move. The whole army waits. Then the piper by the bridge snatches a trumpet from a soldier, blows a mighty blast, and strides across the river.</em>'],
+      [npc('caesar'), '“Eatur quo deorum ostenta et inimicorum iniquitas vocat. <em>Iacta alea est.</em>”<br>Let us go where the signs of the gods and the wrongs of our enemies call us. The die is cast.'],
+      [null, '<em>The Thirteenth Legion follows its eagle across the Rubicon. The light takes you once more, and this time it carries you home.</em>'],
+    ], lastBtn: 'Cross the river',
+    endH: 'IACTA ALEA EST', endSub: (loops, helped) => `You kept history on course in ${loops === 1 ? 'a single night' : loops + ' nights'}. ${helped} of 5 people in the camp trusted you with their secrets.`,
+    fact: '<div class="fact" style="border-left:3px solid var(--gold);padding:8px 12px;margin-bottom:18px;line-height:1.55"><b style="color:var(--gold2)">This really happened.</b> The historian Suetonius tells us that Caesar hesitated at the Rubicon until a mysterious figure of great size and beauty, who had been sitting nearby playing a reed pipe, seized a trumpet and crossed. Caesar said “iacta alea est”: the die is cast. A few days later Titus Labienus, his best general in Gaul, left him and joined Pompey. Asinius Pollio was there that night, and later wrote a history of the war.</div>',
+    next: 0,
+  },
+};
+let LV = LEVELS[1];
+const ENV = scene.environment;
+function useLevel(k) {
+  const L = LEVELS[k];
+  if (LV === L && L.built) return;
+  if (LV.built) Object.assign(LV, { COL, READ, fires, NPCS });
+  if (!L.built) {
+    if (!L.group) { L.group = new THREE.Group(); scene.add(L.group); }
+    WORLD = L.group; COL = []; READ = []; fires = []; NPCS = [];
+    LV = L; PEOPLE = L.people; D = L.d;
+    L.build(); L.built = true;
+  } else { COL = L.COL; READ = L.READ; fires = L.fires; NPCS = L.NPCS; }
+  for (const o of Object.values(LEVELS)) if (o.group) o.group.visible = (o === L);
+  LV = L; WORLD = L.group;
+  PEOPLE = L.people; D = L.d; SUSPECTS = L.suspects; AMBIENT_LINES = L.ambient;
+  scene.fog.color.setHex(L.fog[0]); scene.fog.density = L.fog[1]; scene.background.setHex(L.bg);
+  scene.environment = L.env ? ENV : null;
+  lastZone = '';
+}
+let pipeT = 0;
+function pipeTune(dt) {
+  const pp = npc('piper'); if (!pp) return;
+  const d = Math.hypot(P.x - pp.x, P.z - pp.z); if (d > 16) return;
+  if ((pipeT -= dt) > 0) return;
+  pipeT = 0.35 + Math.random() * 0.5;
+  const notes = [523, 587, 659, 784, 880, 1047];
+  tone(pick(notes), 0.5 + Math.random() * 0.4, 'sine', 0.03 * (1 - d / 16));
 }
 
 // ════════════════════════════════════════════════════════════════
@@ -2608,7 +3094,7 @@ function updateNpcs(dt, t) {
     let moving = false;
     if (path && path.length && mode !== 'talk') {
       const [tx, tz] = path[0], dx = tx - n.x, dz = tz - n.z, d = Math.hypot(dx, dz), step = (n.speed || 1.25) * dt;
-      if (d < step) { n.x = tx; n.z = tz; if (n.path) { n.path.shift(); if (!n.path.length) { n.path = null; n.done = true; } } else n.seg = (n.seg + 1) % n.loop.length; }
+      if (d < step) { n.x = tx; n.z = tz; if (n.path) { n.path.shift(); if (!n.path.length) { n.path = null; n.done = true; LV.onArrive(n); } } else n.seg = (n.seg + 1) % n.loop.length; }
       else { n.x += dx / d * step; n.z += dz / d * step; n.yaw = Math.atan2(dx, dz); moving = true; }
       let gy = groundY(n.x, n.z);
       if (n.x > TRIB.x0 && n.x < TRIB.x1 && n.z > TRIB.z0 && n.z < TRIB.z1) gy = TRIB.top;
@@ -2637,14 +3123,16 @@ function frame(now) {
   if (talkN && talkN.id !== portraitId) { portraitId = talkN.id; document.getElementById('portrait').src = PORTRAITS[portraitId] || ''; }
   updateNpcs(dt, t);
   updateFires(dt, t);
-  if (anim.water) TEX.water.offset.x = t * 0.02;
-  if (anim.lava) { TEX.lava.offset.x = t * 0.006; TEX.lava.offset.y = Math.sin(t * 0.2) * 0.02; anim.lavaLight.intensity = 70 * (0.85 + 0.15 * Math.sin(t * 1.3)); }
+  TEX.water.offset.x = t * 0.02;
+  if (LV.key === 2 && mode === 'play') pipeTune(dt);
+  if (LV.key === 1 && anim.lava) { TEX.lava.offset.x = t * 0.006; TEX.lava.offset.y = Math.sin(t * 0.2) * 0.02; anim.lavaLight.intensity = 70 * (0.85 + 0.15 * Math.sin(t * 1.3)); }
   if (anim.dust) { anim.dust.rotation.y = t * 0.01; }
   // camera
   if (mode === 'title' || !game) {
     titleT += dt * 0.035;
-    camera.position.set(Math.sin(titleT) * 34, 13 + Math.sin(titleT * 0.7) * 3, -8 + Math.cos(titleT) * 30);
-    camera.lookAt(0, 3, -16);
+    const tc = LV.title;
+    camera.position.set(tc.cx + Math.sin(titleT) * tc.r, tc.h + Math.sin(titleT * 0.7) * 3, tc.cz + Math.cos(titleT) * tc.rz);
+    camera.lookAt(...tc.look);
   } else {
     shake = Math.max(0, shake - dt * 0.05);
     let ex = P.x, ey = P.y + EYE, ez = P.z, yaw = P.yaw, pitch = P.pitch;
@@ -2661,18 +3149,21 @@ function frame(now) {
 }
 
 // A handle for testing from the browser console
-window.SEPULTA = { P, npc, startTalk, offerTask, openJournal, loopEnd, ending, accuse, tickDay, get game() { return game; }, get opts() { return opts; }, get mode() { return mode; }, set mode(v) { mode = v; } };
+window.SEPULTA = { P, npc, useLevel, openQuestion, chooseOpt, checkOrder, closeQuestion, askClue, accuseStart, get curQ() { return curQ; }, get LV() { return LV; }, get NPCS() { return NPCS; }, startTalk, offerTask, openJournal, loopEnd, ending, accuse, tickDay, get game() { return game; }, get opts() { return opts; }, get mode() { return mode; }, set mode(v) { mode = v; } };
 
 // ── Boot ──
 buildSetup();
 if (renderer) {
   applyQuality();
   const go = () => {
+    LEVELS[1].build = () => {
     buildWorld();
-    PEOPLE.forEach(addNpc);
+    PEOPLE1.forEach(addNpc);
     addWalker([[-10, 6], [10, 6], [10, -9], [-10, -9]], { tunic: 0x7a6a50, skin: 0xd8a888, hair: 0x2a1a10, belt: true });
     addWalker([[10, 8], [-6, 9], [-10, -6], [6, -9]], { tunic: 0x556070, skin: 0xb88a68, hair: 0x4a3020, female: true });
     addWalker([[-24, 28], [-14, 14], [-4, 4], [-14, 14]], { tunic: 0x8a4a3a, skin: 0xe0b896, hair: 0x6a6a66, beard: '#6a6a66', old: true });
+    };
+    useLevel(1);
     applyQuality();
     requestAnimationFrame(frame);
   };
