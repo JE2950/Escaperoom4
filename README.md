@@ -29,12 +29,35 @@ js/levels/rubicon.js       Level 2: the camp, people and dialogue
 js/game/                   state, audio, HUD, dialogue, Latin tasks, journal, time loop, player, setup screen
 js/game/levels.js          the list of levels and the text that changes between them
 js/main.js                 the main loop and start-up
-assets/textures/           photo textures (stone, plaster, marble, wood, roof tiles, bronze)
-assets/portraits/          portraits shown in the dialogue panel, named after each character's id
+assets/textures/           photo textures (stone, plaster, marble, wood, roof tiles, bronze), WebP
+assets/portraits/          portraits shown in the dialogue panel, named after each character's id, WebP
+assets/models/             scanned props from Poly Haven (CC0), one compressed .glb file each
 vendor/three/              a local copy of Three.js 0.160, so school networks that block CDNs still work
 ```
 
 The scripts are ordinary (non-module) scripts loaded one after another, so they share one global scope. Load order matters: it is the list in `js/boot.js`.
+
+## Graphics settings
+
+The title screen offers three settings. The game remembers the choice on each computer.
+
+- **School PC** (the default): no shadows or post-processing, three moving lights, a slightly lower resolution. Built for school PCs, Chromebooks and tablets.
+- **Standard**: full resolution with smoothing and five lights.
+- **High**: shadows, ambient occlusion, glow and eight lights. Needs a proper graphics card.
+
+If the game drops below about 27 frames a second for a few seconds, it steps down a setting on its own and says so.
+
+Only a few real lights exist (the light pool in `js/engine/lights-and-fire.js`). They move to the fires and lamps nearest the player, so a level can have any number of fires at no extra cost.
+
+## Adding a model
+
+Models are compressed with [glTF-Transform](https://gltf-transform.dev):
+
+```
+npx @gltf-transform/cli optimize in.gltf assets/models/<id>.glb --compress meshopt --texture-compress webp --texture-size 512 --simplify true --simplify-ratio 0.5
+```
+
+Then place it in a level with `prop('<id>', x, y, z, { rot, scale, solid })`.
 
 ## Adding a level
 
@@ -50,4 +73,5 @@ Before every push, the version that is live gets saved as a branch named `backup
 
 - Latin sentences: *Prep School Latin*, R. C. Bass, CC BY-NC-SA.
 - [Three.js](https://threejs.org), MIT licence (see `vendor/three/LICENSE`).
+- 3D props: [Poly Haven](https://polyhaven.com), CC0.
 - Fonts: Cinzel and EB Garamond from Google Fonts.

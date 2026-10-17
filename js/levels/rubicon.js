@@ -231,7 +231,7 @@ function buildRubicon() {
   ml.shadow.bias = -0.0005; ml.shadow.normalBias = 0.05; WORLD.add(ml, ml.target);
 
   // ── Ground and river ──
-  const gg = planeGeo(260, 260, 5, 170, 170), gp = gg.attributes.position;
+  const gg = planeGeo(260, 260, 5, quality === 'high' ? 170 : 96, quality === 'high' ? 170 : 96), gp = gg.attributes.position;
   for (let i = 0; i < gp.count; i++) gp.setY(i, terrain2(gp.getX(i), gp.getZ(i) + 5));
   gg.computeVertexNormals();
   const gm = mesh(gg, MAT.grass, 0, 0, 5); gm.castShadow = false;
@@ -309,7 +309,7 @@ function buildRubicon() {
   mesh(new THREE.CylinderGeometry(0.12, 0.08, 1.0, 8), MAT.bronze, 1.9, 0.5, 15.6);
 
   // ── The standards, with the eagle of the Thirteenth ──
-  eagleStd = new THREE.Group(); eagleStd.position.set(0, 0, 6.2); WORLD.add(eagleStd);
+  eagleStd = new THREE.Group(); eagleStd.position.set(0, 0, 6.2); eagleStd.userData.keep = true; WORLD.add(eagleStd);
   mesh(new THREE.CylinderGeometry(0.045, 0.05, 3.1, 8), MAT.wood, 0, 1.55, 0, eagleStd);
   mesh(boxGeo(0.5, 0.36, 0.04, 1), MAT.gold, 0, 2.3, 0.05, eagleStd);
   const ring = mesh(new THREE.TorusGeometry(0.2, 0.03, 8, 20), MAT.gold, 0, 3.1, 0, eagleStd); ring.rotation.x = Math.PI / 2;

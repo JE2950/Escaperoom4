@@ -20,7 +20,7 @@ function buildWorld() {
   const cm = mesh(cave, MAT.rock, 0, -6, -10, WORLD, true); cm.scale.set(1, 0.55, 0.92); cm.material = MAT.rock.clone(); cm.material.side = THREE.BackSide; cm.material.map = cm.material.map.clone(); cm.material.map.repeat.set(10, 5); cm.material.bumpMap = cm.material.map; cm.receiveShadow = true;
 
   // ── Ground ──
-  const gg = planeGeo(220, 220, 4, 160, 160), gp = gg.attributes.position;
+  const gg = planeGeo(220, 220, 4, quality === 'high' ? 160 : 90, quality === 'high' ? 160 : 90), gp = gg.attributes.position;
   for (let i = 0; i < gp.count; i++) gp.setY(i, terrain(gp.getX(i), gp.getZ(i)));
   gg.computeVertexNormals();
   const gm = mesh(gg, MAT.ground, 0, 0, -10); gm.castShadow = false;
@@ -52,7 +52,7 @@ function buildWorld() {
   const oar = mesh(new THREE.CylinderGeometry(0.04, 0.04, 3.4, 6), MAT.wood, -34.2, 0.1, 43); oar.rotation.z = 1.2;
   mesh(new THREE.CylinderGeometry(0.06, 0.06, 1.6, 6), MAT.wood, -28.2, 0.95, 39.8);
   const lantern = mesh(boxGeo(0.22, 0.3, 0.22, 1), MAT.ember, -28.2, 1.8, 39.8, WORLD, true); lantern.material = std({ color: 0x331a06, emissive: 0xffaa44, emissiveIntensity: 2 });
-  const ll = new THREE.PointLight(0xffaa55, 14, 16, 1.5); ll.position.set(-28.2, 1.9, 39.8); WORLD.add(ll);
+  addLightSource(-28.2, 1.9, 39.8, 0xffaa55, 14, 16, 1.5);
   // tombstone
   const stone = mesh(boxGeo(0.9, 1.4, 0.22, 1), MAT.marble, -24.5, 0.7, 35.4); stone.rotation.y = -0.25;
   stone.material = std({ map: inscription(['D · M', 'GAIVS', 'NAVTA', 'VIX · ANN · CCXX'], 0.9, 1.4, C.marble, 'rgba(70,40,25,.92)'), roughness: 0.5 });
@@ -136,7 +136,7 @@ function buildWorld() {
   mesh(boxGeo(1.6, 1.2, 1.6, 1), MAT.marble, 0, 3.6, -55.5);
   const vulcan = makePerson({ metal: MAT.bronze, tunic: 1, hair: 1, beard: 1, belt: 1, hammer: 1, scale: 1.7 });
   vulcan.root.position.set(0, 4.2, -55.5); vulcan.arms[1].sh.rotation.x = -0.6; vulcan.arms[1].elbow.rotation.x = -1.1; WORLD.add(vulcan.root);
-  const vl = new THREE.PointLight(0xff9a50, 10, 12, 1.5); vl.position.set(0, 7, -52); WORLD.add(vl);
+  addLightSource(0, 7, -52, 0xff9a50, 10, 12, 1.5);
   // the sacred fire in its bronze bowl
   for (let i = 0; i < 3; i++) { const a = i / 3 * Math.PI * 2; const leg = mesh(new THREE.CylinderGeometry(0.06, 0.06, 1.3, 6), MAT.bronze, Math.cos(a) * 0.55, 3.6, -42.5 + Math.sin(a) * 0.55); leg.rotation.set(Math.sin(a) * 0.25, 0, -Math.cos(a) * 0.25); }
   mesh(new THREE.CylinderGeometry(1.15, 0.5, 0.6, 24), MAT.bronze, 0, 4.4, -42.5); solid(-1.2, -43.7, 1.2, -41.3);
@@ -150,7 +150,7 @@ function buildWorld() {
 
   // ── Lava behind the temple ──
   anim.lava = mesh(planeGeo(110, 12, 8), MAT.lava, 0, -1.0, LAVA_Z, WORLD, true);
-  const lavaLight = new THREE.PointLight(0xff4a14, 70, 60, 1.2); lavaLight.position.set(0, 3, LAVA_Z); WORLD.add(lavaLight); anim.lavaLight = lavaLight;
+  anim.lavaLight = addLightSource(0, 3, LAVA_Z, 0xff4a14, 70, 60, 1.2);
   for (let i = 0; i < 6; i++) {
     const pts = []; let x = -40 + i * 16 + Math.random() * 6, y = 4;
     for (let k = 0; k < 6; k++) { pts.push(new THREE.Vector3(x, y, -84 + Math.sin(k + i) * 1.5)); x += (Math.random() - 0.5) * 6; y += 3 + Math.random() * 3; }

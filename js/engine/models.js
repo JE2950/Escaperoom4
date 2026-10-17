@@ -2,17 +2,18 @@
 // ════════════════════════════════════════════════════════════════
 // REAL 3D MODELS
 // Scanned props from Poly Haven (polyhaven.com), all CC0.
-// Each model lives in assets/models/<id>/<id>_1k.gltf with its textures.
+// Each model is one compressed file, assets/models/<id>.glb (meshopt geometry, WebP textures).
 // prop() places a model straight away as an empty group, then fills it
 // in when the file arrives, so level code can place models like boxes.
 // ════════════════════════════════════════════════════════════════
 const modelLoader = new GLTFLoader();
+modelLoader.setMeshoptDecoder(MeshoptDecoder);
 const modelCache = {};
 let modelsPending = [];
 function loadModel(id) {
   if (!modelCache[id]) {
     modelCache[id] = new Promise(resolve => {
-      modelLoader.load(`assets/models/${id}/${id}_1k.gltf`, gltf => {
+      modelLoader.load(`assets/models/${id}.glb`, gltf => {
         gltf.scene.traverse(o => {
           if (!o.isMesh) return;
           o.castShadow = true; o.receiveShadow = true;

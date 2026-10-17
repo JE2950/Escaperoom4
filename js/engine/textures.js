@@ -31,7 +31,7 @@ function texFrom(c, srgb) {
   t.anisotropy = 8; return t;
 }
 const C = {};
-C.rock = paintTex(512, (u, v) => {
+C.rock = PHOTO_CANVAS.rock || paintTex(512, (u, v) => {
   const n = fbm(N1, u * 8, v * 8, 8, 6), r = 1 - Math.abs(fbm(N2, u * 4, v * 4, 4, 4) - 0.5) * 2;
   return mul3(mix3([52, 45, 40], [122, 108, 94], n), 1 - 0.55 * Math.pow(r, 10));
 });
@@ -40,7 +40,7 @@ C.ground = paintTex(512, (u, v) => {
   let c = mix3([46, 40, 35], [96, 84, 70], n); c = mix3(c, [74, 72, 70], smooth(0.45, 0.7, m) * 0.6);
   return N2(u * 64, v * 64, 64) > 0.86 ? mul3(c, 1.35) : c;
 });
-C.pave = (() => {
+C.pave = PHOTO_CANVAS.pave || (() => {
   const rows = 6, cuts = []; let s = 7; const r = () => (s = (s * 16807) % 2147483647) / 2147483647;
   for (let i = 0; i < rows; i++) { const a = [0]; let x = 0; while (x < 0.85) { x += 0.17 + r() * 0.2; a.push(Math.min(1, x)); } a[a.length - 1] = 1; cuts.push(a); }
   const tone = []; for (let i = 0; i < 64; i++) tone.push(0.78 + r() * 0.38);
@@ -59,24 +59,24 @@ const plaster = base => paintTex(256, (u, v) => {
   let c = mul3(base, 0.84 + 0.22 * n); if (m > 0.6) c = mul3(c, 1 - (m - 0.6) * 0.8);
   return c;
 });
-C.plCream = plaster([214, 198, 168]); C.plOchre = plaster([198, 150, 88]); C.plRed = plaster([150, 52, 38]); C.plGrey = plaster([170, 162, 150]);
+C.plCream = PHOTO_CANVAS.plCream || plaster([214, 198, 168]); C.plOchre = PHOTO_CANVAS.plOchre || plaster([198, 150, 88]); C.plRed = PHOTO_CANVAS.plRed || plaster([150, 52, 38]); C.plGrey = plaster([170, 162, 150]);
 C.dado = plaster([96, 34, 26]);
-C.roof = paintTex(256, (u, v) => {
+C.roof = PHOTO_CANVAS.roof || paintTex(256, (u, v) => {
   const ru = (u * 8) % 1, rv = (v * 8) % 1, n = fbm(N2, u * 8, v * 8, 8, 3);
   return mul3(mix3([112, 48, 32], [182, 90, 56], n), (0.5 + 0.55 * Math.sin(ru * Math.PI)) * (rv < 0.12 ? 0.55 : 1));
 });
-C.marble = paintTex(256, (u, v) => {
+C.marble = PHOTO_CANVAS.marble || paintTex(256, (u, v) => {
   const n = fbm(N1, u * 4, v * 4, 4, 6), vein = Math.abs(Math.sin((u * 3 + v * 2 + n * 3) * Math.PI * 2));
   const c = mul3([232, 226, 214], 0.9 + 0.1 * n); return vein < 0.05 ? mul3(c, 0.8) : c;
 });
-C.wood = paintTex(256, (u, v) => {
+C.wood = PHOTO_CANVAS.wood || paintTex(256, (u, v) => {
   const pl = Math.floor(u * 4), n = fbm(N2, u * 4, v * 16, 4, 4);
   const c = mix3([62, 40, 24], [126, 88, 54], n * (0.75 + (pl % 2) * 0.25)); return (u * 4) % 1 < 0.025 ? mul3(c, 0.35) : c;
 });
 C.cloth = paintTex(128, (u, v, i, j) => { const g = 236 * (0.86 + 0.14 * fbm(N1, u * 8, v * 8, 8, 3)) * (((i + j) % 2) ? 0.93 : 1); return [g, g, g]; });
 C.water = paintTex(256, (u, v) => { const n = fbm(N2, u * 8, v * 8, 8, 5) * 255; return [n, n, n]; });
 C.lava = paintTex(256, (u, v) => { const n = fbm(N1, u * 8, v * 8, 8, 5), r = 1 - Math.abs(n - 0.5) * 2; return mix3([30, 6, 3], [255, 168, 60], Math.pow(r, 4)); });
-C.bronze = paintTex(128, (u, v) => { const n = fbm(N2, u * 8, v * 8, 8, 4); return mix3([96, 64, 30], [190, 140, 70], n); });
+C.bronze = PHOTO_CANVAS.bronze || paintTex(128, (u, v) => { const n = fbm(N2, u * 8, v * 8, 8, 4); return mix3([96, 64, 30], [190, 140, 70], n); });
 function glowCanvas() {
   const c = document.createElement('canvas'); c.width = c.height = 64; const x = c.getContext('2d');
   const g = x.createRadialGradient(32, 32, 0, 32, 32, 32);
@@ -94,7 +94,7 @@ function shaftCanvas() {
   return c;
 }
 // The photo textures are loaded by js/boot.js before this file runs (see PHOTO_CANVAS)
-const PORTRAITS = {gaius: 'assets/portraits/gaius.jpg', fabia: 'assets/portraits/fabia.jpg', marcus: 'assets/portraits/marcus.jpg', aulus: 'assets/portraits/aulus.jpg', livia: 'assets/portraits/livia.jpg'};   // character portraits, shown in the dialogue panel
+const PORTRAITS = {gaius: 'assets/portraits/gaius.webp', fabia: 'assets/portraits/fabia.webp', marcus: 'assets/portraits/marcus.webp', aulus: 'assets/portraits/aulus.webp', livia: 'assets/portraits/livia.webp'};   // character portraits, shown in the dialogue panel
 Object.assign(C, PHOTO_CANVAS);
 C.plGrey = C.plCream;
 function relief(canvas, amount) {

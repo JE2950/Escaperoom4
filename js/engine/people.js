@@ -25,26 +25,63 @@ function faceTex(o) {
   x.beginPath(); x.moveTo(cx - 6, 78); x.quadraticCurveTo(cx, 80, cx + 6, 78); x.stroke();
   const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
 }
+// Each joint (body, hips, shoulders, elbows, hands, head, eyes, mouth) moves as one piece,
+// so all the shapes inside one joint that share a material can be merged into a single mesh.
+// This cuts the pieces the graphics card draws for each person by about four-fifths.
+function mergeParts(root, keep) {
+  const joints = [];
+  root.traverse(o => { if (o.children.length) joints.push(o); });
+  for (const j of joints) {
+    const buckets = new Map();
+    for (const c of j.children) {
+      if (!c.isMesh || c.isInstancedMesh || keep.includes(c) || c.children.length || Array.isArray(c.material)) continue;
+      if (!buckets.has(c.material)) buckets.set(c.material, []);
+      buckets.get(c.material).push(c);
+    }
+    for (const [mat, list] of buckets) {
+      if (list.length < 2) continue;
+      const geos = list.map(c => {
+        c.updateMatrix();
+        const g = c.geometry.index ? c.geometry.toNonIndexed() : c.geometry.clone();
+        g.applyMatrix4(c.matrix); g.clearGroups();
+        for (const k of Object.keys(g.attributes)) if (!['position', 'normal', 'uv'].includes(k)) g.deleteAttribute(k);
+        if (!g.attributes.uv) g.setAttribute('uv', new THREE.BufferAttribute(new Float32Array(g.attributes.position.count * 2), 2));
+        if (!g.attributes.normal) g.computeVertexNormals();
+        return g;
+      });
+      const merged = mergeGeometries(geos, false);
+      if (!merged) continue;
+      const m = new THREE.Mesh(merged, mat); m.castShadow = m.receiveShadow = true;
+      list.forEach(c => { j.remove(c); c.geometry.dispose(); });
+      geos.forEach(g => g.dispose());
+      j.add(m);
+    }
+  }
+}
+// On School PC and Standard, people are built with about half the curve segments (High keeps full detail)
+const personSeg = n => quality === 'high' ? n : Math.max(4, Math.round(n * 0.5));
+// Skin textures are shared between people with the same skin colour
+const SKIN_TEX = {};
 // Detailed articulated figures. The original root/body/limb rig is retained.
 function makePerson(o) {
   const root = new THREE.Group(), body = new THREE.Group(); root.add(body);
   const metal = o.metal || null, female = !!o.female;
   const col = new THREE.Color(o.skin === undefined ? 0xc49a78 : o.skin).convertLinearToSRGB();
-  const skinCanvas = paintTex(256, (u,v) => {
+  const skinKey = col.getHexString();
+  const skinMap = SKIN_TEX[skinKey] || (SKIN_TEX[skinKey] = texFrom(paintTex(256, (u,v) => {
     const n = fbm(N1,u*24,v*24,24,4);
     return [col.r*255*(.91+.16*n),col.g*255*(.91+.13*n),col.b*255*(.92+.12*n)];
-  });
-  const skinMap = texFrom(skinCanvas);
+  })));
   const skinM = metal || std({map:skinMap,roughness:.72,bumpMap:skinMap,bumpScale:.0008});
   const lipM = metal || std({color:new THREE.Color(o.skin).multiply(new THREE.Color(0xc08e86)),roughness:.68});
   const hairM = metal || std({color:o.hair||0x33231b,roughness:.96});
   const cloth = c => metal || std({color:c,map:TEX.cloth,bumpMap:TEX.cloth,bumpScale:.0025,roughness:.97});
   const tunicM = cloth(o.tunic), shoeM = metal || MAT.leather;
   const ellipsoid = (parent,mat,x,y,z,sx,sy,sz,segments=20) => {
-    const m=mesh(new THREE.SphereGeometry(1,segments,14),mat,x,y,z,parent);
+    const m=mesh(new THREE.SphereGeometry(1,personSeg(segments),personSeg(14)),mat,x,y,z,parent);
     m.scale.set(sx,sy,sz);return m;
   };
-  const limb = (parent,mat,top,bottom,length,x,y,z) => mesh(new THREE.CylinderGeometry(top,bottom,length,18,3),mat,x,y,z,parent);
+  const limb = (parent,mat,top,bottom,length,x,y,z) => mesh(new THREE.CylinderGeometry(top,bottom,length,personSeg(18),quality === 'high' ? 3 : 1),mat,x,y,z,parent);
   const strap = (parent,x,y,z,w,h,d,rz=0) => {
     const m=mesh(boxGeo(w,h,d,1),shoeM,x,y,z,parent);m.rotation.z=rz;return m;
   };
@@ -75,7 +112,7 @@ function makePerson(o) {
     else r=lerp(female?.204:.238,.055,(y-1.35)/.125);
     profile.push(new THREE.Vector2(r,y));
   }
-  const torso=mesh(new THREE.LatheGeometry(profile,64),tunicM,0,0,0,body);
+  const torso=mesh(new THREE.LatheGeometry(profile,personSeg(64)),tunicM,0,0,0,body);
   const pos=torso.geometry.attributes.position;
   for(let i=0;i<pos.count;i++) {
     const x=pos.getX(i),z=pos.getZ(i),y=pos.getY(i),a=Math.atan2(x,z);
@@ -107,7 +144,7 @@ function makePerson(o) {
   }
   // Leather waist tie and a bronze buckle.
   if(o.belt) {
-    const belt=mesh(new THREE.TorusGeometry(.195,.016,8,48),shoeM,0,.985,0,body);belt.rotation.x=Math.PI/2;belt.scale.y=.73;
+    const belt=mesh(new THREE.TorusGeometry(.195,.016,personSeg(8),personSeg(48)),shoeM,0,.985,0,body);belt.rotation.x=Math.PI/2;belt.scale.y=.73;
     mesh(boxGeo(.042,.036,.012,1),metal||MAT.bronze,.018,.984,.151,body);
     strap(body,.03,.89,.151,.022,.17,.013,.08);
   }
@@ -119,7 +156,7 @@ function makePerson(o) {
   }
   if(o.toga || o.palla) {
     const material=cloth(o.toga||o.palla);if(!metal)material.side=THREE.DoubleSide;
-    const drape=new THREE.LatheGeometry(profile.filter(v=>v.y>.28&&v.y<1.44).map(v=>new THREE.Vector2(v.x+.024,v.y)),64,.18,Math.PI*1.65);
+    const drape=new THREE.LatheGeometry(profile.filter(v=>v.y>.28&&v.y<1.44).map(v=>new THREE.Vector2(v.x+.024,v.y)),personSeg(64),.18,Math.PI*1.65);
     const p=drape.attributes.position;
     for(let i=0;i<p.count;i++){const x=p.getX(i),z=p.getZ(i),y=p.getY(i),a=Math.atan2(x,z);const f=1+.065*Math.sin(a*11+y*4);p.setXYZ(i,x*f,y+.026*Math.sin(a*2),z*f*.77);}
     drape.computeVertexNormals();const garment=mesh(drape,material,0,0,0,body);garment.rotation.y=.52;
@@ -131,7 +168,7 @@ function makePerson(o) {
   limb(body,skinM,.046,.057,.135,0,1.49,0);
   // Sculpted head: separate jaw, cheekbones, eye sockets and projecting bridge.
   const head=new THREE.Group();head.position.y=1.635;body.add(head);
-  const skull=new THREE.SphereGeometry(1,40,32),sv=skull.attributes.position;
+  const skull=new THREE.SphereGeometry(1,personSeg(40),personSeg(32)),sv=skull.attributes.position;
   for(let i=0;i<sv.count;i++){
     let x=sv.getX(i),y=sv.getY(i),z=sv.getZ(i);
     const jaw=y<-.15?lerp(.73,1,Math.min(1,(y+1)/.85)):1;
@@ -166,9 +203,9 @@ function makePerson(o) {
   const seam=mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3([new THREE.Vector3(-.022,0,.004),new THREE.Vector3(0,-.001,.006),new THREE.Vector3(.022,0,.004)]),12,.0009,4,false),metal||std({color:0x60463b,roughness:1}),0,0,0,mouth);
   // Fine hair is instanced: a single draw call for many individual locks.
   if(o.hair){
-    const capGeo=new THREE.SphereGeometry(1,40,20,0,Math.PI*2,0,Math.PI*(female?.60:.49));
+    const capGeo=new THREE.SphereGeometry(1,personSeg(40),personSeg(20),0,Math.PI*2,0,Math.PI*(female?.60:.49));
     const cap=mesh(capGeo,hairM,0,.012,-.013,head);cap.scale.set(.103,.143,.100);cap.rotation.x=-.24;
-    const count=96,locks=new THREE.InstancedMesh(new THREE.SphereGeometry(1,8,6),hairM,count),dummy=new THREE.Object3D();
+    const count=quality === 'high' ? 96 : 40,locks=new THREE.InstancedMesh(new THREE.SphereGeometry(1,personSeg(8),personSeg(6)),hairM,count),dummy=new THREE.Object3D();
     for(let i=0;i<count;i++){
       const a=i*2.399963,phi=Math.acos(1-(i+.5)/count*.95);
       dummy.position.set(Math.cos(a)*Math.sin(phi)*.102,Math.cos(phi)*.143+.012,Math.sin(a)*Math.sin(phi)*.10-.013);
@@ -178,7 +215,7 @@ function makePerson(o) {
   }
   if(o.beard){
     const bm=metal||std({color:o.beard,roughness:1});
-    const g=new THREE.SphereGeometry(1,32,18,0,Math.PI*2,Math.PI*.48,Math.PI*.44);
+    const g=new THREE.SphereGeometry(1,personSeg(32),personSeg(18),0,Math.PI*2,Math.PI*.48,Math.PI*.44);
     const p=g.attributes.position;for(let i=0;i<p.count;i++){let x=p.getX(i),y=p.getY(i),z=p.getZ(i);p.setXYZ(i,x*.095,y*.145,z*.102+.003);}
     const indices=g.index.array, keep=[];
     for(let i=0;i<indices.length;i+=3){
@@ -191,7 +228,7 @@ function makePerson(o) {
   }
   if(o.veil){
     const vm=cloth(o.veil);if(!metal)vm.side=THREE.DoubleSide;
-    const v=mesh(new THREE.SphereGeometry(1,40,24,0,Math.PI*2,0,Math.PI*.67),vm,0,.012,-.020,head);v.scale.set(.12,.162,.118);v.rotation.x=-.48;
+    const v=mesh(new THREE.SphereGeometry(1,personSeg(40),personSeg(24),0,Math.PI*2,0,Math.PI*.67),vm,0,.012,-.020,head);v.scale.set(.12,.162,.118);v.rotation.x=-.48;
   }
   if(o.old){
     const wrinkleM=metal||std({color:new THREE.Color(o.skin).multiplyScalar(.73),roughness:.9});
@@ -204,6 +241,7 @@ function makePerson(o) {
   if(o.hammer){const h=new THREE.Group();h.position.y=-.3;arms[1].elbow.add(h);mesh(new THREE.CylinderGeometry(.018,.018,.55,10),metal||MAT.wood,0,.02,.14,h).rotation.x=Math.PI/2;mesh(boxGeo(.09,.09,.20,1),metal||MAT.iron,0,.02,.4,h).rotation.x=Math.PI/2;}
   root.traverse(m=>{if(m.isMesh){m.castShadow=true;m.receiveShadow=true;}});
   if(o.scale)root.scale.setScalar(o.scale);
+  mergeParts(root, [torso, lowerLip]);
   return {root,body,legs,arms,head,torso,eyes,lids,mouth,lowerLip,seed:Math.random()*10};
 }
 // st: { walk: 0..1, phase, talk, look (head yaw), wave }

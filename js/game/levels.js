@@ -75,17 +75,52 @@ const LEVELS = {
   },
 };
 let LV = LEVELS[1];
+// Once a level is built, every piece of scenery that never moves is merged by material,
+// so hundreds of walls, columns, tents and stones draw as a few dozen pieces.
+// People, readable inscriptions, anything marked keep, and models still loading are left alone.
+function mergeStatic(root) {
+  root.updateMatrixWorld(true);
+  const inv = new THREE.Matrix4().copy(root.matrixWorld).invert(), mtx = new THREE.Matrix4();
+  const skip = o => { for (let a = o; a && a !== root; a = a.parent) if (a.userData.npc || a.userData.read || a.userData.keep || !a.visible) return true; return false; };
+  const buckets = new Map();
+  root.traverse(o => {
+    if (!o.isMesh || o.isInstancedMesh || Array.isArray(o.material) || o.children.length || skip(o)) return;
+    if (o.matrixWorld.determinant() < 0) return;
+    const key = o.material.uuid + (o.castShadow ? 'c' : '') + (o.receiveShadow ? 'r' : '');
+    if (!buckets.has(key)) buckets.set(key, []);
+    buckets.get(key).push(o);
+  });
+  for (const list of buckets.values()) {
+    if (list.length < 2) continue;
+    const geos = list.map(o => {
+      const g = o.geometry.index ? o.geometry.toNonIndexed() : o.geometry.clone();
+      g.applyMatrix4(mtx.multiplyMatrices(inv, o.matrixWorld)); g.clearGroups();
+      for (const k of Object.keys(g.attributes)) if (!['position', 'normal', 'uv'].includes(k)) g.deleteAttribute(k);
+      if (!g.attributes.uv) g.setAttribute('uv', new THREE.BufferAttribute(new Float32Array(g.attributes.position.count * 2), 2));
+      if (!g.attributes.normal) g.computeVertexNormals();
+      return g;
+    });
+    const merged = mergeGeometries(geos, false);
+    geos.forEach(g => g.dispose());
+    if (!merged) continue;
+    const m = new THREE.Mesh(merged, list[0].material);
+    m.castShadow = list[0].castShadow; m.receiveShadow = list[0].receiveShadow;
+    list.forEach(o => o.parent.remove(o));
+    root.add(m);
+  }
+}
 const ENV = scene.environment;
 function useLevel(k) {
   const L = LEVELS[k];
   if (LV === L && L.built) return;
-  if (LV.built) Object.assign(LV, { COL, READ, fires, NPCS });
+  if (LV.built) Object.assign(LV, { COL, READ, fires, NPCS, lightSources });
   if (!L.built) {
     if (!L.group) { L.group = new THREE.Group(); scene.add(L.group); }
-    WORLD = L.group; COL = []; READ = []; fires = []; NPCS = [];
+    WORLD = L.group; COL = []; READ = []; fires = []; NPCS = []; lightSources = [];
     LV = L; PEOPLE = L.people; D = L.d;
     L.build(); L.built = true;
-  } else { COL = L.COL; READ = L.READ; fires = L.fires; NPCS = L.NPCS; }
+    mergeStatic(L.group);
+  } else { COL = L.COL; READ = L.READ; fires = L.fires; NPCS = L.NPCS; lightSources = L.lightSources; }
   for (const o of Object.values(LEVELS)) if (o.group) o.group.visible = (o === L);
   LV = L; WORLD = L.group;
   PEOPLE = L.people; D = L.d; SUSPECTS = L.suspects; AMBIENT_LINES = L.ambient;

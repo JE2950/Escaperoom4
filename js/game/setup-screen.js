@@ -9,7 +9,12 @@ function buildSetup() {
   $('presets').addEventListener('click', e => { const b = e.target.closest('[data-preset]'); if (!b) return; const p = b.dataset.preset; ticked = new Set(p === 'clear' ? [] : PRESETS[+p].keys.split('')); syncSetup(); });
   $('ticks').addEventListener('change', e => { const k = e.target.dataset.g; if (!k) return; e.target.checked ? ticked.add(k) : ticked.delete(k); syncSetup(); });
   $('qtypes').addEventListener('change', e => { const k = e.target.dataset.t; if (!k) return; e.target.checked ? types.add(k) : types.delete(k); syncSetup(); });
-  $('gfx').addEventListener('click', e => { const b = e.target.closest('[data-q]'); if (!b) return; quality = b.dataset.q; store.set('sepultaQuality', quality); applyQuality(); syncSetup(); });
+  $('gfx').addEventListener('click', e => {
+    const b = e.target.closest('[data-q]'); if (!b || b.dataset.q === quality) return;
+    const reload = (quality === 'school') !== (b.dataset.q === 'school');
+    renderScale = 0.8; setQuality(b.dataset.q); syncSetup();
+    if (reload) location.reload();
+  });
   syncSetup();
 }
 function syncSetup() {

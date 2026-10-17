@@ -35,6 +35,22 @@ function updateNpcs(dt, t) {
     animatePerson(p, t, { walk: n.walk, phase: n.phase, talk: n.talking, look: lookAt, pose: !n.talking && n.def.pose });
   }
 }
+// If the game runs below about 27 frames a second for a few seconds, step the graphics down
+const perf = { t: 0, n: 0, warm: 0 };
+function watchFrameRate(dt) {
+  if (mode !== 'play') { perf.t = perf.n = perf.warm = 0; return; }
+  perf.warm += dt; if (perf.warm < 4) return;        // ignore the first seconds after loading
+  perf.t += dt; perf.n++;
+  if (perf.t < 4) return;
+  const fps = perf.n / perf.t; perf.t = perf.n = 0;
+  if (fps >= 27) return;
+  if (quality === 'high') setQuality('low');
+  else if (quality === 'low') setQuality('school');
+  else if (renderScale > 0.61) { renderScale = Math.max(0.6, renderScale - 0.1); setQuality('school'); }
+  else return;
+  perf.warm = 0;
+  toast('<span class="g">GRAPHICS LOWERED</span><br>to keep the game smooth on this computer.', 3000);
+}
 function frame(now) {
   requestAnimationFrame(frame);
   if (!renderer) return;
@@ -46,6 +62,8 @@ function frame(now) {
   if (talkN && talkN.id !== portraitId) { portraitId = talkN.id; document.getElementById('portrait').src = PORTRAITS[portraitId] || ''; }
   updateNpcs(dt, t);
   updateFires(dt, t);
+  updateLightPool(dt);
+  watchFrameRate(dt);
   TEX.water.offset.x = t * 0.02;
   if (LV.key === 2 && mode === 'play') pipeTune(dt);
   if (LV.key === 1 && anim.lava) { TEX.lava.offset.x = t * 0.006; TEX.lava.offset.y = Math.sin(t * 0.2) * 0.02; anim.lavaLight.intensity = 70 * (0.85 + 0.15 * Math.sin(t * 1.3)); }

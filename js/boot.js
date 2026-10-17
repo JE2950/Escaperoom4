@@ -12,8 +12,10 @@ import { SSAOPass } from 'three/addons/postprocessing/SSAOPass.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
+import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 
-Object.assign(window, { THREE, EffectComposer, RenderPass, UnrealBloomPass, SSAOPass, RoomEnvironment, OutputPass, GLTFLoader });
+Object.assign(window, { THREE, EffectComposer, RenderPass, UnrealBloomPass, SSAOPass, RoomEnvironment, OutputPass, GLTFLoader, MeshoptDecoder, mergeGeometries });
 
 // Photo textures: drawn onto 768 px canvases so the texture code can use them like its painted ones
 const PHOTO_KEYS = ['rock', 'pave', 'plCream', 'plOchre', 'plRed', 'marble', 'wood', 'roof', 'bronze'];
@@ -22,7 +24,7 @@ await Promise.all(PHOTO_KEYS.map(key => new Promise(resolve => {
   const img = new Image();
   img.onload = () => { const c = document.createElement('canvas'); c.width = c.height = 768; c.getContext('2d').drawImage(img, 0, 0, 768, 768); PHOTO_CANVAS[key] = c; resolve(); };
   img.onerror = resolve;
-  img.src = `assets/textures/${key}.jpg`;
+  img.src = `assets/textures/${key}.webp`;
 })));
 
 // The game, in load order. To add a level, add its file here and register it in js/game/levels.js.
