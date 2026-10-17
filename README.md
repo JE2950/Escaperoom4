@@ -4,6 +4,7 @@ A first-person Latin mystery for Common Entrance Level 1. Two levels:
 
 1. **The Buried City.** A Roman city under Vesuvius lives the same day over and over. Find who will put out Vulcan's fire.
 2. **The Rubicon.** Caesar's camp, the night of 10 January 49 BC. Find who will steal the eagle of the Thirteenth Legion.
+3. **The Ides of March.** The house of Brutus, the night of 14 March 44 BC. Find who murdered Felix the scribe, and uncover the plot against Caesar.
 
 Each level has five people with three Latin tasks each: 15 questions per level. The questions come from *Prep School Latin* by R. C. Bass (CC BY-NC-SA).
 
@@ -26,6 +27,7 @@ js/data/latin-bank.js      the Latin sentences, grammar tables and question buil
 js/engine/                 renderer, textures and materials, lights and fire, buildings, people
 js/levels/sepulta/         Level 1: ground, world, people and dialogue
 js/levels/rubicon.js       Level 2: the camp, people and dialogue
+js/levels/ides.js          Level 3: the house of Brutus, people and dialogue
 js/game/                   state, audio, HUD, dialogue, Latin tasks, journal, time loop, player, setup screen
 js/game/levels.js          the list of levels and the text that changes between them
 js/main.js                 the main loop and start-up

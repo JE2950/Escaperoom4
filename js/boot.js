@@ -48,6 +48,7 @@ const SCRIPTS = [
   'js/game/player.js',
   'js/game/setup-screen.js',
   'js/levels/rubicon.js',
+  'js/levels/ides.js',
   'js/game/levels.js',
   'js/main.js'
 ];
