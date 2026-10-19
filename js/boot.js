@@ -47,6 +47,7 @@ const SCRIPTS = [
   'js/game/time-loop.js',
   'js/game/player.js',
   'js/game/setup-screen.js',
+  'js/game/practice.js',
   'js/levels/rubicon.js',
   'js/levels/ides.js',
   'js/game/levels.js',

@@ -28,7 +28,7 @@ js/engine/                 renderer, textures and materials, lights and fire, bu
 js/levels/sepulta/         Level 1: ground, world, people and dialogue
 js/levels/rubicon.js       Level 2: the camp, people and dialogue
 js/levels/ides.js          Level 3: the house of Brutus, people and dialogue
-js/game/                   state, audio, HUD, dialogue, Latin tasks, journal, time loop, player, setup screen
+js/game/                   state, audio, HUD, dialogue, Latin tasks, journal, time loop, player, setup screen, quick practice
 js/game/levels.js          the list of levels and the text that changes between them
 js/main.js                 the main loop and start-up
 assets/textures/           photo textures (stone, plaster, marble, wood, roof tiles, bronze), WebP
@@ -70,6 +70,10 @@ Then place it in a level with `prop('<id>', x, y, z, { rot, scale, solid })`.
 ## Backups
 
 Before every push, the version that is live gets saved as a branch named `backup/<date>-<label>`. To go back to one, check out that branch, or open it on GitHub and copy its files over `main`.
+
+## Quick practice: Aurum
+
+The **Quick practice** button on the title screen opens a short coin-catching game (`js/game/practice.js`). A Latin task from the same question bank appears at the top: translate, choose the right form, or parse. Gold coins fall into the forum, each stamped with an answer. Move the purse with the arrow keys, A and D, the mouse or a finger (1 to 4 jump to a lane) and catch the true gold coin. Lead coins, or letting the gold one fall, cost one of three lamps. Tasks you miss come back later. It uses the grammar and question types ticked on the title screen, and the 3D city pauses while it runs.
 
 ## Credits
 

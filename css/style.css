@@ -223,3 +223,47 @@ kbd { border-color:#d8c49c66;border-radius:3px;background:#111a;padding:2px 6px;
 .story p { color:#e3ded4; } .story .when { color:#c6ab7b; }
 @media(max-width:640px){#dlg {padding:25px 14px 20px;}#portrait{width:74px;height:110px;left:12px;top:0;opacity:.7;}#dlg .inner{padding-left:0;}#dlgWho{padding-left:80px;min-height:60px;}#dlgTxt{font-size:1.12rem;}#clock{top:12px;right:12px;padding:8px 10px;}.panel{padding:18px;} .logo{letter-spacing:.08em;} }
 @media(prefers-reduced-motion:reduce){*{transition:none!important}.btn:hover{transform:none!important}}
+
+/* ── Quick practice: Aurum (js/game/practice.js) ── */
+#aurum { position: fixed; inset: 0; z-index: 60; display: none; background: #0b0c18; color: var(--ink); font-family: 'EB Garamond', Georgia, serif; user-select: none; -webkit-user-select: none; touch-action: none; }
+#aurum.on { display: block; }
+#auCv { position: absolute; inset: 0; width: 100%; height: 100%; }
+#auTop { position: absolute; left: 0; right: 0; top: 0; display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; pointer-events: none; }
+#auTop button { pointer-events: auto; }
+#auScore { display: flex; gap: 16px; font-family: 'Cinzel', serif; letter-spacing: .08em; font-size: 1.05rem; background: var(--bg); border: 1px solid rgba(217,181,106,.35); padding: 6px 14px; }
+#auScore b { color: var(--gold2); }
+#auLives { display: flex; gap: 6px; }
+#auLives i { width: 22px; height: 22px; border-radius: 50%; background: radial-gradient(circle at 50% 60%, #3a2a1e 40%, #1a120c 70%); border: 1px solid rgba(217,181,106,.35); }
+#auLives i.on { background: radial-gradient(circle at 50% 55%, #fff1b8 0, #ffb54a 30%, #c25a1a 60%, rgba(60,30,10,.9) 72%); box-shadow: 0 0 12px rgba(255,170,70,.7); }
+#auQ { position: absolute; left: 50%; top: 58px; transform: translateX(-50%); width: min(760px, 94vw); background: var(--bg); border: 1px solid rgba(217,181,106,.4); border-top: 3px solid var(--gold); padding: 10px 18px 12px; text-align: center; transition: border-color .3s, box-shadow .3s; pointer-events: none; }
+#auQ.ok { border-color: var(--ok); box-shadow: 0 0 18px rgba(111,174,106,.45); }
+#auQ.bad { border-color: var(--bad); box-shadow: 0 0 18px rgba(196,85,63,.45); }
+.au-task { font-family: 'Cinzel', serif; font-size: .9rem; letter-spacing: .12em; color: var(--gold); text-transform: uppercase; }
+.au-lat { font-size: clamp(1.4rem, 3.6vw, 2rem); font-style: italic; color: #fff4dc; margin-top: 4px; line-height: 1.3; }
+.au-lat .gap { display: inline-block; min-width: 3.2em; border-bottom: 2px solid var(--gold2); margin: 0 .15em; }
+.au-lat .tgt { color: var(--gold2); text-decoration: underline; text-underline-offset: 4px; }
+.au-en { color: var(--dim); font-size: 1.1rem; margin-top: 2px; }
+#auSay { position: absolute; left: 50%; bottom: 14px; transform: translateX(-50%); max-width: min(640px, 92vw); background: var(--bg); border-left: 3px solid var(--gold); padding: 8px 16px; font-size: 1.15rem; text-align: center; opacity: 0; transition: opacity .3s; pointer-events: none; }
+#auSay.show { opacity: 1; }
+#auSay.ok { border-left-color: var(--ok); }
+#auSay.bad { border-left-color: var(--bad); }
+.au-a { color: var(--gold2); font-style: italic; font-weight: 600; }
+.au-screen { position: absolute; inset: 0; display: none; align-items: flex-start; justify-content: center; overflow: auto; padding: 28px 14px; background: rgba(6,4,3,.6); }
+.au-screen.on { display: flex; }
+.au-card { width: min(700px, 100%); margin: auto 0; background: rgba(14,10,7,.94); border: 1px solid rgba(217,181,106,.4); border-top: 3px solid var(--gold); padding: 22px 26px; font-size: 1.12rem; line-height: 1.5; }
+.au-card h2 { font-family: 'Cinzel', serif; letter-spacing: .16em; color: var(--gold2); text-align: center; margin: 0; font-size: clamp(2rem, 6vw, 3rem); }
+.au-sub { text-align: center; font-style: italic; color: var(--dim); margin-bottom: 10px; }
+.au-card ul { padding-left: 22px; }
+.au-card kbd { font-family: inherit; border: 1px solid var(--dim); padding: 0 5px; font-size: .9em; }
+.au-stat { text-align: center; color: var(--dim); }
+.au-stat b { color: var(--gold2); }
+.au-btns { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-top: 14px; }
+.au-speed { margin-top: 10px; }
+.au-big { text-align: center; font-family: 'Cinzel', serif; font-size: clamp(2.4rem, 8vw, 3.6rem); color: var(--gold2); }
+.au-big small { font-size: .4em; color: var(--dim); letter-spacing: .1em; }
+.au-rev { margin-top: 12px; max-height: 42vh; overflow: auto; background: rgba(0,0,0,.3); padding: 8px 14px; }
+.au-rev h4 { margin: 4px 0; font-family: 'Cinzel', serif; letter-spacing: .1em; color: var(--gold); }
+.au-rev li { margin: 6px 0; }
+.au-l { font-style: italic; color: #fff4dc; }
+.au-l .tgt { color: var(--gold2); text-decoration: underline; }
+.au-p { color: var(--dim); font-size: .95em; }
