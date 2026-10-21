@@ -38,7 +38,7 @@ function renderQuestion() {
   h += `<div class="q-meta"><div class="dots">Tries:`;
   for (let a = 0; a < maxAttempts(q); a++) h += `<div class="dotq" id="qd${a}"></div>`;
   h += `</div>`;
-  const t = TABLES[q.hint];
+  const t = helpEnabled ? TABLES[q.hint] : null;
   if (t) h += `<button class="wbtn small" id="qHelp">Grammar table</button>`;
   h += `</div>`;
   if (t) {

@@ -10,6 +10,7 @@ const store = {
 };
 let ticked = new Set(store.get('grammar', 'ABCDEFGHIJKLMNOPQR'.split('')));
 let types = new Set(store.get('types', QTYPES.map(q => q.k)));
+let helpEnabled = store.get('help', true);
 const coarse = !!(window.matchMedia && matchMedia('(pointer: coarse)').matches);
 // Graphics: 'school' (the default, built for school PCs and tablets), 'low' (Standard) or 'high'
 let quality = store.get('sepultaGraphics', 'school');

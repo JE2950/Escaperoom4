@@ -9,6 +9,7 @@ function buildSetup() {
   $('presets').addEventListener('click', e => { const b = e.target.closest('[data-preset]'); if (!b) return; const p = b.dataset.preset; ticked = new Set(p === 'clear' ? [] : PRESETS[+p].keys.split('')); syncSetup(); });
   $('ticks').addEventListener('change', e => { const k = e.target.dataset.g; if (!k) return; e.target.checked ? ticked.add(k) : ticked.delete(k); syncSetup(); });
   $('qtypes').addEventListener('change', e => { const k = e.target.dataset.t; if (!k) return; e.target.checked ? types.add(k) : types.delete(k); syncSetup(); });
+  $('helpToggle').addEventListener('change', e => { helpEnabled = e.target.checked; store.set('help', helpEnabled); syncSetup(); });
   $('gfx').addEventListener('click', e => {
     const b = e.target.closest('[data-q]'); if (!b || b.dataset.q === quality) return;
     const reload = (quality === 'school') !== (b.dataset.q === 'school');
@@ -20,6 +21,8 @@ function buildSetup() {
 function syncSetup() {
   document.querySelectorAll('[data-g]').forEach(i => i.checked = ticked.has(i.dataset.g));
   document.querySelectorAll('[data-t]').forEach(i => i.checked = types.has(i.dataset.t));
+  $('helpToggle').checked = helpEnabled;
+  document.body.classList.toggle('assessment-mode', !helpEnabled);
   document.querySelectorAll('[data-q]').forEach(b => b.classList.toggle('on', b.dataset.q === quality));
   const keyStr = [...ticked].sort().join('');
   document.querySelectorAll('[data-preset]').forEach(b => b.classList.toggle('on', b.dataset.preset !== 'clear' && PRESETS[+b.dataset.preset].keys === keyStr));
