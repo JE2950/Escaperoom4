@@ -69,8 +69,8 @@ const PRESETS = [
   { label: 'Ch 1–38', keys: 'ABCDEFGHIJ' },
   { label: 'Ch 1–56', keys: 'ABCDEFGHIJKLMNOP' },
   { label: 'Whole of Level 1', keys: 'ABCDEFGHIJKLMNOPQR' },
-  { label: 'Level 2: Ch 74–99', keys: 'ABCDEFGHIJKLMNOPQRSTUVWXY' },
-  { label: 'Whole of Level 2', keys: 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcde' },
+  { label: 'Level 2: Ch 74–99', keys: 'STUVWXY' },
+  { label: 'Whole of Level 2', keys: 'STUVWXYZabcde' },
   { label: 'Whole of Level 3', keys: 'fghijklmnopq' },
   { label: 'Scholarship', keys: 'rstuvwx' },
 ];

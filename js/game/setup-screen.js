@@ -3,10 +3,10 @@
 // SETUP SCREEN
 // ════════════════════════════════════════════════════════════════
 function buildSetup() {
-  $('presets').innerHTML = PRESETS.map((p, i) => `<button class="btn small" data-preset="${i}">${esc(p.label)}</button>`).join('') + `<button class="btn small" data-preset="clear">Clear all</button>`;
+  $('presets').innerHTML = PRESETS.map((p, i) => `<button class="btn small" data-preset="${i}">${esc(p.label)}</button>`).join('') + `<button class="btn small" data-preset="clear">Clear all</button><span class="presetHint">Tap more than one to combine them.</span>`;
   $('ticks').innerHTML = GRAMMAR.map(g => (g.k === 'A' ? '<div class="lvhead">CE Level 1 <span>· Bass Ch 1–73</span></div>' : g.k === 'S' ? '<div class="lvhead">CE Level 2 <span>· Bass Ch 74–116 · assumes Level 1</span></div>' : g.k === 'f' ? '<div class="lvhead">CE Level 3 <span>· Bass Ch 117–140 · assumes Levels 1 and 2</span></div>' : g.k === 'r' ? '<div class="lvhead">Scholarship <span>· Bass Ch 141–154 · assumes Levels 1 to 3</span></div>' : '') + `<label class="tick"><input type="checkbox" data-g="${g.k}"><span class="box"></span><span>${esc(g.name)}<span class="ch">${esc(g.ch)}</span></span></label>`).join('');
   $('qtypes').innerHTML = QTYPES.map(q => `<label class="tick"><input type="checkbox" data-t="${q.k}"><span class="box"></span><span>${esc(q.name)}</span></label>`).join('');
-  $('presets').addEventListener('click', e => { const b = e.target.closest('[data-preset]'); if (!b) return; const p = b.dataset.preset; ticked = new Set(p === 'clear' ? [] : PRESETS[+p].keys.split('')); syncSetup(); });
+  $('presets').addEventListener('click', e => { const b = e.target.closest('[data-preset]'); if (!b) return; const p = b.dataset.preset; if (p === 'clear') ticked = new Set(); else { const ks = PRESETS[+p].keys.split(''), all = ks.every(k => ticked.has(k)); ks.forEach(k => all ? ticked.delete(k) : ticked.add(k)); } syncSetup(); });
   $('ticks').addEventListener('change', e => { const k = e.target.dataset.g; if (!k) return; e.target.checked ? ticked.add(k) : ticked.delete(k); syncSetup(); });
   $('qtypes').addEventListener('change', e => { const k = e.target.dataset.t; if (!k) return; e.target.checked ? types.add(k) : types.delete(k); syncSetup(); });
   $('helpToggle').addEventListener('change', e => { helpEnabled = e.target.checked; store.set('help', helpEnabled); syncSetup(); });
@@ -25,7 +25,7 @@ function syncSetup() {
   document.body.classList.toggle('assessment-mode', !helpEnabled);
   document.querySelectorAll('[data-q]').forEach(b => b.classList.toggle('on', b.dataset.q === quality));
   const keyStr = [...ticked].sort().join('');
-  document.querySelectorAll('[data-preset]').forEach(b => b.classList.toggle('on', b.dataset.preset !== 'clear' && PRESETS[+b.dataset.preset].keys === keyStr));
+  document.querySelectorAll('[data-preset]').forEach(b => b.classList.toggle('on', b.dataset.preset !== 'clear' && PRESETS[+b.dataset.preset].keys.split('').every(k => ticked.has(k))));
   store.set('grammar', [...ticked]); store.set('types', [...types]);
   const st = $('setupStatus'), btns = document.querySelectorAll('[data-level]');
   const warn = m => { st.textContent = m; st.className = 'status warn'; btns.forEach(b => b.disabled = true); };
