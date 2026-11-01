@@ -44,7 +44,7 @@ function showEnd() {
   $('endH').textContent = LV.endH;
   $('endSub').textContent = LV.endSub(game.loop, helpedCount());
   $('nextBtn').style.display = LV.next ? '' : 'none';
-  if (LV.next) $('nextBtn').textContent = `Level ${LV.next}: ${LEVELS[LV.next].name} ▶`;
+  if (LV.next) $('nextBtn').textContent = `Case ${LV.next}: ${LEVELS[LV.next].name} ▶`;
   const answered = game.results.filter(Boolean).length;
   $('endScore').innerHTML = `${game.score} / 15<small>Latin tasks right first time · ${answered} of 15 attempted · about ${mins} minute${mins === 1 ? '' : 's'}</small>`;
   const missed = {};

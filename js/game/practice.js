@@ -19,12 +19,12 @@ const Aurum = (() => {
 
   // ── Questions: the main game's multiple-choice types only ──
   function pool() {
-    const items = BANK.filter(it => subset(it.t, ticked));
+    const items = BANK.filter(it => subset(it.t, effTicked()));
     const out = [];
     items.forEach(it => {
       const ts = [];
       if (types.has('tr')) ts.push('tr');
-      if (types.has('gap') && (it.g || []).some(g => subset(extraTags(g[2]), ticked))) ts.push('gap');
+      if (types.has('gap') && (it.g || []).some(g => subset(extraTags(g[2]), effTicked()))) ts.push('gap');
       if (types.has('parse') && (it.p || []).some(p => p[1] !== 'tense' || tensesAllowed().length > 1)) ts.push('parse');
       ts.forEach(t => out.push([it, t]));
     });

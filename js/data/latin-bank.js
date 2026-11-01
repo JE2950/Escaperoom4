@@ -21,7 +21,47 @@ const GRAMMAR = [
   { k: 'P', name: 'Adjectives like miser and pulcher', ch: 'Ch 54' },
   { k: 'Q', name: 'Imperfect tense', ch: 'Ch 57' },
   { k: 'R', name: 'Perfect tense', ch: 'Ch 60–73' },
+  // CE Level 2 (Bass Ch 74–116). Ticking any of these assumes all of Level 1.
+  { k: 'S', lv: 2, name: 'Third declension nouns (rex, opus, mare)', ch: 'Ch 77–79' },
+  { k: 'T', lv: 2, name: 'Future tense', ch: 'Ch 81–82' },
+  { k: 'U', lv: 2, name: 'eo (I go) and its compounds', ch: 'Ch 84' },
+  { k: 'V', lv: 2, name: '-que, et… et…, quamquam', ch: 'Ch 75, 77, 85' },
+  { k: 'W', lv: 2, name: 'hic, haec, hoc and ille, illa, illud', ch: 'Ch 89, 91' },
+  { k: 'X', lv: 2, name: 'is, ea, id and personal pronouns', ch: 'Ch 94, 96' },
+  { k: 'Y', lv: 2, name: 'Pluperfect tense', ch: 'Ch 99' },
+  { k: 'Z', lv: 2, name: 'Third declension adjectives (fortis, felix, ingens)', ch: 'Ch 101, 103' },
+  { k: 'a', lv: 2, name: 'Comparison of adjectives', ch: 'Ch 104, 106' },
+  { k: 'b', lv: 2, name: 'possum and debeo', ch: 'Ch 109, 113' },
+  { k: 'c', lv: 2, name: 'Prohibitions: noli, nolite', ch: 'Ch 111' },
+  { k: 'd', lv: 2, name: 'Questions with nonne and num', ch: 'Ch 112' },
+  { k: 'e', lv: 2, name: 'Reflexive pronoun se', ch: 'Ch 115' },
+  // CE Level 3 (Bass Ch 117–140). Ticking any of these assumes all of Levels 1 and 2.
+  { k: 'f', lv: 3, name: 'Passive: present, imperfect and future', ch: 'Ch 118–119, 130' },
+  { k: 'g', lv: 3, name: 'Perfect passive', ch: 'Ch 121' },
+  { k: 'h', lv: 3, name: 'Pluperfect passive', ch: 'Ch 123' },
+  { k: 'i', lv: 3, name: 'volo and nolo', ch: 'Ch 126' },
+  { k: 'j', lv: 3, name: 'Expressions of time', ch: 'Ch 127' },
+  { k: 'k', lv: 3, name: 'fero (I carry, I bear)', ch: 'Ch 129' },
+  { k: 'l', lv: 3, name: 'Relative clauses: qui, quae, quod', ch: 'Ch 132' },
+  { k: 'm', lv: 3, name: 'Present participles', ch: 'Ch 133' },
+  { k: 'n', lv: 3, name: 'Purpose clauses: ut and ne', ch: 'Ch 135' },
+  { k: 'o', lv: 3, name: 'Indirect commands', ch: 'Ch 137' },
+  { k: 'p', lv: 3, name: 'Perfect participle passive', ch: 'Ch 139' },
+  { k: 'q', lv: 3, name: 'Place: domus, rus and Roma', ch: 'Ch 140' },
+  // Common Academic Scholarship (Bass Ch 141–154). Assumes all of Levels 1–3.
+  { k: 'r', lv: 4, name: 'Ablative absolute', ch: 'Ch 141–142' },
+  { k: 's', lv: 4, name: 'Indirect statement: present infinitive', ch: 'Ch 144' },
+  { k: 't', lv: 4, name: 'Present infinitive passive', ch: 'Ch 145' },
+  { k: 'u', lv: 4, name: 'Indirect statement: perfect infinitive', ch: 'Ch 147' },
+  { k: 'v', lv: 4, name: 'Deponent verbs', ch: 'Ch 149–150' },
+  { k: 'w', lv: 4, name: 'cum + subjunctive', ch: 'Ch 152' },
+  { k: 'x', lv: 4, name: 'Deponent perfect participles', ch: 'Ch 154' },
 ];
+// Ticking a point from a higher level assumes every point from the levels below it.
+const lvOf = k => { const g = GRAMMAR.find(x => x.k === k); return g ? (g.lv || 1) : 1; };
+function topLevel() { let m = 1; ticked.forEach(k => { m = Math.max(m, lvOf(k)); }); return m; }
+const hasL2 = () => topLevel() >= 2;
+function effTicked() { const s = new Set(ticked), m = topLevel(); GRAMMAR.forEach(g => { if ((g.lv || 1) < m) s.add(g.k); }); return s; }
 
 const PRESETS = [
   { label: 'Ch 1–8', keys: 'A' },
@@ -29,6 +69,10 @@ const PRESETS = [
   { label: 'Ch 1–38', keys: 'ABCDEFGHIJ' },
   { label: 'Ch 1–56', keys: 'ABCDEFGHIJKLMNOP' },
   { label: 'Whole of Level 1', keys: 'ABCDEFGHIJKLMNOPQR' },
+  { label: 'Level 2: Ch 74–99', keys: 'ABCDEFGHIJKLMNOPQRSTUVWXY' },
+  { label: 'Whole of Level 2', keys: 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcde' },
+  { label: 'Whole of Level 3', keys: 'fghijklmnopq' },
+  { label: 'Scholarship', keys: 'rstuvwx' },
 ];
 
 const QTYPES = [
@@ -93,10 +137,111 @@ const TABLES = {
     note: '-ne on the first word turns a statement into a question.' },
   num: { title: 'Numbers', cols: ['', 'cardinal', '', 'ordinal', ''],
     rows: [['1', 'unus', 'one', 'primus', 'first'], ['2', 'duo', 'two', 'secundus', 'second'], ['3', 'tres', 'three', 'tertius', 'third'], ['4', 'quattuor', 'four', 'quartus', 'fourth'], ['5', 'quinque', 'five', 'quintus', 'fifth'], ['6', 'sex', 'six', 'sextus', 'sixth'], ['7', 'septem', 'seven', 'septimus', 'seventh'], ['8', 'octo', 'eight', 'octavus', 'eighth'], ['9', 'novem', 'nine', 'nonus', 'ninth'], ['10', 'decem', 'ten', 'decimus', 'tenth']] },
+  // ── CE Level 2 tables (Bass Ch 77–115) ──
+  decl3: { title: 'Third declension: rex (m.) and opus (n.)', cols: ['case', 'rex sg', 'rex pl', 'opus sg', 'opus pl'],
+    rows: [['nominative', 'rex', 'reges', 'opus', 'opera'], ['vocative', 'rex', 'reges', 'opus', 'opera'], ['accusative', 'regem', 'reges', 'opus', 'opera'], ['genitive', 'regis', 'regum', 'operis', 'operum'], ['dative', 'regi', 'regibus', 'operi', 'operibus'], ['ablative', 'rege', 'regibus', 'opere', 'operibus']],
+    note: 'Find the stem from the genitive: regis → reg-. mare has ablative mari and plural maria.' },
+  fut: { title: 'Future tense', cols: ['', 'amo (1)', 'moneo (2)', 'rego (3)', 'capio (3½)', 'audio (4)', 'sum'],
+    rows: [['I shall', 'amabo', 'monebo', 'regam', 'capiam', 'audiam', 'ero'], ['you (sg) will', 'amabis', 'monebis', 'reges', 'capies', 'audies', 'eris'], ['he will', 'amabit', 'monebit', 'reget', 'capiet', 'audiet', 'erit'], ['we shall', 'amabimus', 'monebimus', 'regemus', 'capiemus', 'audiemus', 'erimus'], ['you (pl) will', 'amabitis', 'monebitis', 'regetis', 'capietis', 'audietis', 'eritis'], ['they will', 'amabunt', 'monebunt', 'regent', 'capient', 'audient', 'erunt']] },
+  eo: { title: 'eo, ire, ii: I go', cols: ['', 'present', 'imperfect', 'perfect', 'future'],
+    rows: [['I', 'eo', 'ibam', 'ii', 'ibo'], ['you (sg)', 'is', 'ibas', 'iisti', 'ibis'], ['he, she, it', 'it', 'ibat', 'iit', 'ibit'], ['we', 'imus', 'ibamus', 'iimus', 'ibimus'], ['you (pl)', 'itis', 'ibatis', 'iistis', 'ibitis'], ['they', 'eunt', 'ibant', 'ierunt', 'ibunt']],
+    note: 'Infinitive ire. Imperatives i, ite. adeo (go towards), ineo (go in), exeo (go out), pereo (perish), redeo (return), transeo (cross) go the same way.' },
+  que: { title: 'Joining words', cols: ['Latin', 'English'],
+    rows: [['-que', 'and (joined to the second word: pueri puellaeque)'], ['et… et…', 'both… and…'], ['quamquam', 'although'], ['ubi', 'when'], ['postquam', 'after']] },
+  hic: { title: 'hic, haec, hoc: this, these', cols: ['', 'masculine', 'feminine', 'neuter'],
+    rows: [['nom sg', 'hic', 'haec', 'hoc'], ['acc sg', 'hunc', 'hanc', 'hoc'], ['gen sg', 'huius', 'huius', 'huius'], ['dat sg', 'huic', 'huic', 'huic'], ['abl sg', 'hoc', 'hac', 'hoc'],
+      ['nom pl', 'hi', 'hae', 'haec'], ['acc pl', 'hos', 'has', 'haec'], ['gen pl', 'horum', 'harum', 'horum'], ['dat pl', 'his', 'his', 'his'], ['abl pl', 'his', 'his', 'his']] },
+  ille: { title: 'ille, illa, illud: that, those', cols: ['', 'masculine', 'feminine', 'neuter'],
+    rows: [['nom sg', 'ille', 'illa', 'illud'], ['acc sg', 'illum', 'illam', 'illud'], ['gen sg', 'illius', 'illius', 'illius'], ['dat sg', 'illi', 'illi', 'illi'], ['abl sg', 'illo', 'illa', 'illo'],
+      ['nom pl', 'illi', 'illae', 'illa'], ['acc pl', 'illos', 'illas', 'illa'], ['gen pl', 'illorum', 'illarum', 'illorum'], ['dat pl', 'illis', 'illis', 'illis'], ['abl pl', 'illis', 'illis', 'illis']] },
+  is: { title: 'is, ea, id: he, she, it', cols: ['', 'masculine', 'feminine', 'neuter'],
+    rows: [['nom sg', 'is (he)', 'ea (she)', 'id (it)'], ['acc sg', 'eum (him)', 'eam (her)', 'id (it)'], ['gen sg', 'eius (his)', 'eius (her)', 'eius (of it)'], ['dat sg', 'ei (to him)', 'ei (to her)', 'ei (to it)'], ['abl sg', 'eo', 'ea', 'eo'],
+      ['nom pl', 'ei (they)', 'eae (they)', 'ea (they)'], ['acc pl', 'eos (them)', 'eas (them)', 'ea (them)'], ['gen pl', 'eorum (their)', 'earum (their)', 'eorum (their)'], ['dat pl', 'eis (to them)', 'eis', 'eis'], ['abl pl', 'eis', 'eis', 'eis']] },
+  pron: { title: 'ego, tu, nos, vos', cols: ['', 'I', 'you (sg)', 'we', 'you (pl)'],
+    rows: [['nominative', 'ego', 'tu', 'nos', 'vos'], ['accusative', 'me', 'te', 'nos', 'vos'], ['genitive', 'mei', 'tui', 'nostrum', 'vestrum'], ['dative', 'mihi', 'tibi', 'nobis', 'vobis'], ['ablative', 'me', 'te', 'nobis', 'vobis']],
+    note: 'mecum = with me, tecum = with you, nobiscum = with us, vobiscum = with you (pl).' },
+  plupf: { title: 'Pluperfect tense (had…)', cols: ['', 'amo', 'moneo', 'rego', 'capio', 'audio', 'sum'],
+    rows: [['I had', 'amaveram', 'monueram', 'rexeram', 'ceperam', 'audiveram', 'fueram'], ['you (sg) had', 'amaveras', 'monueras', 'rexeras', 'ceperas', 'audiveras', 'fueras'], ['he had', 'amaverat', 'monuerat', 'rexerat', 'ceperat', 'audiverat', 'fuerat'], ['we had', 'amaveramus', 'monueramus', 'rexeramus', 'ceperamus', 'audiveramus', 'fueramus'], ['you (pl) had', 'amaveratis', 'monueratis', 'rexeratis', 'ceperatis', 'audiveratis', 'fueratis'], ['they had', 'amaverant', 'monuerant', 'rexerant', 'ceperant', 'audiverant', 'fuerant']],
+    note: 'Perfect stem + -eram, -eras, -erat, -eramus, -eratis, -erant.' },
+  adj3: { title: 'Third declension adjectives: fortis, felix, ingens', cols: ['', 'fortis m/f', 'forte n', 'felix m/f', 'ingens m/f'],
+    rows: [['nom sg', 'fortis', 'forte', 'felix', 'ingens'], ['acc sg', 'fortem', 'forte', 'felicem', 'ingentem'], ['gen sg', 'fortis', 'fortis', 'felicis', 'ingentis'], ['dat sg', 'forti', 'forti', 'felici', 'ingenti'], ['abl sg', 'forti', 'forti', 'felici', 'ingenti'],
+      ['nom pl', 'fortes', 'fortia', 'felices', 'ingentes'], ['acc pl', 'fortes', 'fortia', 'felices', 'ingentes'], ['gen pl', 'fortium', 'fortium', 'felicium', 'ingentium'], ['dat pl', 'fortibus', 'fortibus', 'felicibus', 'ingentibus'], ['abl pl', 'fortibus', 'fortibus', 'felicibus', 'ingentibus']],
+    note: 'omnes on its own = everyone; omnia on its own = everything.' },
+  comp: { title: 'Comparison of adjectives', cols: ['positive', 'comparative', 'superlative'],
+    rows: [['altus (high)', 'altior (higher)', 'altissimus (highest, very high)'], ['pulcher (beautiful)', 'pulchrior', 'pulcherrimus'], ['fortis (brave)', 'fortior', 'fortissimus'], ['felix (lucky)', 'felicior', 'felicissimus'], ['facilis (easy)', 'facilior', 'facillimus'], ['difficilis (difficult)', 'difficilior', 'difficillimus']],
+    note: 'quam = than. Comparatives end -ior (neuter -ius) and go like fortior; superlatives go like bonus.' },
+  irrcomp: { title: 'Irregular comparison', cols: ['positive', 'comparative', 'superlative'],
+    rows: [['bonus (good)', 'melior (better)', 'optimus (very good, best)'], ['malus (bad)', 'peior (worse)', 'pessimus (very bad, worst)'], ['magnus (big)', 'maior (bigger)', 'maximus (very big, biggest)'], ['parvus (small)', 'minor (smaller)', 'minimus (very small, smallest)'], ['multus (much, many)', 'plus (more)', 'plurimus (most, very many)']] },
+  possum: { title: 'possum: I am able, I can', cols: ['', 'present', 'imperfect', 'perfect', 'future', 'pluperfect'],
+    rows: [['I', 'possum', 'poteram', 'potui', 'potero', 'potueram'], ['you (sg)', 'potes', 'poteras', 'potuisti', 'poteris', 'potueras'], ['he, she, it', 'potest', 'poterat', 'potuit', 'poterit', 'potuerat'], ['we', 'possumus', 'poteramus', 'potuimus', 'poterimus', 'potueramus'], ['you (pl)', 'potestis', 'poteratis', 'potuistis', 'poteritis', 'potueratis'], ['they', 'possunt', 'poterant', 'potuerunt', 'poterunt', 'potuerant']],
+    note: 'possum and debeo (I must, ought to) are followed by an infinitive.' },
+  noli: { title: 'Prohibitions: do not…!', cols: ['Latin', 'English'],
+    rows: [['noli currere, serve!', 'Do not run, slave! (one person)'], ['nolite currere, servi!', 'Do not run, slaves! (more than one)']],
+    note: 'noli / nolite + infinitive. The person spoken to is in the vocative.' },
+  nonne: { title: 'Questions: -ne, nonne, num', cols: ['Latin', 'English', 'answer expected'],
+    rows: [['laboratne?', 'Is he working?', 'yes or no'], ['nonne laborat?', 'He is working, isn’t he?', 'yes'], ['num laborat?', 'He isn’t working, is he?', 'no']] },
+  se: { title: 'Reflexive pronoun se', cols: ['case', 'Latin', 'English'],
+    rows: [['accusative', 'se', 'himself, herself, themselves'], ['genitive', 'sui', 'of himself, of themselves'], ['dative', 'sibi', 'to or for himself, themselves'], ['ablative', 'se', '(by) himself, themselves'], ['', 'secum', 'with him, with them']],
+    note: 'se refers back to the subject of the verb.' },
+  // ── CE Level 3 and Scholarship tables (Bass Ch 118–154) ──
+  passive: { title: 'Passive: present, imperfect, future (amo)', cols: ['', 'present', 'imperfect', 'future'],
+    rows: [['I', 'amor', 'amabar', 'amabor'], ['you (sg)', 'amaris', 'amabaris', 'amaberis'], ['he, she, it', 'amatur', 'amabatur', 'amabitur'], ['we', 'amamur', 'amabamur', 'amabimur'], ['you (pl)', 'amamini', 'amabamini', 'amabimini'], ['they', 'amantur', 'amabantur', 'amabuntur']],
+    note: 'I am loved, I was being loved, I shall be loved. By a person = a / ab + ablative; by a thing = ablative alone.' },
+  perfpass: { title: 'Perfect and pluperfect passive', cols: ['', 'perfect', 'pluperfect'],
+    rows: [['I', 'amatus sum', 'amatus eram'], ['you (sg)', 'amatus es', 'amatus eras'], ['he', 'amatus est', 'amatus erat'], ['she', 'amata est', 'amata erat'], ['we', 'amati sumus', 'amati eramus'], ['you (pl)', 'amati estis', 'amati eratis'], ['they', 'amati sunt', 'amati erant']],
+    note: 'Perfect participle passive + sum (I was loved) or eram (I had been loved). The participle agrees with the subject.' },
+  volo: { title: 'volo (I want) and nolo (I do not want)', cols: ['', 'volo', 'nolo'],
+    rows: [['I', 'volo', 'nolo'], ['you (sg)', 'vis', 'non vis'], ['he, she, it', 'vult', 'non vult'], ['we', 'volumus', 'nolumus'], ['you (pl)', 'vultis', 'non vultis'], ['they', 'volunt', 'nolunt'], ['imperfect', 'volebam', 'nolebam'], ['perfect', 'volui', 'nolui']],
+    note: 'Both are usually followed by an infinitive: laborare nolo = I do not want to work.' },
+  time: { title: 'Expressions of time', cols: ['case', 'question', 'example'],
+    rows: [['accusative', 'how long?', 'multos dies = for many days'], ['ablative', 'when?', 'tertio die = on the third day'], ['ablative', 'within what time?', 'paucis horis = in a few hours']] },
+  fero: { title: 'fero, ferre, tuli, latum: I carry, I bear', cols: ['', 'present', 'imperfect', 'future', 'perfect'],
+    rows: [['I', 'fero', 'ferebam', 'feram', 'tuli'], ['you (sg)', 'fers', 'ferebas', 'feres', 'tulisti'], ['he, she, it', 'fert', 'ferebat', 'feret', 'tulit'], ['we', 'ferimus', 'ferebamus', 'feremus', 'tulimus'], ['you (pl)', 'fertis', 'ferebatis', 'feretis', 'tulistis'], ['they', 'ferunt', 'ferebant', 'ferent', 'tulerunt']],
+    note: 'Passive: feror, ferris, fertur, ferimur, ferimini, feruntur.' },
+  qui: { title: 'Relative pronoun: qui, quae, quod (who, which)', cols: ['', 'm', 'f', 'n'],
+    rows: [['nom sg', 'qui', 'quae', 'quod'], ['acc sg', 'quem', 'quam', 'quod'], ['gen sg', 'cuius', 'cuius', 'cuius'], ['dat sg', 'cui', 'cui', 'cui'], ['abl sg', 'quo', 'qua', 'quo'], ['nom pl', 'qui', 'quae', 'quae'], ['acc pl', 'quos', 'quas', 'quae'], ['gen pl', 'quorum', 'quarum', 'quorum'], ['dat pl', 'quibus', 'quibus', 'quibus'], ['abl pl', 'quibus', 'quibus', 'quibus']],
+    note: 'Gender and number come from the word it refers back to; its case comes from its job in its own clause. quocum = with whom.' },
+  prespart: { title: 'Present participle: portans (carrying)', cols: ['', 'singular', 'plural'],
+    rows: [['nominative', 'portans', 'portantes'], ['accusative', 'portantem', 'portantes'], ['genitive', 'portantis', 'portantium'], ['dative', 'portanti', 'portantibus'], ['ablative', 'portante', 'portantibus']],
+    note: 'portans, monens, regens, audiens, capiens. Goes like ingens and agrees with the noun it describes.' },
+  purpose: { title: 'Imperfect subjunctive and purpose clauses', cols: ['', 'amo', 'moneo', 'rego', 'audio', 'sum'],
+    rows: [['I', 'amarem', 'monerem', 'regerem', 'audirem', 'essem'], ['you (sg)', 'amares', 'moneres', 'regeres', 'audires', 'esses'], ['he, she, it', 'amaret', 'moneret', 'regeret', 'audiret', 'esset'], ['we', 'amaremus', 'moneremus', 'regeremus', 'audiremus', 'essemus'], ['you (pl)', 'amaretis', 'moneretis', 'regeretis', 'audiretis', 'essetis'], ['they', 'amarent', 'monerent', 'regerent', 'audirent', 'essent']],
+    note: 'Present infinitive + -m, -s, -t, -mus, -tis, -nt. ut + subjunctive = in order to; ne + subjunctive = in order not to.' },
+  indcmd: { title: 'Indirect commands', cols: ['verb', 'person told', 'then'],
+    rows: [['impero (I order)', 'dative', 'ut / ne + subjunctive'], ['persuadeo (I persuade)', 'dative', 'ut / ne + subjunctive'], ['moneo (I warn, advise)', 'accusative', 'ut / ne + subjunctive'], ['rogo (I ask)', 'accusative', 'ut / ne + subjunctive'], ['iubeo (I order)', 'accusative', 'infinitive']],
+    note: 'ut = to; ne = not to. dux militibus imperavit ut pugnarent = The leader ordered the soldiers to fight.' },
+  ppp: { title: 'Perfect participle passive (PPP)', cols: ['verb', 'PPP', 'meaning'],
+    rows: [['porto', 'portatus, -a, -um', 'having been carried'], ['moneo', 'monitus, -a, -um', 'having been warned'], ['rego', 'rectus, -a, -um', 'having been ruled'], ['audio', 'auditus, -a, -um', 'having been heard'], ['capio', 'captus, -a, -um', 'having been captured'], ['video', 'visus, -a, -um', 'having been seen']],
+    note: 'The PPP goes like bonus and agrees with its noun. Often best translated with a clause: urbem captam = the city which they had captured.' },
+  place: { title: 'Place without a preposition', cols: ['', 'to', 'at, in', 'from'],
+    rows: [['domus (home)', 'domum', 'domi', 'domo'], ['rus (country)', 'rus', 'ruri', 'rure'], ['Roma (Rome)', 'Romam', 'Romae', 'Roma']],
+    note: 'Names of towns, domus and rus take no preposition.' },
+  ablabs: { title: 'Ablative absolute', cols: ['Latin', 'English'],
+    rows: [['urbe capta', 'when the city had been captured'], ['hoc audito', 'when this had been heard'], ['hostibus visis', 'when the enemy had been seen']],
+    note: 'Noun + participle, both in the ablative, not linked to the rest of the sentence. Start with when… had been… then tidy the English.' },
+  indst: { title: 'Indirect statement: accusative + infinitive', cols: ['Latin', 'English'],
+    rows: [['scio puerum currere', 'I know that the boy is running'], ['sciebam puerum currere', 'I knew that the boy was running'], ['dixit se timere', 'he said that he was afraid']],
+    note: 'After dico, scio, video, audio, credo, nescio: the subject goes into the accusative and the verb into the infinitive. se = he, she, they (the subject).' },
+  infpass: { title: 'Present infinitive passive', cols: ['active', 'passive', 'meaning'],
+    rows: [['amare', 'amari', 'to be loved'], ['monere', 'moneri', 'to be warned'], ['regere', 'regi', 'to be ruled'], ['audire', 'audiri', 'to be heard'], ['capere', 'capi', 'to be captured']],
+    note: '3rd conjugation and capio verbs: change -ere to -i.' },
+  perfinf: { title: 'Perfect infinitive', cols: ['verb', 'active', 'passive'],
+    rows: [['amo', 'amavisse (to have loved)', 'amatus esse (to have been loved)'], ['moneo', 'monuisse', 'monitus esse'], ['rego', 'rexisse', 'rectus esse'], ['audio', 'audivisse', 'auditus esse'], ['capio', 'cepisse', 'captus esse']],
+    note: 'In indirect statement the perfect infinitive shows the action happened earlier: dicit eum venisse = he says that he has come; dixit eum venisse = he said that he had come.' },
+  deponent: { title: 'Deponent verbs: passive forms, active meaning', cols: ['', 'present', 'imperfect', 'future', 'perfect'],
+    rows: [['I', 'conor', 'conabar', 'conabor', 'conatus sum'], ['you (sg)', 'conaris', 'conabaris', 'conaberis', 'conatus es'], ['he, she, it', 'conatur', 'conabatur', 'conabitur', 'conatus est'], ['we', 'conamur', 'conabamur', 'conabimur', 'conati sumus'], ['you (pl)', 'conamini', 'conabamini', 'conabimini', 'conati estis'], ['they', 'conantur', 'conabantur', 'conabuntur', 'conati sunt']],
+    note: 'conor (try), hortor (encourage), loquor (speak), sequor (follow), proficiscor (set out), ingredior (enter), egredior (go out), patior (suffer), morior (die).' },
+  cumsubj: { title: 'cum + subjunctive', cols: ['', 'imperfect subjunctive', 'pluperfect subjunctive'],
+    rows: [['I', 'amarem', 'amavissem'], ['you (sg)', 'amares', 'amavisses'], ['he, she, it', 'amaret', 'amavisset'], ['we', 'amaremus', 'amavissemus'], ['you (pl)', 'amaretis', 'amavissetis'], ['they', 'amarent', 'amavissent']],
+    note: 'cum + imperfect subjunctive = when, while or since… was; cum + pluperfect subjunctive = when or since… had. Pluperfect subjunctive = perfect infinitive + -m, -s, -t…' },
+  deppart: { title: 'Deponent perfect participles', cols: ['verb', 'participle', 'meaning'],
+    rows: [['conor', 'conatus', 'having tried'], ['hortor', 'hortatus', 'having encouraged'], ['loquor', 'locutus', 'having spoken'], ['sequor', 'secutus', 'having followed'], ['proficiscor', 'profectus', 'having set out'], ['ingredior', 'ingressus', 'having entered'], ['patior', 'passus', 'having suffered']],
+    note: 'Deponent participles are active in meaning: having done, not having been done.' },
 };
+TABLES.ager = TABLES.servus; // some Level 1 gap questions point at 'ager'
 // Hint shown for translate / unscramble questions: the table for the most advanced point in the sentence
-const TAG_TABLE = { R: 'perf', Q: 'impf', O: 'inf', M: 'imp', P: 'miser', N: 'num', L: 'bellum', K: 'ego', J: 'prep', I: 'servus', H: 'puella', G: 'ne', F: 'pres', E: 'bonus', D: 'sum', C: 'qw', B: 'puellaNA', A: 'amo' };
-const TAG_ORDER = 'RQOMPNLKJIHGFEDCBA';
+const TAG_TABLE = { x: 'deppart', w: 'cumsubj', v: 'deponent', u: 'perfinf', t: 'infpass', s: 'indst', r: 'ablabs', q: 'place', p: 'ppp', o: 'indcmd', n: 'purpose', m: 'prespart', l: 'qui', k: 'fero', j: 'time', i: 'volo', h: 'perfpass', g: 'perfpass', f: 'passive', e: 'se', d: 'nonne', c: 'noli', b: 'possum', a: 'comp', Z: 'adj3', Y: 'plupf', X: 'is', W: 'hic', V: 'que', U: 'eo', T: 'fut', S: 'decl3', R: 'perf', Q: 'impf', O: 'inf', M: 'imp', P: 'miser', N: 'num', L: 'bellum', K: 'ego', J: 'prep', I: 'servus', H: 'puella', G: 'ne', F: 'pres', E: 'bonus', D: 'sum', C: 'qw', B: 'puellaNA', A: 'amo' };
+const TAG_ORDER = 'xwvutsrqponmlkjihgfedcbaZYXWVUTSRQOMPNLKJIHGFEDCBA';
 // ════════════════════════════════════════════════════════════════
 // QUESTION BANK — every Latin sentence and form is taken from
 // Prep School Latin (R. C. Bass, 2018), CE Level 1, Chapters 2–73.
@@ -609,6 +754,822 @@ T(73, 'audiebatis.', 'You (pl) were listening.', 'Q', ['You (pl) listened.', 'Yo
 T(73, 'consumpsimus.', 'We ate.', 'R', ['We eat.', 'We were eating.', 'They ate.'], { p: [[0, 'pn', '1p', 'perf']] });
 T(73, 'discesserunt.', 'They departed.', 'R', ['They depart.', 'He departed.', 'They were departing.'], { p: [[0, 'tense', 'perf']] });
 
+// ════════════════════════════════════════════════════════════════
+// CE LEVEL 2 — every Latin sentence is taken from Prep School Latin
+// (R. C. Bass, 2018), Chapters 75–116. Level 2 sentences carry only
+// their Level 2 grammar keys: ticking any Level 2 point assumes the
+// whole of Level 1 has been covered.
+// ════════════════════════════════════════════════════════════════
+
+// ── V: -que, et… et…, quamquam (Ch 75, 77, 85) ──
+T(75, 'puer puellaque currunt.', 'The boy and girl are running.', 'V', ['The boy and the girls are running.', 'The boys and the girl are running.', 'The boy runs to the girl.'], { u: 1 });
+T(75, 'servus timet fugitque.', 'The slave is afraid and flees.', 'V', ['The slave flees because he is afraid.', 'The slaves are afraid and flee.', 'The slave is not afraid and stays.'], {});
+T(75, 'dominus intrat servumque punit.', 'The master enters and punishes the slave.', 'V', ['The slave enters and punishes the master.', 'The master enters and punishes the slaves.', 'The master and the slave enter.'], { u: 1 });
+T(75, 'puella intrat amicumque videt.', 'The girl enters and sees her friend.', 'V', ['The girl and her friend enter.', 'The girl enters and sees her friends.', 'The friend enters and sees the girl.'], { u: 1 });
+T(75, 'semper ridemus ludimusque.', 'We always laugh and play.', 'V', ['We never laugh and play.', 'They always laugh and play.', 'We always laugh and work.'], { u: 1 });
+T(75, 'magister Sextum Marcumque punit.', 'The teacher punishes Sextus and Marcus.', 'V', ['Sextus and Marcus punish the teacher.', 'The teacher and Sextus punish Marcus.', 'The teacher praises Sextus and Marcus.'], { u: 1 });
+T(75, 'servi fessi miserique erant.', 'The slaves were tired and miserable.', 'V', ['The slaves are tired and miserable.', 'The slave was tired and miserable.', 'The slaves were tired but happy.'], { u: 1 });
+T(75, 'templum sacrum pulchrumque erat.', 'The temple was sacred and beautiful.', 'V', ['The temple is sacred and beautiful.', 'The temples were sacred and beautiful.', 'The temple was big and beautiful.'], { u: 1 });
+T(75, 'servi cibum aquamque habebant.', 'The slaves had food and water.', 'V', ['The slaves had food but no water.', 'The slave had food and water.', 'The slaves were giving food and water.'], { u: 1 });
+T(77, 'et matrem et patrem habeo.', 'I have both a mother and a father.', 'S V', ['I have a mother but not a father.', 'He has both a mother and a father.', 'I love both my mother and my father.'], {});
+T(77, 'soror mea et pulchra et clara est.', 'My sister is both beautiful and famous.', 'S V', ['My sister is beautiful but not famous.', 'My sisters are both beautiful and famous.', 'My mother is both beautiful and famous.'], {});
+T(77, 'et mater et pater regis irati erant.', 'Both the mother and the father of the king were angry.', 'S V', ['The king was angry with his mother and father.', 'Both the mother and the father of the king are angry.', 'The mother of the king was angry with the father.'], {});
+T(85, 'vir, quamquam multam pecuniam habebat, non laetus erat.', 'Although the man had a lot of money, he was not happy.', 'V', ['Because the man had a lot of money, he was happy.', 'Although the man was not happy, he had a lot of money.', 'Although the man has a lot of money, he is not happy.'], {});
+T(85, 'nautae, quamquam undae magnae erant, non timebant.', 'Although the waves were big, the sailors were not afraid.', 'V', ['Because the waves were big, the sailors were afraid.', 'Although the waves were small, the sailors were afraid.', 'Although the waves were big, the sailor was not afraid.'], {});
+T(85, 'rex, quamquam clarus erat, uxorem non habebat.', 'Although the king was famous, he did not have a wife.', 'S V', ['Because the king was famous, he had a wife.', 'Although the king had a wife, he was not famous.', 'Although the king is famous, he does not have a wife.'], {});
+T(85, 'quamquam iter longum non erat, iuvenes fessi erant.', 'Although the journey was not long, the young men were tired.', 'S V', ['Because the journey was long, the young men were tired.', 'Although the journey was long, the young men were not tired.', 'Although the journey was not long, the young man was tired.'], {});
+T(85, 'servus, quamquam fessus erat, bene laborabat.', 'Although the slave was tired, he was working well.', 'V', ['Because the slave was tired, he was not working well.', 'Although the slave was working well, he was tired.', 'Although the slaves were tired, they were working well.'], {});
+T(85, 'Graeci, quamquam bene pugnaverunt, Romanos non superaverunt.', 'Although the Greeks fought well, they did not overcome the Romans.', 'V', ['Because the Greeks fought well, they overcame the Romans.', 'Although the Romans fought well, they did not overcome the Greeks.', 'Although the Greeks did not fight well, they overcame the Romans.'], {});
+T(85, 'Paris, ubi lucem claram vidit, magnopere timebat.', 'When Paris saw the bright light, he was very afraid.', 'S V', ['When Paris saw the bright light, he was not afraid.', 'Paris was very afraid because he did not see the light.', 'When Paris sees the bright light, he is very afraid.'], {});
+T(85, 'ubi ad urbem advenimus, ad templum festinavimus.', 'When we arrived at the city, we hurried to the temple.', 'S V', ['When we arrived at the temple, we hurried to the city.', 'When they arrived at the city, they hurried to the temple.', 'When we arrive at the city, we hurry to the temple.'], {});
+T(85, 'mater in villa sola manebat.', 'Mother was staying alone in the villa.', 'V', ['Mother was staying in the villa with a friend.', 'Mother stays alone in the villa.', 'Mother was walking alone to the villa.'], { u: 1 });
+T(116, 'miles, quamquam fessus erat, diu pugnavit.', 'Although the soldier was tired, he fought for a long time.', 'S V', ['Because the soldier was tired, he did not fight for long.', 'Although the soldiers were tired, they fought for a long time.', 'Although the soldier fought for a long time, he was not tired.'], {});
+T(116, 'Graeci, ubi Troiam ceperunt, Helenam ad Graeciam reduxerunt.', 'When the Greeks captured Troy, they led Helen back to Greece.', 'V', ['When the Trojans captured Greece, they led Helen back to Troy.', 'When the Greeks captured Helen, they led her back to Troy.', 'When the Greeks capture Troy, they will lead Helen back to Greece.'], {});
+T(116, 'Troiani, ubi equum viderunt, timebant.', 'When the Trojans saw the horse, they were afraid.', 'V', ['When the Trojans saw the horse, they were happy.', 'When the Greeks saw the horse, they were afraid.', 'When the Trojan saw the horses, he was afraid.'], { u: 1 });
+
+// ── S: Third declension nouns (Ch 77–79) ──
+T(77, 'montem vidi.', 'I saw the mountain.', 'S', ['I saw the mountains.', 'He saw the mountain.', 'I see the mountain.'], { g: [[0, ['montem', 'mons', 'montes', 'montis'], '', 'decl3']], p: [[0, 'case', 'acc sg', 'decl3']] });
+T(77, 'pater currit.', 'Father is running.', 'S', ['The fathers are running.', 'Mother is running.', 'Father is laughing.'], { p: [[0, 'case', 'nom sg', 'decl3']] });
+T(77, 'uxorem meam amo.', 'I love my wife.', 'S', ['My wife loves me.', 'I love my wives.', 'He loves my wife.'], { u: 1, g: [[0, ['uxorem', 'uxor', 'uxores', 'uxoris'], '', 'decl3']] });
+T(77, 'rex regit.', 'The king rules.', 'S', ['The kings rule.', 'The king is running.', 'The king is ruled.'], { p: [[0, 'case', 'nom sg', 'decl3']] });
+T(77, 'matrem amamus.', 'We love our mother.', 'S', ['Mother loves us.', 'We love our mothers.', 'They love their mother.'], { p: [[0, 'case', 'acc sg', 'decl3']] });
+T(77, 'fratrem et sororem habeo.', 'I have a brother and a sister.', 'S', ['I have a father and a sister.', 'I have brothers and sisters.', 'He has a brother and a sister.'], { u: 1 });
+T(77, 'rex sororem pulchram habet.', 'The king has a beautiful sister.', 'S', ['The king has a beautiful wife.', 'The sister has a handsome king.', 'The king has beautiful sisters.'], { u: 1 });
+T(77, 'multos montes vidimus.', 'We saw many mountains.', 'S', ['We saw a big mountain.', 'They saw many mountains.', 'Many mountains saw us.'], { u: 1, g: [[1, ['montes', 'montem', 'montium', 'montibus'], '', 'decl3']], p: [[1, 'case', 'acc pl', 'decl3']] });
+T(77, 'ad montem altum appropinquabamus.', 'We were approaching the high mountain.', 'S', ['We were approaching the high mountains.', 'We were walking away from the high mountain.', 'They were approaching the high mountain.'], { u: 1 });
+T(77, 'uxor mea iam venit.', 'My wife is already coming.', 'S', ['My wife is not coming.', 'My wives are already coming.', 'My sister is already coming.'], { u: 1, p: [[0, 'case', 'nom sg', 'decl3']] });
+T(77, 'Marcus frater Aureliae est.', 'Marcus is the brother of Aurelia.', 'S', ['Aurelia is the sister of Marcus.', 'Marcus is the father of Aurelia.', 'Marcus is the friend of Aurelia.'], { u: 1 });
+T(77, 'puella cibum patri parabat.', 'The girl was preparing food for her father.', 'S', ['The father was preparing food for the girl.', 'The girl was preparing food for her mother.', 'The girl was eating her father’s food.'], { g: [[2, ['patri', 'patrem', 'pater', 'patris'], '', 'decl3']], p: [[2, 'case', 'dat sg', 'decl3']] });
+T(77, 'servi ad montem festinant.', 'The slaves are hurrying to the mountain.', 'S', ['The slaves are hurrying away from the mountain.', 'The slave is hurrying to the mountain.', 'The slaves are hurrying to the mountains.'], { u: 1 });
+T(77, 'in montibus sunt multae viae.', 'In the mountains there are many roads.', 'S', ['In the mountain there is a long road.', 'There are many mountains on the road.', 'In the mountains there were many roads.'], { p: [[1, 'case', 'abl pl', 'decl3']] });
+T(77, 'rex matrem patremque amabat.', 'The king loved his mother and father.', 'S V', ['The mother and father loved the king.', 'The king loved his mother and brother.', 'The king loves his mother and father.'], { u: 1 });
+T(77, 'patrem bonum habeo.', 'I have a good father.', 'S', ['I have a good mother.', 'The good father has me.', 'He has a good father.'], { u: 1 });
+T(77, 'puer cum sorore semper pugnat.', 'The boy always fights with his sister.', 'S', ['The boy never fights with his sister.', 'The sister always fights with the boy.', 'The boy always fights with his sisters.'], { u: 1, g: [[2, ['sorore', 'sororem', 'soror', 'sororis'], '', 'prep']] });
+T(77, 'pater pueri iratus est.', 'The boy’s father is angry.', 'S', ['The father is angry with the boy.', 'The boy’s father was angry.', 'The boy’s mother is angry.'], { u: 1 });
+T(77, 'rex pecuniam sorori dat.', 'The king gives money to his sister.', 'S', ['The sister gives money to the king.', 'The king gives money to his sisters.', 'The king takes money from his sister.'], { u: 1, p: [[2, 'case', 'dat sg', 'decl3']] });
+T(77, 'puella pecuniam regis capit.', 'The girl takes the king’s money.', 'S', ['The king takes the girl’s money.', 'The girl gives money to the king.', 'The girl takes the kings’ money.'], { u: 1, g: [[2, ['regis', 'regem', 'rex', 'regum'], '', 'decl3']], p: [[2, 'case', 'gen sg', 'decl3']] });
+T(77, 'puer multa dona matri dedit.', 'The boy gave many presents to his mother.', 'S', ['The mother gave many presents to the boy.', 'The boy gave many presents to his mothers.', 'The boy gives many presents to his mother.'], { u: 1 });
+T(77, 'uxor regis pulchra est.', 'The wife of the king is beautiful.', 'S', ['The king’s wives are beautiful.', 'The wife of the king was beautiful.', 'The king’s sister is beautiful.'], { u: 1, g: [[1, ['regis', 'regem', 'rex', 'regi'], '', 'decl3']] });
+
+// ── S: Third declension neuter nouns (Ch 79) ──
+T(79, 'nauta mare non timet.', 'The sailor does not fear the sea.', 'S', ['The sea does not frighten the sailors.', 'The sailor fears the sea.', 'The sailors do not fear the sea.'], { u: 1, p: [[1, 'case', 'acc sg', 'decl3']] });
+T(79, 'iter longum et difficile erat.', 'The journey was long and difficult.', 'S Z', ['The journey was long but easy.', 'The journeys were long and difficult.', 'The journey is long and difficult.'], { u: 1 });
+T(79, 'servi corpus portabant.', 'The slaves were carrying the body.', 'S', ['The slaves were carrying the bodies.', 'The slave was carrying the body.', 'The slaves carried the body.'], { u: 1, g: [[1, ['corpus', 'corpora', 'corporis', 'corpore'], '', 'decl3']] });
+T(79, 'multa itinera longa fecimus.', 'We made many long journeys.', 'S', ['We made a long journey.', 'They made many long journeys.', 'We make many long journeys.'], { u: 1, g: [[1, ['itinera', 'iter', 'itineris', 'itinere'], '', 'decl3']] });
+T(79, 'aqua fluminis alta erat.', 'The water of the river was deep.', 'S', ['The water of the rivers was deep.', 'The river water is deep.', 'The water of the sea was deep.'], { u: 1, p: [[1, 'case', 'gen sg', 'decl3']] });
+T(79, 'sunt in urbe multa templa.', 'There are many temples in the city.', 'S', ['There are many cities in the temple.', 'There were many temples in the city.', 'There is a big temple in the city.'], {});
+T(79, 'nomen regis Sextus erat.', 'The name of the king was Sextus.', 'S', ['The name of the king is Sextus.', 'Sextus was the king of the city.', 'The name of the boy was Sextus.'], { u: 1 });
+T(79, 'pater meus trans mare solus saepe navigat.', 'My father often sails across the sea alone.', 'S', ['My father often sails across the sea with friends.', 'My father never sails across the sea alone.', 'My father often sailed across the sea alone.'], {});
+T(79, 'amici itinere fessi erant.', 'The friends were tired from the journey.', 'S', ['The friend was tired from the journey.', 'The friends were happy after the journey.', 'The friends are tired from the journey.'], { u: 1, p: [[1, 'case', 'abl sg', 'decl3']] });
+T(79, 'multa corpora in proelio vidi.', 'I saw many bodies in the battle.', 'S', ['I saw many bodies in the river.', 'They saw many bodies in the battle.', 'I saw a body in the battle.'], { u: 1 });
+T(79, 'rex lucem claram in caelo vidit.', 'The king saw a bright light in the sky.', 'S', ['The king saw a bright light in the river.', 'The kings saw bright lights in the sky.', 'The king sees a bright light in the sky.'], { u: 1, g: [[1, ['lucem', 'lux', 'lucis', 'luce'], '', 'decl3']] });
+T(79, 'nomen urbis Roma erat.', 'The name of the city was Rome.', 'S', ['The name of the city is Rome.', 'Rome was the name of the river.', 'The names of the cities were Roman.'], { u: 1 });
+T(79, 'puellae iuvenes pulchros saepe amant.', 'Girls often love handsome young men.', 'S', ['Handsome young men often love girls.', 'Girls never love handsome young men.', 'The girl often loves a handsome young man.'], {});
+T(79, 'pater multam pecuniam iuveni dedit.', 'The father gave a lot of money to the young man.', 'S', ['The young man gave a lot of money to the father.', 'The father gave a lot of money to the young men.', 'The father took a lot of money from the young man.'], { u: 1, g: [[3, ['iuveni', 'iuvenem', 'iuvenis', 'iuvenes'], '', 'decl3']] });
+T(79, 'ad flumen mox venimus.', 'We soon came to the river.', 'S', ['We soon came to the sea.', 'They soon came to the river.', 'We soon came from the river.'], { u: 1 });
+T(79, 'iuvenes advenerunt.', 'The young men arrived.', 'S', ['The young man arrived.', 'The young men are arriving.', 'The young men departed.'], { p: [[0, 'case', 'nom pl', 'decl3']] });
+T(79, 'urbes spectamus.', 'We are looking at the cities.', 'S', ['We are looking at the city.', 'The cities are looking at us.', 'They are looking at the cities.'], { p: [[0, 'case', 'acc pl', 'decl3']] });
+T(79, 'flumina longa sunt.', 'The rivers are long.', 'S', ['The river is long.', 'The rivers were long.', 'The journeys are long.'], { g: [[0, ['flumina', 'flumen', 'fluminis', 'flumine'], '', 'decl3']], p: [[0, 'case', 'nom pl', 'decl3']] });
+T(79, 'rex urbem cepit.', 'The king captured the city.', 'S', ['The city captured the king.', 'The king captures the city.', 'The kings captured the city.'], { g: [[1, ['urbem', 'urbs', 'urbes', 'urbis'], '', 'decl3']] });
+T(79, 'urbs pulchra erat.', 'The city was beautiful.', 'S', ['The cities were beautiful.', 'The city is beautiful.', 'The city was big.'], {});
+
+// ── T: Future tense (Ch 81–82) ──
+T(81, 'aedificabunt.', 'They will build.', 'T', ['They are building.', 'They were building.', 'We shall build.'], { g: [[0, ['aedificabunt', 'aedificant', 'aedificabant', 'aedificabit'], 'Q', 'fut']], p: [[0, 'pn', '3p', 'fut'], [0, 'tense', 'fut']] });
+T(81, 'iubebo.', 'I shall order.', 'T', ['I order.', 'He will order.', 'I was ordering.'], { p: [[0, 'pn', '1s', 'fut'], [0, 'tense', 'fut']] });
+T(81, 'respondebitis.', 'You (pl) will reply.', 'T', ['You (pl) reply.', 'You (sg) will reply.', 'You (pl) were replying.'], { p: [[0, 'pn', '2p', 'fut']] });
+T(81, 'pugnabimus.', 'We shall fight.', 'T', ['We are fighting.', 'They will fight.', 'We were fighting.'], { g: [[0, ['pugnabimus', 'pugnamus', 'pugnabamus', 'pugnabunt'], 'Q', 'fut']], p: [[0, 'pn', '1p', 'fut'], [0, 'tense', 'fut']] });
+T(81, 'clamabit.', 'He will shout.', 'T', ['He shouts.', 'They will shout.', 'He was shouting.'], { p: [[0, 'pn', '3s', 'fut'], [0, 'tense', 'fut']] });
+T(81, 'delebunt.', 'They will destroy.', 'T', ['They destroy.', 'He will destroy.', 'They destroyed.'], { p: [[0, 'pn', '3p', 'fut']] });
+T(81, 'videbo.', 'I shall see.', 'T', ['I see.', 'I saw.', 'You (sg) will see.'], { g: [[0, ['videbo', 'video', 'videbam', 'videbit'], 'Q', 'fut']], p: [[0, 'tense', 'fut']] });
+T(81, 'ridebimus.', 'We shall laugh.', 'T', ['We are laughing.', 'They will laugh.', 'We laughed.'], { p: [[0, 'pn', '1p', 'fut']] });
+T(81, 'manebo.', 'I shall stay.', 'T', ['I stay.', 'He will stay.', 'I was staying.'], { p: [[0, 'tense', 'fut']] });
+T(82, 'regemus.', 'We shall rule.', 'T', ['We rule.', 'We were ruling.', 'They will rule.'], { g: [[0, ['regemus', 'regimus', 'regebamus', 'regent'], 'Q', 'fut']], p: [[0, 'pn', '1p', 'fut'], [0, 'tense', 'fut']] });
+T(82, 'legam.', 'I shall read.', 'T', ['I read.', 'He will read.', 'I was reading.'], { p: [[0, 'pn', '1s', 'fut']] });
+T(82, 'curram.', 'I shall run.', 'T', ['I run.', 'You (sg) will run.', 'I ran.'], { p: [[0, 'tense', 'fut']] });
+T(82, 'eris.', 'You (sg) will be.', 'T', ['You (sg) are.', 'You (sg) were.', 'He will be.'], { g: [[0, ['eris', 'es', 'eras', 'erit'], 'Q', 'fut']], p: [[0, 'pn', '2s', 'fut']] });
+T(82, 'fugiam.', 'I shall flee.', 'T', ['I flee.', 'He will flee.', 'I fled.'], { p: [[0, 'pn', '1s', 'fut']] });
+T(82, 'mittent.', 'They will send.', 'T', ['They send.', 'He will send.', 'They were sending.'], { g: [[0, ['mittent', 'mittunt', 'mittebant', 'mittet'], 'Q', 'fut']], p: [[0, 'pn', '3p', 'fut']] });
+T(82, 'erunt.', 'They will be.', 'T', ['They are.', 'They were.', 'He will be.'], { g: [[0, ['erunt', 'sunt', 'erant', 'erit'], 'Q', 'fut']], p: [[0, 'tense', 'fut']] });
+T(82, 'bibemus.', 'We shall drink.', 'T', ['We drink.', 'They will drink.', 'We were drinking.'], { p: [[0, 'pn', '1p', 'fut']] });
+T(82, 'dormiet.', 'He will sleep.', 'T', ['He sleeps.', 'They will sleep.', 'He was sleeping.'], { g: [[0, ['dormiet', 'dormit', 'dormiebat', 'dormient'], 'Q', 'fut']], p: [[0, 'pn', '3s', 'fut']] });
+T(82, 'veniam.', 'I shall come.', 'T', ['I come.', 'He will come.', 'I came.'], { p: [[0, 'tense', 'fut']] });
+T(82, 'capiemus.', 'We shall capture.', 'T', ['We capture.', 'They will capture.', 'We were capturing.'], { p: [[0, 'pn', '1p', 'fut'], [0, 'tense', 'fut']] });
+T(82, 'dicet.', 'He will say.', 'T', ['He says.', 'They will say.', 'He said.'], { g: [[0, ['dicet', 'dicit', 'dicebat', 'dicent'], 'Q', 'fut']], p: [[0, 'pn', '3s', 'fut']] });
+T(82, 'cras servus fugiet.', 'Tomorrow the slave will flee.', 'T', ['Yesterday the slave fled.', 'Today the slave is fleeing.', 'Tomorrow the slaves will flee.'], { u: 1, g: [[2, ['fugiet', 'fugit', 'fugiebat', 'fugient'], 'Q', 'fut']] });
+T(82, 'cras oppidum capiemus.', 'Tomorrow we shall capture the town.', 'T', ['Today we are capturing the town.', 'Tomorrow they will capture the town.', 'Yesterday we were attacking the town.'], { u: 1, g: [[2, ['capiemus', 'capimus', 'capiebamus', 'capient'], 'Q', 'fut']] });
+T(82, 'cras pueri current.', 'Tomorrow the boys will run.', 'T', ['Today the boys are running.', 'Tomorrow the boy will run.', 'Yesterday the boys were running.'], { u: 1, g: [[2, ['current', 'currunt', 'currebant', 'curret'], 'Q', 'fut']] });
+T(82, 'pueri magistros numquam audient.', 'The boys will never listen to the teachers.', 'T', ['The teachers will never listen to the boys.', 'The boys never listen to the teachers.', 'The boys will always listen to the teachers.'], { u: 1 });
+T(85, 'dominus multa dona servis cras dabit.', 'Tomorrow the master will give many presents to the slaves.', 'T', ['Tomorrow the slaves will give many presents to the master.', 'Yesterday the master gave many presents to the slaves.', 'Tomorrow the master will give many presents to the slave.'], {});
+
+// ── U: eo, ire, ii and its compounds (Ch 84) ──
+T(84, 'redibo.', 'I shall return.', 'T U', ['I am returning.', 'I returned.', 'He will return.'], { p: [[0, 'pn', '1s', 'eo']] });
+T(84, 'perierunt.', 'They perished.', 'U', ['They perish.', 'He perished.', 'They will perish.'], { p: [[0, 'pn', '3p', 'eo']] });
+T(84, 'ibas.', 'You (sg) were going.', 'U', ['You (sg) are going.', 'You (pl) were going.', 'You (sg) went.'], { g: [[0, ['ibas', 'is', 'ibatis', 'ibat'], '', 'eo']], p: [[0, 'pn', '2s', 'eo']] });
+T(84, 'ineunt.', 'They go in.', 'U', ['They go out.', 'He goes in.', 'They went in.'], { p: [[0, 'pn', '3p', 'eo']] });
+T(84, 'exit.', 'He goes out.', 'U', ['He goes in.', 'They go out.', 'He went out.'], { p: [[0, 'pn', '3s', 'eo']] });
+T(84, 'ibant.', 'They were going.', 'U', ['They go.', 'He was going.', 'They went.'], { g: [[0, ['ibant', 'eunt', 'ibat', 'ibunt'], 'T', 'eo']], p: [[0, 'pn', '3p', 'eo']] });
+T(84, 'transibunt.', 'They will cross.', 'T U', ['They are crossing.', 'They crossed.', 'He will cross.'], { p: [[0, 'pn', '3p', 'eo']] });
+T(84, 'itis.', 'You (pl) are going.', 'U', ['You (sg) are going.', 'They are going.', 'You (pl) were going.'], { g: [[0, ['itis', 'is', 'eunt', 'imus'], '', 'eo']], p: [[0, 'pn', '2p', 'eo']] });
+T(84, 'rediit.', 'He returned.', 'U', ['He returns.', 'They returned.', 'He went out.'], { p: [[0, 'pn', '3s', 'eo']] });
+T(84, 'exibo.', 'I shall go out.', 'T U', ['I go out.', 'I went out.', 'He will go out.'], { p: [[0, 'pn', '1s', 'eo']] });
+T(84, 'ierunt.', 'They went.', 'U', ['They go.', 'He went.', 'They will go.'], { g: [[0, ['ierunt', 'eunt', 'iit', 'ibant'], '', 'eo']], p: [[0, 'pn', '3p', 'eo']] });
+T(84, 'ibitis.', 'You (pl) will go.', 'T U', ['You (pl) are going.', 'You (sg) will go.', 'You (pl) were going.'], { p: [[0, 'pn', '2p', 'eo']] });
+T(84, 'heri flumen transiimus.', 'Yesterday we crossed the river.', 'S U', ['Tomorrow we shall cross the river.', 'Yesterday they crossed the river.', 'Yesterday we crossed the sea.'], { u: 1 });
+T(84, 'ad urbem eo.', 'I am going to the city.', 'S U', ['I am going out of the city.', 'He is going to the city.', 'I went to the city.'], { u: 1, g: [[2, ['eo', 'it', 'eunt', 'is'], '', 'eo']], p: [[2, 'pn', '1s', 'eo']] });
+T(84, 'i, puer!', 'Go, boy!', 'U', ['Go, boys!', 'Come, boy!', 'The boy is going.'], {});
+T(84, 'per viam ibamus.', 'We were going along the road.', 'U', ['We went along the road.', 'They were going along the road.', 'We were going across the road.'], { u: 1, p: [[2, 'pn', '1p', 'eo']] });
+T(84, 'multi iuvenes perierunt.', 'Many young men perished.', 'S U', ['Many young men escaped.', 'A young man perished.', 'Many young men will perish.'], { u: 1 });
+T(84, 'pueri mox redierunt.', 'The boys soon returned.', 'U', ['The boys will soon return.', 'The boy soon returned.', 'The boys soon went out.'], { u: 1, g: [[2, ['redierunt', 'redeunt', 'rediit', 'redibunt'], 'T', 'eo']] });
+T(84, 'crasne ad urbem redibis?', 'Will you (sg) return to the city tomorrow?', 'S T U', ['Did you (sg) return to the city yesterday?', 'Will you (pl) return to the city tomorrow?', 'Are you (sg) going to the city today?'], {});
+T(84, 'celeriter exiit.', 'He went out quickly.', 'U', ['He went in quickly.', 'They went out quickly.', 'He goes out quickly.'], { p: [[1, 'pn', '3s', 'eo']] });
+T(84, 'quis ad urbem cras ibit?', 'Who will go to the city tomorrow?', 'S T U', ['Who went to the city yesterday?', 'Who is going to the city today?', 'Why will he go to the city tomorrow?'], { u: 1 });
+T(84, 'multi servi trans flumen transierunt.', 'Many slaves went across the river.', 'S U', ['Many slaves will go across the river.', 'A slave went across the river.', 'Many slaves went along the river.'], { u: 1 });
+T(84, 'multi iuvenes in bello perierunt.', 'Many young men perished in the war.', 'S U', ['Many young men escaped from the war.', 'Many young men will perish in the war.', 'Many young men fought in the war.'], { u: 1 });
+T(84, 'mater paterque ad urbem mox redibunt.', 'Mother and father will soon return to the city.', 'S T U V', ['Mother and father soon returned to the city.', 'Mother and father will soon leave the city.', 'Mother will soon return to the city with father.'], {});
+T(84, 'puer ex oppido statim exiit.', 'The boy went out of the town at once.', 'U', ['The boy went into the town at once.', 'The boys went out of the town at once.', 'The boy will go out of the town at once.'], { u: 1 });
+T(84, 'vir, ubi in templum iniit, amicum vidit.', 'When the man went into the temple, he saw his friend.', 'U', ['When the man went out of the temple, he saw his friend.', 'When the friend went into the temple, he saw the man.', 'When the man goes into the temple, he sees his friend.'], {});
+T(84, 'nauta ad urbem tandem adiit.', 'At last the sailor went towards the city.', 'S U', ['At last the sailor went out of the city.', 'At last the sailors went towards the city.', 'At last the sailor will go towards the city.'], { u: 1 });
+T(84, 'rex iuvenes e templo exire iussit.', 'The king ordered the young men to go out of the temple.', 'S U', ['The young men ordered the king to go out of the temple.', 'The king ordered the young men to go into the temple.', 'The king ordered the young man to go out of the temple.'], {});
+T(85, 'et pater et mater in bello perierunt.', 'Both father and mother perished in the war.', 'S U V', ['Father and mother escaped from the war.', 'Both father and mother will perish in the war.', 'Father perished in the war, but mother did not.'], {});
+T(116, 'multi perierunt, pauci effugerunt.', 'Many perished, few escaped.', 'U', ['Few perished, many escaped.', 'Many escaped, few perished.', 'Many will perish, few will escape.'], {});
+
+// ── W: hic, haec, hoc and ille, illa, illud (Ch 89, 91) ──
+T(89, 'hic puer est Marcus.', 'This boy is Marcus.', 'W', ['That boy is Marcus.', 'These boys are Marcus and Sextus.', 'This boy is with Marcus.'], { u: 1, g: [[0, ['hic', 'haec', 'hoc', 'hunc'], '', 'hic']] });
+T(89, 'hoc bellum est malum.', 'This war is bad.', 'W', ['That war is bad.', 'These wars are bad.', 'This war is good.'], { u: 1, g: [[0, ['hoc', 'hic', 'haec', 'hunc'], '', 'hic']] });
+T(89, 'hae puellae sunt parvae.', 'These girls are small.', 'W', ['This girl is small.', 'Those girls are small.', 'These boys are small.'], { u: 1, g: [[0, ['hae', 'hi', 'haec', 'has'], '', 'hic']] });
+T(89, 'hanc puellam amo.', 'I love this girl.', 'W', ['This girl loves me.', 'I love these girls.', 'I love that girl.'], { u: 1, g: [[0, ['hanc', 'haec', 'hunc', 'hac'], '', 'hic']] });
+T(89, 'magister pueros his verbis terret.', 'The teacher frightens the boys with these words.', 'W', ['The boys frighten the teacher with these words.', 'The teacher frightens the boys with those words.', 'The teacher frightens the boy with this word.'], { u: 1, g: [[2, ['his', 'hos', 'haec', 'hoc'], '', 'hic']] });
+T(89, 'librum huius pueri lego.', 'I am reading this boy’s book.', 'W', ['This boy is reading my book.', 'I am reading these boys’ books.', 'I am reading that boy’s book.'], { u: 1, g: [[1, ['huius', 'hic', 'hunc', 'hoc'], '', 'hic']] });
+T(89, 'iuvenis, ubi haec verba audivit, discessit.', 'When the young man heard these words, he departed.', 'S W', ['When the young man heard those words, he stayed.', 'When the young men heard these words, they departed.', 'When the young man said these words, he departed.'], {});
+T(89, 'hoc flumen sacrum est.', 'This river is sacred.', 'S W', ['That river is sacred.', 'These rivers are sacred.', 'This river is deep.'], { u: 1, g: [[0, ['hoc', 'hic', 'haec', 'hunc'], '', 'hic']] });
+T(89, 'nomen huius puellae Flavia est.', 'The name of this girl is Flavia.', 'S W', ['The name of that girl is Flavia.', 'This girl’s friend is Flavia.', 'The names of these girls are Flavia and Julia.'], { u: 1 });
+T(89, 'muri huius urbis alti sunt.', 'The walls of this city are high.', 'S W', ['The walls of that city are high.', 'The wall of this city is high.', 'The walls of these cities are high.'], { u: 1, g: [[1, ['huius', 'hic', 'hanc', 'hac'], '', 'hic']] });
+T(89, 'miles hoc gladio bene pugnavit.', 'The soldier fought well with this sword.', 'S W', ['The soldier fought well with that sword.', 'The soldiers fought well with these swords.', 'The soldier fights well with this sword.'], { u: 1, g: [[1, ['hoc', 'hic', 'hunc', 'haec'], '', 'hic']] });
+T(89, 'dominus donum his pueris dabit.', 'The master will give a present to these boys.', 'T W', ['These boys will give a present to the master.', 'The master gave a present to these boys.', 'The master will give a present to this boy.'], { u: 1 });
+T(91, 'ille servus bonus est.', 'That slave is good.', 'W', ['This slave is good.', 'Those slaves are good.', 'That slave is bad.'], { u: 1, g: [[0, ['ille', 'illa', 'illud', 'illum'], '', 'ille']] });
+T(91, 'illa navis magna est.', 'That ship is big.', 'S W', ['This ship is big.', 'Those ships are big.', 'That ship is small.'], { u: 1, g: [[0, ['illa', 'ille', 'illud', 'illam'], '', 'ille']] });
+T(91, 'illud templum magnum et pulchrum est.', 'That temple is big and beautiful.', 'W', ['This temple is big and beautiful.', 'Those temples are big and beautiful.', 'That temple was big and beautiful.'], { u: 1, g: [[0, ['illud', 'ille', 'illa', 'illum'], '', 'ille']] });
+T(91, 'illum puerum non amo.', 'I do not like that boy.', 'W', ['That boy does not like me.', 'I do not like this boy.', 'I do not like those boys.'], { u: 1, g: [[0, ['illum', 'ille', 'illud', 'illo'], '', 'ille']] });
+T(91, 'dominus illos servos saepe punit.', 'The master often punishes those slaves.', 'W', ['Those slaves often punish the master.', 'The master often punishes that slave.', 'The master never punishes those slaves.'], { u: 1, g: [[1, ['illos', 'illi', 'illas', 'illum'], '', 'ille']] });
+T(91, 'scuta illorum militum magna sunt.', 'The shields of those soldiers are big.', 'S W', ['The shields of that soldier are big.', 'Those soldiers have small shields.', 'The shields of these soldiers are big.'], { u: 1 });
+T(91, 'pecuniam illis servis cras dabo.', 'I shall give money to those slaves tomorrow.', 'T W', ['Those slaves will give me money tomorrow.', 'I gave money to those slaves yesterday.', 'I shall give money to that slave tomorrow.'], { u: 1, g: [[1, ['illis', 'illos', 'illi', 'illa'], '', 'ille']] });
+T(91, 'multi iuvenes in illa urbe habitant.', 'Many young men live in that city.', 'S W', ['Many young men live in this city.', 'A young man lives in that city.', 'Many young men are walking into that city.'], { u: 1 });
+T(91, 'sunt multae naves in illo flumine.', 'There are many ships on that river.', 'S W', ['There are many ships on this river.', 'There is a big ship on that river.', 'There were many ships on that river.'], {});
+T(91, 'ubi sunt libri illorum puerorum?', 'Where are the books of those boys?', 'W', ['Where are the books of that boy?', 'Where are those boys?', 'Why are the books of those boys here?'], { u: 1 });
+T(92, 'hic servus bonus, ille malus est.', 'This slave is good, that one is bad.', 'W', ['This slave is bad, that one is good.', 'That slave is good, this one is bad.', 'This slave is good, that master is bad.'], {});
+T(92, 'ille servus hunc dominum timebat.', 'That slave was afraid of this master.', 'W', ['This master was afraid of that slave.', 'That slave was afraid of that master.', 'That slave is afraid of this master.'], { u: 1, g: [[2, ['hunc', 'hic', 'hoc', 'huic'], '', 'hic']] });
+T(92, 'illi milites hanc urbem oppugnaverunt.', 'Those soldiers attacked this city.', 'S W', ['These soldiers attacked that city.', 'That soldier attacked this city.', 'Those soldiers were attacking this city.'], { u: 1 });
+T(92, 'haec navis ad illam insulam navigavit.', 'This ship sailed towards that island.', 'S W', ['That ship sailed towards this island.', 'This ship sailed away from that island.', 'These ships sailed towards that island.'], { u: 1 });
+T(92, 'hanc puellam in illa via vidi.', 'I saw this girl in that street.', 'W', ['I saw that girl in this street.', 'This girl saw me in that street.', 'I saw these girls in that street.'], { u: 1 });
+T(92, 'nauta navem conspexit.', 'The sailor caught sight of the ship.', 'S', ['The sailors caught sight of the ship.', 'The sailor caught sight of the ships.', 'The ship caught sight of the sailor.'], { u: 1, g: [[1, ['navem', 'navis', 'naves', 'navi'], '', 'decl3']] });
+T(97, 'illi milites in proelio fortiter pugnaverunt.', 'Those soldiers fought bravely in the battle.', 'S W', ['These soldiers fought bravely in the battle.', 'That soldier fought bravely in the battle.', 'Those soldiers fought badly in the battle.'], {});
+T(97, 'hunc civem in urbe heri conspexi.', 'I caught sight of this citizen in the city yesterday.', 'S W', ['This citizen caught sight of me in the city yesterday.', 'I shall catch sight of this citizen in the city tomorrow.', 'I caught sight of that citizen in the city yesterday.'], {});
+
+// ── X: is, ea, id and personal pronouns (Ch 94, 96) ──
+T(94, 'Marcus filium habet. eum amat.', 'Marcus has a son. He loves him.', 'X', ['Marcus has a daughter. He loves her.', 'Marcus has a son. The son loves him.', 'Marcus has sons. He loves them.'], { g: [[3, ['eum', 'eam', 'eos', 'id'], '', 'is']] });
+T(94, 'Marcus filiam habet. eam amat.', 'Marcus has a daughter. He loves her.', 'X', ['Marcus has a son. He loves him.', 'Marcus has a daughter. She loves him.', 'Marcus has daughters. He loves them.'], { g: [[3, ['eam', 'eum', 'eas', 'ea'], '', 'is']] });
+T(94, 'Marcus servum habet. pecuniam ei dat.', 'Marcus has a slave. He gives money to him.', 'X', ['Marcus has a slave. The slave gives money to him.', 'Marcus has slaves. He gives money to them.', 'Marcus has a slave. He takes money from him.'], { g: [[4, ['ei', 'eum', 'eius', 'eo'], '', 'is']] });
+T(94, 'Marcus uxorem pulchram habet. nomen eius est Aurelia.', 'Marcus has a beautiful wife. Her name is Aurelia.', 'S X', ['Marcus has a beautiful sister. Her name is Aurelia.', 'Aurelia has a handsome husband. His name is Marcus.', 'Marcus has a beautiful wife. Their name is Aurelia.'], {});
+T(94, 'Aurelia multos amicos habet. amici eius clari sunt.', 'Aurelia has many friends. Her friends are famous.', 'X', ['Aurelia has many friends. Their friends are famous.', 'Aurelia has a friend. Her friend is famous.', 'Aurelia has many famous friends. She is famous too.'], {});
+T(94, 'rex servos amat. multam pecuniam eis saepe dat.', 'The king loves his slaves. He often gives them a lot of money.', 'S X', ['The king loves his slaves. They often give him a lot of money.', 'The king loves his slave. He often gives him a lot of money.', 'The king loves his slaves. He never gives them money.'], { g: [[5, ['eis', 'eos', 'eorum', 'ei'], '', 'is']] });
+T(94, 'servus aquam rogat. dominus eam ei dat.', 'The slave asks for water. The master gives it to him.', 'X', ['The master asks for water. The slave gives it to him.', 'The slave asks for water. The master gives it to her.', 'The slave asks for food. The master gives it to him.'], {});
+T(94, 'Protesilaus fortiter pugnabat. Troiani tamen eum mox occiderunt.', 'Protesilaus was fighting bravely. However, the Trojans soon killed him.', 'X', ['Protesilaus was fighting bravely. However, he soon killed the Trojans.', 'Protesilaus was fighting badly. So the Trojans soon killed him.', 'Protesilaus fought bravely. The Trojans did not kill him.'], {});
+T(94, 'navis magna erat. erant in ea multi nautae.', 'The ship was big. There were many sailors in it.', 'S X', ['The ship was small. There were few sailors in it.', 'The ship was big. There were many soldiers in it.', 'The ships were big. There were many sailors in them.'], {});
+T(94, 'urbs magna erat. Romani eam capere constituerunt.', 'The city was big. The Romans decided to capture it.', 'S X', ['The city was big. The Romans decided to destroy it.', 'The city was big. The Romans did not capture it.', 'The city was small. The Romans decided to capture it.'], {});
+T(94, 'hoc vinum bonum est. id saepe bibo.', 'This wine is good. I often drink it.', 'W X', ['That wine is good. I often drink it.', 'This wine is bad. I never drink it.', 'This wine is good. He often drinks it.'], {});
+T(94, 'auxilio eorum urbem cepimus.', 'With their help we captured the city.', 'S X', ['With his help we captured the city.', 'With our help they captured the city.', 'With their help we shall capture the city.'], { u: 1 });
+T(96, 'tu ludis; ego laboro.', 'You (sg) are playing; I am working.', 'X', ['I am playing; you (sg) are working.', 'You (pl) are playing; we are working.', 'You (sg) are working; I am playing.'], {});
+T(96, 'nos vos non amamus.', 'We do not like you (pl).', 'X', ['You (pl) do not like us.', 'We like you (pl).', 'They do not like you (pl).'], { u: 1 });
+T(96, 'nemo me vidit.', 'No one saw me.', 'X', ['I saw no one.', 'No one saw you (sg).', 'Everyone saw me.'], { u: 1 });
+T(96, 'te in urbe vidi.', 'I saw you (sg) in the city.', 'S X', ['You (sg) saw me in the city.', 'I saw you (pl) in the city.', 'I shall see you (sg) in the city.'], { u: 1 });
+T(96, 'hostes contra nos pugnant.', 'The enemy are fighting against us.', 'S X', ['We are fighting against the enemy.', 'The enemy are fighting with us.', 'The enemy are fighting against you (pl).'], { u: 1 });
+T(96, 'pater pecuniam tibi dat.', 'Father gives money to you (sg).', 'S X', ['Father gives money to me.', 'You (sg) give money to Father.', 'Father gives money to you (pl).'], { u: 1, g: [[2, ['tibi', 'te', 'tu', 'tui'], '', 'pron']] });
+T(96, 'amici mecum ludunt.', 'My friends are playing with me.', 'X', ['My friends are playing with you (sg).', 'My friend is playing with me.', 'I am playing with my friends.'], { u: 1 });
+T(96, 'ego donum tibi dabo.', 'I shall give a present to you (sg).', 'T X', ['You (sg) will give a present to me.', 'I gave a present to you (sg).', 'I shall give a present to him.'], { u: 1 });
+T(96, 'magister dona nobis numquam dat.', 'The teacher never gives presents to us.', 'X', ['We never give presents to the teacher.', 'The teacher always gives presents to us.', 'The teacher never gives presents to you (pl).'], { u: 1, g: [[2, ['nobis', 'nos', 'nostrum', 'vobis'], '', 'pron']] });
+T(97, 'te cras videbo.', 'I shall see you (sg) tomorrow.', 'T X', ['You (sg) will see me tomorrow.', 'I saw you (sg) yesterday.', 'I shall see you (pl) tomorrow.'], { u: 1 });
+T(97, 'quod milites bene pugnabant, dux eos laudavit.', 'Because the soldiers were fighting well, the general praised them.', 'S X', ['Because the general was fighting well, the soldiers praised him.', 'Although the soldiers were fighting well, the general did not praise them.', 'Because the soldier was fighting well, the general praised him.'], {});
+T(116, 'quis nos servare poterit?', 'Who will be able to save us?', 'T X b', ['Who was able to save us?', 'Who will be able to save you (pl)?', 'Who wants to save us?'], { u: 1 });
+T(116, 'cives, quamquam hostes timebant, contra eos bene pugnaverunt.', 'Although the citizens were afraid of the enemy, they fought well against them.', 'S V X', ['Because the citizens were afraid of the enemy, they did not fight.', 'Although the enemy were afraid of the citizens, they fought well against them.', 'Although the citizens were not afraid of the enemy, they fought badly.'], {});
+
+// ── S: Third declension, revision (Ch 92–97) ──
+T(97, 'rex mortuus erat.', 'The king was dead.', 'S', ['The king is dead.', 'The kings were dead.', 'The king was alive.'], { u: 1 });
+T(97, 'dux bellum non timet.', 'The general does not fear war.', 'S', ['The general fears war.', 'The generals do not fear war.', 'War does not frighten the soldier.'], { u: 1, p: [[0, 'case', 'nom sg', 'decl3']] });
+T(97, 'cives oppida defenderunt.', 'The citizens defended the towns.', 'S', ['The citizens defended the town.', 'The citizen defended the towns.', 'The towns defended the citizens.'], { u: 1, p: [[0, 'case', 'nom pl', 'decl3']] });
+T(97, 'duces comites amabant.', 'The leaders loved their companions.', 'S', ['The companions loved their leaders.', 'The leader loved his companion.', 'The leaders love their companions.'], { u: 1 });
+T(97, 'hostes multos cives armis vulneraverunt.', 'The enemy wounded many citizens with weapons.', 'S', ['Many citizens wounded the enemy with weapons.', 'The enemy killed many citizens with weapons.', 'The enemy wounded a citizen with a weapon.'], { u: 1, g: [[2, ['cives', 'civis', 'civem', 'civibus'], '', 'decl3']] });
+T(116, 'pater meus vocem magnam habet.', 'My father has a loud voice.', 'S', ['My mother has a loud voice.', 'My father has a quiet voice.', 'My father hears a loud voice.'], { u: 1, g: [[2, ['vocem', 'vox', 'voces', 'vocis'], '', 'decl3']] });
+T(116, 'bene pugnate, cives!', 'Fight well, citizens!', 'S', ['Fight well, citizen!', 'The citizens are fighting well.', 'Do not fight, citizens!'], {});
+
+// ── Y: Pluperfect tense (Ch 99) ──
+T(99, 'amaveramus.', 'We had loved.', 'Y', ['We loved.', 'We were loving.', 'They had loved.'], { g: [[0, ['amaveramus', 'amavimus', 'amabamus', 'amaverant'], 'Q R', 'plupf']], p: [[0, 'pn', '1p', 'plupf'], [0, 'tense', 'plupf']] });
+T(99, 'ceperant.', 'They had captured.', 'Y', ['They captured.', 'He had captured.', 'They were capturing.'], { p: [[0, 'pn', '3p', 'plupf'], [0, 'tense', 'plupf']] });
+T(99, 'audiveras.', 'You (sg) had heard.', 'Y', ['You (sg) heard.', 'You (pl) had heard.', 'You (sg) were hearing.'], { p: [[0, 'pn', '2s', 'plupf']] });
+T(99, 'rexerat.', 'He had ruled.', 'Y', ['He ruled.', 'They had ruled.', 'He will rule.'], { p: [[0, 'tense', 'plupf']] });
+T(99, 'dederam.', 'I had given.', 'Y', ['I gave.', 'He had given.', 'I was giving.'], { g: [[0, ['dederam', 'dedi', 'dabam', 'dederat'], 'Q R', 'plupf']], p: [[0, 'pn', '1s', 'plupf']] });
+T(99, 'duxerat.', 'He had led.', 'Y', ['He led.', 'They had led.', 'He was leading.'], { p: [[0, 'pn', '3s', 'plupf']] });
+T(99, 'miseram.', 'I had sent.', 'Y', ['I sent.', 'He had sent.', 'I was sending.'], { p: [[0, 'tense', 'plupf']] });
+T(99, 'cucurrerant.', 'They had run.', 'Y', ['They ran.', 'He had run.', 'They were running.'], { g: [[0, ['cucurrerant', 'cucurrerunt', 'currebant', 'cucurrerat'], 'Q R', 'plupf']], p: [[0, 'pn', '3p', 'plupf']] });
+T(99, 'fugerat.', 'He had fled.', 'Y', ['He fled.', 'They had fled.', 'He was fleeing.'], { p: [[0, 'tense', 'plupf']] });
+T(99, 'dixerat.', 'He had said.', 'Y', ['He said.', 'They had said.', 'He will say.'], { p: [[0, 'pn', '3s', 'plupf']] });
+T(99, 'magister iratus erat quod riseramus.', 'The teacher was angry because we had laughed.', 'Y', ['We had laughed because the teacher was angry.', 'The teacher was angry because they had laughed.', 'The teacher was angry because we were laughing.'], { g: [[4, ['riseramus', 'risimus', 'ridebamus', 'riserant'], 'Q R', 'plupf']] });
+T(99, 'puer librum non legerat.', 'The boy had not read the book.', 'Y', ['The boy did not read the book.', 'The boys had not read the book.', 'The boy had not read the books.'], { u: 1, p: [[3, 'tense', 'plupf']] });
+T(99, 'puella puerum vulneraverat.', 'The girl had wounded the boy.', 'Y', ['The boy had wounded the girl.', 'The girl wounded the boy.', 'The girl had wounded the boys.'], { u: 1 });
+T(99, 'verba non audiveramus.', 'We had not heard the words.', 'Y', ['We did not hear the words.', 'They had not heard the words.', 'We had not said the words.'], { u: 1 });
+T(99, 'dominus laetus erat quod bene dormiverat.', 'The master was happy because he had slept well.', 'Y', ['The master was happy because he was sleeping well.', 'The master had slept well because he was happy.', 'The master was sad because he had not slept well.'], {});
+T(99, 'servi bene laboraverant.', 'The slaves had worked well.', 'Y', ['The slaves worked well.', 'The slave had worked well.', 'The slaves had worked badly.'], { u: 1, g: [[2, ['laboraverant', 'laboraverunt', 'laborabant', 'laboraverat'], 'Q R', 'plupf']] });
+T(99, 'uxor discesserat.', 'The wife had departed.', 'S Y', ['The wife departed.', 'The wives had departed.', 'The wife had arrived.'], { p: [[1, 'tense', 'plupf']] });
+T(99, 'servus cibum paraverat.', 'The slave had prepared the food.', 'Y', ['The slave prepared the food.', 'The slaves had prepared the food.', 'The slave had eaten the food.'], { u: 1 });
+T(99, 'hostes laeti erant quod Romani discesserant.', 'The enemy were happy because the Romans had departed.', 'S Y', ['The Romans were happy because the enemy had departed.', 'The enemy were happy because the Romans were departing.', 'The enemy were sad because the Romans had departed.'], {});
+T(99, 'multa oppida ceperant.', 'They had captured many towns.', 'Y', ['They captured many towns.', 'He had captured many towns.', 'They had captured a big town.'], { u: 1 });
+T(99, 'puer celeriter currebat quod magistrum iratum viderat.', 'The boy was running quickly because he had seen the angry teacher.', 'Y', ['The angry teacher was running quickly because he had seen the boy.', 'The boy was running quickly because he saw the happy teacher.', 'The boy had run quickly because he was seeing the angry teacher.'], {});
+T(99, 'milites bene pugnaverant.', 'The soldiers had fought well.', 'S Y', ['The soldiers fought well.', 'The soldier had fought well.', 'The soldiers had fought badly.'], { u: 1, g: [[2, ['pugnaverant', 'pugnaverunt', 'pugnabant', 'pugnaverat'], 'Q R', 'plupf']] });
+T(99, 'proelium longum fuerat.', 'The battle had been long.', 'Y', ['The battle was long.', 'The battles had been long.', 'The battle will be long.'], { u: 1 });
+T(99, 'dominus multos servos liberaverat.', 'The master had set many slaves free.', 'Y', ['The master set many slaves free.', 'Many slaves had set the master free.', 'The master had punished many slaves.'], { u: 1 });
+T(99, 'servi ex oppido cucurrerant.', 'The slaves had run out of the town.', 'Y', ['The slaves had run into the town.', 'The slaves ran out of the town.', 'The slave had run out of the town.'], { u: 1 });
+T(99, 'nuntius multa verba dixerat.', 'The messenger had said many words.', 'Y', ['The messenger said many words.', 'The messengers had said many words.', 'The messenger had heard many words.'], { u: 1 });
+T(99, 'milites trans flumen transierant.', 'The soldiers had crossed the river.', 'S U Y', ['The soldiers crossed the river.', 'The soldier had crossed the river.', 'The soldiers had crossed the sea.'], { u: 1 });
+T(99, 'cives oppidum fortiter defenderant.', 'The citizens had defended the town bravely.', 'S Y', ['The citizens defended the town bravely.', 'The citizens had attacked the town bravely.', 'The citizen had defended the town bravely.'], { u: 1 });
+
+// ── Z: Third declension adjectives (Ch 101, 103) ──
+T(101, 'dominum crudelem habeo.', 'I have a cruel master.', 'Z', ['The cruel master has me.', 'I have a noble master.', 'He has a cruel master.'], { u: 1, g: [[1, ['crudelem', 'crudelis', 'crudeles', 'crudeli'], '', 'adj3']] });
+T(101, 'opus facile facio.', 'I am doing an easy task.', 'S Z', ['I am doing a difficult task.', 'He is doing an easy task.', 'I am doing easy tasks.'], { u: 1, g: [[1, ['facile', 'facilis', 'facilem', 'facilia'], '', 'adj3']] });
+T(101, 'omnia vina amo.', 'I love all wines.', 'Z', ['All wines love me.', 'I love this wine.', 'I love all women.'], { u: 1, g: [[0, ['omnia', 'omnes', 'omnis', 'omne'], '', 'adj3']] });
+T(101, 'omnes libros lego.', 'I read all the books.', 'Z', ['I read the book.', 'All the boys read books.', 'He reads all the books.'], { u: 1, g: [[0, ['omnes', 'omnia', 'omnis', 'omnem'], '', 'adj3']] });
+T(101, 'ducem fortem laudo.', 'I praise the brave leader.', 'S Z', ['The brave leader praises me.', 'I praise the brave leaders.', 'I praise the cruel leader.'], { u: 1, g: [[1, ['fortem', 'fortis', 'fortes', 'forti'], '', 'adj3']] });
+T(101, 'servum tristem video.', 'I see the sad slave.', 'Z', ['The sad slave sees me.', 'I see the sad slaves.', 'I see the happy slave.'], { u: 1, g: [[1, ['tristem', 'tristis', 'tristes', 'tristi'], '', 'adj3']] });
+T(101, 'milites crudeles timeo.', 'I fear the cruel soldiers.', 'S Z', ['The cruel soldiers fear me.', 'I fear the cruel soldier.', 'I praise the cruel soldiers.'], { u: 1 });
+T(101, 'hic miles est fortis et validus.', 'This soldier is brave and strong.', 'S W Z', ['That soldier is brave and strong.', 'These soldiers are brave and strong.', 'This soldier is cruel and strong.'], {});
+T(101, 'illa puella nobilis est.', 'That girl is noble.', 'W Z', ['This girl is noble.', 'Those girls are noble.', 'That girl is sad.'], { u: 1 });
+T(101, 'cur tristis es, puer?', 'Why are you sad, boy?', 'Z', ['Why are you sad, boys?', 'Where are you, sad boy?', 'Why is the boy sad?'], {});
+T(101, 'tristis sum quod magister crudelis est.', 'I am sad because the teacher is cruel.', 'Z', ['The teacher is cruel because I am sad.', 'I am sad because the teacher is noble.', 'He is sad because the teacher is cruel.'], {});
+T(101, 'magister crudelis omnes pueros punit.', 'The cruel teacher punishes all the boys.', 'Z', ['All the boys punish the cruel teacher.', 'The cruel teacher punishes the boy.', 'The cruel teacher praises all the boys.'], { u: 1 });
+T(101, 'librum facilem legimus.', 'We are reading an easy book.', 'Z', ['We are reading a difficult book.', 'They are reading an easy book.', 'We are reading easy books.'], { u: 1, g: [[1, ['facilem', 'facilis', 'facile', 'faciles'], '', 'adj3']] });
+T(101, 'omnes puellae ludunt.', 'All the girls are playing.', 'Z', ['The girl is playing with everyone.', 'All the boys are playing.', 'All the girls are working.'], { u: 1 });
+T(101, 'servi tristes dominum crudelem timent.', 'The sad slaves fear the cruel master.', 'Z', ['The cruel master fears the sad slaves.', 'The sad slave fears the cruel master.', 'The sad slaves fear the cruel masters.'], { u: 1 });
+T(101, 'itinera difficilia saepe facimus.', 'We often make difficult journeys.', 'S Z', ['We often make easy journeys.', 'We often made a difficult journey.', 'They often make difficult journeys.'], { u: 1, g: [[1, ['difficilia', 'difficilis', 'difficile', 'difficiles'], '', 'adj3']] });
+T(103, 'templum ingens aedificamus.', 'We are building a huge temple.', 'Z', ['We are building a small temple.', 'They are building a huge temple.', 'We are building huge temples.'], { u: 1 });
+T(103, 'Roma erat urbs ingens.', 'Rome was a huge city.', 'S Z', ['Rome is a huge city.', 'Rome was a small city.', 'Rome was a beautiful city.'], { u: 1 });
+T(103, 'dux sapiens milites fortes semper laudat.', 'The wise general always praises brave soldiers.', 'S Z', ['Brave soldiers always praise the wise general.', 'The wise general never praises brave soldiers.', 'The brave general always praises wise soldiers.'], {});
+T(103, 'omnes milites Romani audaces erant.', 'All the Roman soldiers were daring.', 'S Z', ['All the Roman soldiers are daring.', 'The Roman soldier was daring.', 'Not all the Roman soldiers were daring.'], {});
+T(103, 'milites ducem felicem semper amant.', 'Soldiers always love a lucky general.', 'S Z', ['A lucky general always loves his soldiers.', 'Soldiers never love a lucky general.', 'Soldiers always love a cruel general.'], { u: 1, g: [[2, ['felicem', 'felix', 'felices', 'felici'], '', 'adj3']] });
+T(103, 'magister puerum sapientem laudat.', 'The teacher praises the wise boy.', 'Z', ['The wise boy praises the teacher.', 'The teacher praises the wise boys.', 'The teacher punishes the wise boy.'], { u: 1, g: [[2, ['sapientem', 'sapiens', 'sapientes', 'sapienti'], '', 'adj3']] });
+T(116, 'senex et fortis et audax erat.', 'The old man was both brave and daring.', 'S V Z', ['The old man was brave but not daring.', 'The young man was both brave and daring.', 'The old man is both brave and daring.'], {});
+
+// ── a: Comparison of adjectives (Ch 104, 106) ──
+T(104, 'ille miles fortior quam hic miles est.', 'That soldier is braver than this soldier.', 'S W Z a', ['This soldier is braver than that soldier.', 'That soldier is the bravest soldier.', 'That soldier is as brave as this soldier.'], {});
+T(104, 'illa puella sapientior est quam hic puer.', 'That girl is wiser than this boy.', 'W Z a', ['This boy is wiser than that girl.', 'That girl is very wise.', 'That girl is wiser than that boy.'], {});
+T(104, 'magistri sapientiores sunt quam pueri.', 'Teachers are wiser than boys.', 'Z a', ['Boys are wiser than teachers.', 'Teachers are very wise.', 'The teacher is wiser than the boy.'], { u: 1, g: [[1, ['sapientiores', 'sapientior', 'sapientissimi', 'sapientes'], '', 'comp']] });
+T(104, 'hoc templum altius quam illud est.', 'This temple is higher than that one.', 'W a', ['That temple is higher than this one.', 'This temple is very high.', 'This temple is as high as that one.'], {});
+T(104, 'hoc opus non facile sed difficillimum est.', 'This task is not easy but very difficult.', 'S W Z a', ['This task is easy, not difficult.', 'This task is not easy but more difficult.', 'That task is not easy but very difficult.'], {});
+T(104, 'milites Romani fortiores quam milites Graeci erant.', 'The Roman soldiers were braver than the Greek soldiers.', 'S Z a', ['The Greek soldiers were braver than the Roman soldiers.', 'The Roman soldiers were very brave.', 'The Roman soldiers are braver than the Greek soldiers.'], {});
+T(106, 'ego sum puer bonus, sed tu es melior.', 'I am a good boy, but you (sg) are better.', 'a', ['I am a better boy than you (sg).', 'I am a good boy, but you (sg) are the best.', 'I am a bad boy, but you (sg) are worse.'], {});
+T(106, 'Sextus puer pessimus est.', 'Sextus is a very bad boy.', 'a', ['Sextus is a very good boy.', 'Sextus is a worse boy.', 'Sextus was a very bad boy.'], { u: 1, g: [[2, ['pessimus', 'peior', 'malus', 'optimus'], '', 'irrcomp']] });
+T(106, 'Iulius Caesar erat dux optimus.', 'Julius Caesar was a very good general.', 'S a', ['Julius Caesar was a better general.', 'Julius Caesar was a very bad general.', 'Julius Caesar is a very good general.'], { u: 1, g: [[4, ['optimus', 'melior', 'bonus', 'pessimus'], '', 'irrcomp']] });
+T(106, 'hoc templum est maius quam illud.', 'This temple is bigger than that one.', 'W a', ['That temple is bigger than this one.', 'This temple is very big.', 'This temple is smaller than that one.'], {});
+T(106, 'Italia maior quam Britannia est.', 'Italy is bigger than Britain.', 'a', ['Britain is bigger than Italy.', 'Italy is smaller than Britain.', 'Italy is very big.'], { u: 1, g: [[1, ['maior', 'minor', 'maxima', 'magna'], '', 'irrcomp']] });
+T(106, 'illa puella minima est.', 'That girl is very small.', 'W a', ['That girl is smaller.', 'This girl is very small.', 'That girl is very big.'], { u: 1, g: [[2, ['minima', 'minor', 'maxima', 'parva'], '', 'irrcomp']] });
+T(106, 'plurimi milites oppidum oppugnaverunt.', 'Very many soldiers attacked the town.', 'S a', ['A few soldiers attacked the town.', 'Very many soldiers defended the town.', 'More soldiers attacked the town.'], { u: 1 });
+T(106, 'puellae meliores quam pueri sunt.', 'Girls are better than boys.', 'a', ['Boys are better than girls.', 'Girls are worse than boys.', 'Girls are very good.'], { u: 1 });
+T(106, 'pueri peiores quam puellae sunt.', 'Boys are worse than girls.', 'a', ['Girls are worse than boys.', 'Boys are better than girls.', 'Boys are very bad.'], { u: 1, g: [[1, ['peiores', 'meliores', 'pessimi', 'mali'], '', 'irrcomp']] });
+T(106, 'naves maximae appropinquabant.', 'Very big ships were approaching.', 'S a', ['Very small ships were approaching.', 'Bigger ships were approaching.', 'A very big ship was approaching.'], { u: 1 });
+T(106, 'cibus matris tuae optimus erat.', 'Your mother’s food was very good.', 'S a', ['Your mother’s food was very bad.', 'Your mother’s food was better.', 'My mother’s food was very good.'], {});
+T(107, 'cives Graeci sapientiores quam cives Romani erant.', 'The Greek citizens were wiser than the Roman citizens.', 'S Z a', ['The Roman citizens were wiser than the Greek citizens.', 'The Greek citizens were very wise.', 'The Greek citizens are wiser than the Roman citizens.'], {});
+T(116, 'Graeci fortiores quam nos non sunt.', 'The Greeks are not braver than us.', 'X Z a', ['We are not braver than the Greeks.', 'The Greeks are braver than us.', 'The Greeks were not braver than us.'], {});
+
+// ── b: possum and debeo (Ch 109, 113) ──
+T(109, 'potest.', 'He is able.', 'b', ['They are able.', 'He was able.', 'I am able.'], { g: [[0, ['potest', 'possunt', 'potes', 'possum'], '', 'possum']], p: [[0, 'pn', '3s', 'possum']] });
+T(109, 'poterat.', 'He was able.', 'b', ['He is able.', 'They were able.', 'He will be able.'], { p: [[0, 'pn', '3s', 'possum']] });
+T(109, 'possumus.', 'We are able.', 'b', ['They are able.', 'We were able.', 'You (pl) are able.'], { g: [[0, ['possumus', 'potestis', 'possunt', 'potest'], '', 'possum']], p: [[0, 'pn', '1p', 'possum']] });
+T(109, 'poterunt.', 'They will be able.', 'T b', ['They are able.', 'They were able.', 'He will be able.'], { p: [[0, 'pn', '3p', 'possum']] });
+T(109, 'laborare possum.', 'I am able to work.', 'b', ['I am able to sleep.', 'He is able to work.', 'I was able to work.'], { g: [[1, ['possum', 'potest', 'possunt', 'potes'], '', 'possum']] });
+T(109, 'effugere potest.', 'He can escape.', 'b', ['They can escape.', 'He could escape.', 'He cannot escape.'], {});
+T(109, 'vincere possumus.', 'We can win.', 'b', ['We cannot win.', 'They can win.', 'We could win.'], {});
+T(109, 'exspectare non poteram.', 'I could not wait.', 'b', ['I can wait.', 'He could not wait.', 'I cannot wait.'], { g: [[2, ['poteram', 'possum', 'poterat', 'potero'], 'T', 'possum']] });
+T(109, 'fugere poterant.', 'They were able to flee.', 'b', ['They are able to flee.', 'He was able to flee.', 'They were not able to flee.'], {});
+T(109, 'redire non possum.', 'I cannot return.', 'U b', ['I can return.', 'He cannot return.', 'I could not return.'], { u: 1 });
+T(109, 'dormire non possum.', 'I cannot sleep.', 'b', ['I can sleep.', 'They cannot sleep.', 'I could not sleep.'], { u: 1 });
+T(109, 'nautae ad insulam navigare poterant.', 'The sailors were able to sail to the island.', 'b', ['The sailors were not able to sail to the island.', 'The sailor was able to sail to the island.', 'The sailors are able to sail to the island.'], { u: 1 });
+T(109, 'hostes vincere numquam poterimus.', 'We shall never be able to conquer the enemy.', 'S T b', ['The enemy will never be able to conquer us.', 'We were never able to conquer the enemy.', 'We shall soon be able to conquer the enemy.'], { u: 1 });
+T(109, 'milites urbem delere non poterant.', 'The soldiers could not destroy the city.', 'S b', ['The soldiers were able to destroy the city.', 'The soldier could not destroy the city.', 'The soldiers cannot destroy the city.'], { u: 1 });
+T(109, 'servi ex oppido effugere non poterant.', 'The slaves could not escape from the town.', 'b', ['The slaves were able to escape from the town.', 'The slaves could not enter the town.', 'The slave could not escape from the town.'], {});
+T(109, 'Romani tela iacere non poterant.', 'The Romans could not throw their spears.', 'b', ['The Romans were able to throw their spears.', 'The Romans could not carry their spears.', 'The Romans cannot throw their spears.'], { u: 1 });
+T(109, 'ille rex bene regere non potest.', 'That king cannot rule well.', 'S W b', ['That king can rule well.', 'This king cannot rule well.', 'That king could not rule well.'], {});
+T(109, 'ad urbem hodie venire non potuimus.', 'We were not able to come to the city today.', 'S b', ['We were able to come to the city today.', 'They were not able to come to the city today.', 'We shall not be able to come to the city tomorrow.'], {});
+T(109, 'magistri omnia facere non possunt.', 'Teachers cannot do everything.', 'Z b', ['Teachers can do everything.', 'A teacher cannot do everything.', 'Teachers could not do everything.'], { u: 1 });
+T(113, 'hostes urbem capere debebant.', 'The enemy had to capture the city.', 'S b', ['The enemy had to defend the city.', 'The enemy must capture the city.', 'The enemy were able to capture the city.'], { u: 1 });
+T(113, 'milites celeriter currere debent.', 'The soldiers must run quickly.', 'S b', ['The soldiers can run quickly.', 'The soldier must run quickly.', 'The soldiers had to run quickly.'], { u: 1 });
+T(113, 'magistri pueros terrere non debent.', 'Teachers ought not to frighten boys.', 'b', ['Boys ought not to frighten teachers.', 'Teachers ought to frighten boys.', 'Teachers cannot frighten boys.'], { u: 1 });
+T(113, 'hoc statim facere debeo.', 'I must do this at once.', 'W b', ['I can do this at once.', 'He must do this at once.', 'I must do that at once.'], { u: 1 });
+T(113, 'libros semper legere debetis, pueri!', 'You must always read books, boys!', 'b', ['You must never read books, boys!', 'Boys always read books!', 'You must always read books, boy!'], {});
+T(113, 'servi cibum mox parare debebunt.', 'The slaves will soon have to prepare the food.', 'T b', ['The slaves soon had to prepare the food.', 'The slaves will soon be able to prepare the food.', 'The slave will soon have to prepare the food.'], { u: 1 });
+T(116, 'hostes flumen transire non poterant.', 'The enemy could not cross the river.', 'S U b', ['The enemy were able to cross the river.', 'The enemy could not cross the sea.', 'The enemy cannot cross the river.'], { u: 1 });
+
+// ── c: Prohibitions — noli, nolite (Ch 111) ──
+T(111, 'noli ridere, puer!', 'Do not laugh, boy!', 'c', ['Do not laugh, boys!', 'Laugh, boy!', 'The boy is not laughing.'], { g: [[2, ['puer', 'pueri', 'puerum', 'puero'], '', 'noli']] });
+T(111, 'nolite ridere, pueri!', 'Do not laugh, boys!', 'c', ['Do not laugh, boy!', 'Laugh, boys!', 'The boys are not laughing.'], { g: [[0, ['nolite', 'noli', 'non'], '', 'noli']] });
+T(111, 'nolite oppugnare, milites!', 'Do not attack, soldiers!', 'S c', ['Do not attack, soldier!', 'Attack, soldiers!', 'The soldiers are not attacking.'], { g: [[0, ['nolite', 'noli', 'non'], '', 'noli']] });
+T(111, 'nolite effugere, servi!', 'Do not escape, slaves!', 'c', ['Do not escape, slave!', 'Escape, slaves!', 'The slaves do not escape.'], {});
+T(111, 'noli exspectare, amice!', 'Do not wait, friend!', 'c', ['Do not wait, friends!', 'Wait, friend!', 'My friend is not waiting.'], { g: [[0, ['noli', 'nolite', 'non'], '', 'noli']] });
+T(111, 'noli discedere, mater!', 'Do not leave, mother!', 'S c', ['Leave, mother!', 'Do not leave, mothers!', 'Mother is not leaving.'], {});
+T(111, 'noli flere, femina!', 'Do not cry, woman!', 'c', ['Do not cry, women!', 'Cry, woman!', 'The woman is not crying.'], { g: [[2, ['femina', 'feminae', 'feminam', 'feminas'], '', 'noli']] });
+T(111, 'nolite timere, comites!', 'Do not be afraid, companions!', 'S c', ['Do not be afraid, companion!', 'Be afraid, companions!', 'The companions are not afraid.'], {});
+T(111, 'nolite oppidum oppugnare, milites!', 'Do not attack the town, soldiers!', 'S c', ['Attack the town, soldiers!', 'Do not attack the town, soldier!', 'Do not defend the town, soldiers!'], {});
+T(111, 'noli iter longum facere, amice!', 'Do not make a long journey, friend!', 'S c', ['Make a long journey, friend!', 'Do not make a long journey, friends!', 'My friend is not making a long journey.'], {});
+T(111, 'noli hunc servum punire, domine!', 'Do not punish this slave, master!', 'W c', ['Punish this slave, master!', 'Do not punish that slave, master!', 'Do not punish these slaves, master!'], {});
+T(111, 'noli e templo exire, puer!', 'Do not go out of the temple, boy!', 'U c', ['Do not go into the temple, boy!', 'Go out of the temple, boy!', 'Do not go out of the temple, boys!'], {});
+T(111, 'noli hoc vinum bibere, mater!', 'Do not drink this wine, mother!', 'S W c', ['Drink this wine, mother!', 'Do not drink that wine, mother!', 'Mother does not drink this wine.'], {});
+T(111, 'nolite hostes vulnerare, milites!', 'Do not wound the enemy, soldiers!', 'S c', ['Wound the enemy, soldiers!', 'Do not wound the enemy, soldier!', 'Do not fear the enemy, soldiers!'], {});
+T(111, 'noli flumen transire, nauta!', 'Do not cross the river, sailor!', 'S U c', ['Cross the river, sailor!', 'Do not cross the river, sailors!', 'The sailor does not cross the river.'], {});
+T(116, 'nolite me relinquere, comites!', 'Do not leave me behind, companions!', 'S X c', ['Leave me behind, companions!', 'Do not leave me behind, companion!', 'Do not leave them behind, companions!'], {});
+
+// ── d: Questions with nonne and num (Ch 112) ──
+T(112, 'num clamat?', 'He isn’t shouting, is he?', 'd', ['He is shouting, isn’t he?', 'Is he shouting?', 'He is shouting.'], { g: [[0, ['num', 'nonne'], '', 'nonne']] });
+T(112, 'nonne flet?', 'He is crying, isn’t he?', 'd', ['He isn’t crying, is he?', 'Is he crying?', 'He is not crying.'], { g: [[0, ['nonne', 'num'], '', 'nonne']] });
+T(112, 'nonne pugnant?', 'They are fighting, aren’t they?', 'd', ['They aren’t fighting, are they?', 'Are they fighting?', 'They are not fighting.'], {});
+T(112, 'num currebant?', 'They weren’t running, were they?', 'd', ['They were running, weren’t they?', 'Were they running?', 'They were not running.'], {});
+T(112, 'nonne bene pugnabat?', 'He was fighting well, wasn’t he?', 'd', ['He wasn’t fighting well, was he?', 'Was he fighting well?', 'He was not fighting well.'], {});
+T(112, 'num hic miles fortis est?', 'This soldier isn’t brave, is he?', 'W Z d', ['This soldier is brave, isn’t he?', 'Is this soldier brave?', 'That soldier isn’t brave, is he?'], {});
+T(112, 'nonne Hector audax erat?', 'Hector was daring, wasn’t he?', 'Z d', ['Hector wasn’t daring, was he?', 'Was Hector daring?', 'Hector is daring, isn’t he?'], { g: [[0, ['nonne', 'num'], '', 'nonne']] });
+T(112, 'nonne cives urbem bene defendebant?', 'The citizens were defending the city well, weren’t they?', 'S d', ['The citizens weren’t defending the city well, were they?', 'Were the citizens defending the city well?', 'The citizens were attacking the city, weren’t they?'], {});
+T(112, 'num puer hoc fecit?', 'The boy didn’t do this, did he?', 'W d', ['The boy did this, didn’t he?', 'Did the boy do this?', 'The boy will not do this, will he?'], {});
+T(112, 'num Graeci Romanos vicerunt?', 'The Greeks didn’t conquer the Romans, did they?', 'd', ['The Greeks conquered the Romans, didn’t they?', 'The Romans didn’t conquer the Greeks, did they?', 'Did the Greeks conquer the Romans?'], { g: [[0, ['num', 'nonne'], '', 'nonne']] });
+T(112, 'num omnes mortem timent?', 'Not everyone fears death, do they?', 'S Z d', ['Everyone fears death, don’t they?', 'Does everyone fear death?', 'No one fears death.'], {});
+T(112, 'nonne matrem tuam amas?', 'You love your mother, don’t you?', 'S d', ['You don’t love your mother, do you?', 'Do you love your mother?', 'Your mother loves you, doesn’t she?'], {});
+T(112, 'num femina hoc facere poterit?', 'A woman will not be able to do this, will she?', 'T W b d', ['A woman will be able to do this, won’t she?', 'Will a woman be able to do this?', 'A woman was not able to do this, was she?'], {});
+T(116, 'nonne milites Graeci felicissimi erant?', 'The Greek soldiers were very lucky, weren’t they?', 'S Z a d', ['The Greek soldiers weren’t very lucky, were they?', 'Were the Greek soldiers lucky?', 'The Greek soldiers were luckier, weren’t they?'], {});
+
+// ── e: Reflexive pronoun se (Ch 115) ──
+T(115, 'ille puer se amat.', 'That boy loves himself.', 'W e', ['That boy loves him.', 'This boy loves himself.', 'Those boys love themselves.'], { u: 1, g: [[2, ['se', 'eum', 'sui', 'sibi'], '', 'se']] });
+T(115, 'Troiani se defendere paraverunt.', 'The Trojans prepared to defend themselves.', 'e', ['The Trojans prepared to defend them.', 'The Greeks prepared to defend themselves.', 'The Trojans prepared to attack themselves.'], { u: 1 });
+T(115, 'illa puella se semper spectat.', 'That girl is always looking at herself.', 'W e', ['That girl is always looking at her.', 'This girl is never looking at herself.', 'Those girls are always looking at themselves.'], { u: 1 });
+T(115, 'pueri sapientes se numquam laudant.', 'Wise boys never praise themselves.', 'Z e', ['Wise boys always praise themselves.', 'Wise boys never praise them.', 'A wise boy never praises himself.'], { u: 1 });
+T(115, 'cives Troiani se fortiter defendebant.', 'The Trojan citizens were defending themselves bravely.', 'S e', ['The Trojan citizens were defending them bravely.', 'The Trojan citizens defended themselves badly.', 'The Trojan citizen was defending himself bravely.'], { u: 1 });
+T(115, 'ille miles se gladio suo vulneravit.', 'That soldier wounded himself with his own sword.', 'S W e', ['That soldier wounded him with his own sword.', 'This soldier wounded himself with his own spear.', 'Those soldiers wounded themselves with their swords.'], {});
+T(115, 'multae feminae in flumine se spectabant.', 'Many women were looking at themselves in the river.', 'S e', ['Many women were looking at them in the river.', 'A woman was looking at herself in the river.', 'Many women were swimming in the river.'], {});
+// ── From the first Fuga Romana (the illustrated Escape-room edition) ──
+// These 15 sentences were written for that game, not taken from Bass.
+T(48, 'Festina! Nauta aquam portat.', 'Hurry! The sailor is carrying water.', 'A B M', ['Stop! The farmer is carrying fire.', 'Hurry! The farmer is carrying food.', 'Stop! The sailor is carrying gold.'], { u: 1, g: [[3, ['portat', 'portant', 'portas', 'porto']]], p: [[3, 'pn', '3s']] });
+T(38, 'servus in horto est.', 'The slave is in the garden.', 'D H I J', ['The slaves are in the garden.', 'The slave is in the field.', 'The slave is near the garden.'], { u: 1, g: [[3, ['est', 'sunt', 'es', 'sum']]], p: [[2, 'case', 'abl sg']] });
+T(25, 'dominus servum videt.', 'The master sees the slave.', 'A I', ['The slave sees the master.', 'The masters see the slave.', 'The master sees the slaves.'], { u: 1, g: [[2, ['videt', 'vident', 'vides', 'videtis']]], p: [[2, 'pn', '3s']] });
+T(42, 'Socii in agro pugnant. Vir scutum tenet.', 'The allies fight in the field. The man holds a shield.', 'A I J L', ['The allies stand in the camp. The man carries a sword.', 'The friends run in the forum. The man sees a shield.', 'The slaves fight in the town. The man has a spear.'], { u: 1, p: [[3, 'pn', '3p']] });
+T(37, 'Vir Romanus semper fortiter pugnat.', 'A Roman man always fights bravely.', 'A E I', ['A Roman man often walks slowly.', 'A Roman woman never sings well.', 'A brave man always runs quickly.'], { u: 1, g: [[4, ['pugnat', 'pugnant', 'pugnas', 'pugnamus']]] });
+T(42, 'Socii ad murum currunt et oppidum oppugnant.', 'The allies run to the wall and attack the town.', 'A F I J L', ['The allies walk from the wall and defend the town.', 'The slaves run to the gate and enter the town.', 'The friends hurry from the temple and watch the town.'], { u: 1, p: [[3, 'pn', '3p']] });
+T(38, 'puella cibum in villam portat.', 'The girl carries food into the house.', 'A B I J', ['The girl carries food out of the house.', 'The girls carry food into the house.', 'The girl carries water into the house.'], { u: 1, g: [[4, ['portat', 'portant', 'portas', 'portamus']]], p: [[3, 'case', 'acc sg']] });
+T(38, 'Filia mea in villa manet.', 'My daughter stays in the house.', 'A B E J', ['My daughter stays near the house.', 'My daughters stay in the house.', 'My daughter leaves the house.'], { u: 1, g: [[4, ['manet', 'manes', 'maneo', 'manent']]], p: [[4, 'pn', '3s']] });
+T(37, 'Vir iratus filium vocat et servum terret.', 'The angry man calls his son and frightens the slave.', 'A E I', ['The happy man sees his daughter and calls the slave.', 'The tired man calls his son and moves the slave.', 'The wretched man calls his son and praises the slave.'], { p: [[3, 'pn', '3s']] });
+T(38, 'Nautae ad insulam navigant quod ventus bonus est.', 'The sailors sail to the island because the wind is good.', 'A B C D E I J', ['The sailors sail across the sea because the water is good.', 'The sailors sail from the island because the wind is bad.', 'The sailors sail to the town because the road is good.'], { p: [[3, 'pn', '3p']] });
+T(42, 'Nauta aurum et vinum portat.', 'The sailor carries gold and wine.', 'A B L', ['The sailor carries money and arrows.', 'The sailor carries food and water.', 'The sailor carries a book and a sword.'], { u: 1, g: [[4, ['portat', 'portant', 'portas', 'porto']]] });
+T(77, 'hostes oppidum nunc oppugnant.', 'The enemy are attacking the town now.', 'S', ['The enemy are defending the town now.', 'The enemy is attacking the town now.', 'The town is attacking the enemy now.'], { u: 1, g: [[3, ['oppugnant', 'oppugnat', 'oppugnas', 'oppugnamus']]], p: [[3, 'pn', '3p']] });
+T(37, 'Magister bonos pueros laudat, malos pueros monet.', 'The teacher praises the good boys, warns the bad boys.', 'A E I', ['The farmer praises the good sons, watches the bad daughters.', 'The teacher frightens the good boys, praises the bad boys.', 'The master praises the good slaves, orders the bad slaves.'], { u: 1, p: [[3, 'pn', '3s']] });
+T(38, 'Puer bonus in via stat.', 'The good boy is standing in the street.', 'A E I J', ['The good boys are standing in the street.', 'The good boy is walking in the street.', 'The good boy is standing near the street.'], { u: 1, g: [[4, ['stat', 'stant', 'stas', 'statis']]], p: [[4, 'pn', '3s']] });
+T(38, 'Ubi est via ad forum?', 'Where is the road to the forum?', 'B C D J L', ['Why is the street from the temple?', 'Where is the wall near the harbour?', 'When is the road into the town?'], { u: 1 });
+
+// ════════════════════════════════════════════════════════════════
+// CE LEVEL 3 AND SCHOLARSHIP — every Latin sentence comes from the
+// Latin-to-English exercises in Prep School Latin (R. C. Bass, 2018),
+// Chapters 117–154. Level 3 sentences carry only their Level 3 keys and
+// Scholarship sentences only their Scholarship keys (plus any lower-level
+// key that matters): ticking a higher level assumes the levels below it.
+// The English and the wrong English options were written for this game.
+// ════════════════════════════════════════════════════════════════
+T(118, 'amamur.', 'We are loved.', 'f', ['We love.', 'They are loved.', 'We were loved.'], { g: [[0, ['amamur', 'amamus', 'amantur', 'amabamur']]], p: [[0, 'pn', '1p'], [0, 'tense', 'pres']] });
+T(118, 'liberamur.', 'We are set free.', 'f', ['We set free.', 'You (pl) are set free.', 'We will be set free.'], { p: [[0, 'pn', '1p']] });
+T(118, 'portatur.', 'He is carried.', 'f', ['He carries.', 'They are carried.', 'He was carried.'], { g: [[0, ['portatur', 'portat', 'portantur', 'portabatur']]], p: [[0, 'pn', '3s'], [0, 'tense', 'pres']] });
+T(118, 'vulnerantur.', 'They are wounded.', 'f', ['They wound.', 'He is wounded.', 'They will be wounded.'], { p: [[0, 'pn', '3p']] });
+T(118, 'laudamini.', 'You (pl) are praised.', 'f', ['You (pl) praise.', 'We are praised.', 'You (sg) are praised.'], { p: [[0, 'pn', '2p']] });
+T(118, 'vocaris.', 'You (sg) are called.', 'f', ['You (sg) call.', 'You (pl) are called.', 'He is called.'], { p: [[0, 'pn', '2s']] });
+T(118, 'portor.', 'I am carried.', 'f', ['I carry.', 'He is carried.', 'I was carried.'], { p: [[0, 'pn', '1s'], [0, 'tense', 'pres']] });
+T(118, 'spectamini.', 'You (pl) are watched.', 'f', ['You (pl) watch.', 'They are watched.', 'We are watched.'], { p: [[0, 'pn', '2p']] });
+T(118, 'monetur.', 'He is warned.', 'f', ['He warns.', 'They are warned.', 'He will be warned.'], { p: [[0, 'pn', '3s']] });
+T(118, 'delentur.', 'They are destroyed.', 'f', ['They destroy.', 'It is destroyed.', 'They were destroyed.'], { g: [[0, ['delentur', 'delent', 'deletur', 'delebantur']]], p: [[0, 'pn', '3p'], [0, 'tense', 'pres']] });
+T(118, 'videmini.', 'You (pl) are seen.', 'f', ['You (pl) see.', 'We are seen.', 'You (sg) are seen.'], { p: [[0, 'pn', '2p']] });
+T(118, 'terreris.', 'You (sg) are frightened.', 'f', ['You (sg) frighten.', 'He is frightened.', 'You (pl) are frightened.'], { p: [[0, 'pn', '2s']] });
+T(118, 'iubemur.', 'We are ordered.', 'f', ['We order.', 'They are ordered.', 'We were ordered.'], { p: [[0, 'pn', '1p']] });
+T(118, 'regimur.', 'We are ruled.', 'f', ['We rule.', 'They are ruled.', 'We will be ruled.'], { p: [[0, 'pn', '1p']] });
+T(118, 'mitteris.', 'You (sg) are sent.', 'f', ['You (sg) send.', 'He is sent.', 'You (pl) are sent.'], { p: [[0, 'pn', '2s']] });
+T(118, 'traduntur.', 'They are handed over.', 'f', ['They hand over.', 'He is handed over.', 'They were handed over.'], { p: [[0, 'pn', '3p']] });
+T(118, 'vincuntur.', 'They are conquered.', 'f', ['They conquer.', 'He is conquered.', 'They will conquer.'], { g: [[0, ['vincuntur', 'vincunt', 'vincitur', 'vincebantur']]], p: [[0, 'pn', '3p']] });
+T(118, 'auditur.', 'He is heard.', 'f', ['He hears.', 'They are heard.', 'He was heard.'], { p: [[0, 'pn', '3s']] });
+T(118, 'punimur.', 'We are punished.', 'f', ['We punish.', 'They are punished.', 'You (pl) are punished.'], { p: [[0, 'pn', '1p']] });
+T(118, 'puniris.', 'You (sg) are punished.', 'f', ['You (sg) punish.', 'You (pl) are punished.', 'He is punished.'], { p: [[0, 'pn', '2s']] });
+T(118, 'defendimur.', 'We are defended.', 'f', ['We defend.', 'They are defended.', 'We were defended.'], { p: [[0, 'pn', '1p']] });
+T(118, 'legitur.', 'It is read.', 'f', ['He reads.', 'They are read.', 'It was read.'], { p: [[0, 'pn', '3s']] });
+T(118, 'miles gladio vulneratur.', 'The soldier is wounded by a sword.', 'f', ['The soldier wounds with a sword.', 'The soldiers are wounded by a sword.', 'The soldier was wounded by a sword.'], { u: 1, g: [[2, ['vulneratur', 'vulnerat', 'vulnerantur', 'vulnerabatur']]] });
+T(118, 'urbs ab hostibus oppugnatur.', 'The city is attacked by the enemy.', 'f', ['The city attacks the enemy.', 'The enemy are attacked by the city.', 'The city was attacked by the enemy.'], { u: 1, g: [[3, ['oppugnatur', 'oppugnat', 'oppugnantur', 'oppugnant']]] });
+T(118, 'naves tempestate delentur.', 'The ships are destroyed by a storm.', 'f', ['The ships destroy the storm.', 'The ship is destroyed by a storm.', 'The ships were destroyed by a storm.'], { u: 1, g: [[2, ['delentur', 'delent', 'deletur', 'delebunt']]] });
+T(118, 'ab hostibus non amamur.', 'We are not loved by the enemy.', 'f', ['We do not love the enemy.', 'The enemy are not loved by us.', 'They are not loved by the enemy.'], { u: 1, g: [[3, ['amamur', 'amamus', 'amantur', 'amatur']]] });
+T(119, 'ab hostibus spectamur.', 'We are watched by the enemy.', 'f', ['We watch the enemy.', 'They are watched by the enemy.', 'We were watched by the enemy.'], { u: 1 });
+T(119, 'hostes gladiis occiduntur.', 'The enemy are killed with swords.', 'f', ['The enemy kill with swords.', 'The enemy is killed with a sword.', 'The enemy were killed with swords.'], { u: 1, g: [[2, ['occiduntur', 'occidunt', 'occiditur', 'occidebantur']]] });
+T(119, 'milites sagittis vulnerantur.', 'The soldiers are wounded by arrows.', 'f', ['The soldiers wound with arrows.', 'The soldier is wounded by arrows.', 'The soldiers will be wounded by arrows.'], { u: 1 });
+T(119, 'Patroclus ab Hectore occiditur.', 'Patroclus is killed by Hector.', 'f', ['Patroclus kills Hector.', 'Hector is killed by Patroclus.', 'Patroclus was killed by Hector.'], { u: 1, g: [[3, ['occiditur', 'occidit', 'occiduntur', 'occidebat']]] });
+T(119, 'Hector ab Achille occiditur.', 'Hector is killed by Achilles.', 'f', ['Hector kills Achilles.', 'Achilles is killed by Hector.', 'Hector will be killed by Achilles.'], { u: 1 });
+T(119, 'muri Troiae non delentur.', 'The walls of Troy are not destroyed.', 'f', ['The walls do not destroy Troy.', 'The wall of Troy is not destroyed.', 'The walls of Troy were not destroyed.'], { u: 1 });
+T(119, 'equus prope urbem Troiam ponitur.', 'The horse is placed near the city of Troy.', 'f', ['The horse places Troy near the city.', 'The horses are placed near the city of Troy.', 'The horse was placed near the city of Troy.'], { u: 1 });
+T(119, 'mox naves trans mare ad urbem Troiam mittuntur.', 'Soon ships are sent across the sea to the city of Troy.', 'f', ['Soon ships send men across the sea to Troy.', 'Soon a ship is sent across the sea to Troy.', 'Soon ships were sent across the sea to Troy.']);
+T(130, 'portabantur.', 'They were being carried.', 'f', ['They were carrying.', 'They are being carried.', 'He was being carried.'], { g: [[0, ['portabantur', 'portabant', 'portantur', 'portabatur']]], p: [[0, 'pn', '3p'], [0, 'tense', 'impf']] });
+T(130, 'audiar.', 'I shall be heard.', 'f', ['I shall hear.', 'I am heard.', 'He will be heard.'], { p: [[0, 'pn', '1s'], [0, 'tense', 'fut']] });
+T(130, 'regebamur.', 'We were being ruled.', 'f', ['We were ruling.', 'We are ruled.', 'They were being ruled.'], { p: [[0, 'pn', '1p'], [0, 'tense', 'impf']] });
+T(130, 'legebatur.', 'It was being read.', 'f', ['He was reading.', 'It is being read.', 'They were being read.'], { p: [[0, 'pn', '3s'], [0, 'tense', 'impf']] });
+T(130, 'timebor.', 'I shall be feared.', 'f', ['I shall fear.', 'I was feared.', 'He will be feared.'], { p: [[0, 'pn', '1s'], [0, 'tense', 'fut']] });
+T(130, 'vocabor.', 'I shall be called.', 'f', ['I shall call.', 'I am called.', 'You (sg) will be called.'], { g: [[0, ['vocabor', 'vocabo', 'vocor', 'vocabar']]], p: [[0, 'pn', '1s'], [0, 'tense', 'fut']] });
+T(130, 'laudor.', 'I am praised.', 'f', ['I praise.', 'I shall be praised.', 'He is praised.'], { p: [[0, 'pn', '1s'], [0, 'tense', 'pres']] });
+T(130, 'capiemur.', 'We shall be captured.', 'f', ['We shall capture.', 'We are captured.', 'They will be captured.'], { p: [[0, 'pn', '1p'], [0, 'tense', 'fut']] });
+T(130, 'non vincar.', 'I shall not be conquered.', 'f', ['I shall not conquer.', 'I am not conquered.', 'He will not be conquered.'], { p: [[1, 'pn', '1s'], [1, 'tense', 'fut']] });
+T(130, 'iubebamur.', 'We were being ordered.', 'f', ['We were ordering.', 'We are ordered.', 'You (pl) were being ordered.'], { p: [[0, 'pn', '1p'], [0, 'tense', 'impf']] });
+T(130, 'parabantur.', 'They were being prepared.', 'f', ['They were preparing.', 'It was being prepared.', 'They will be prepared.'], { p: [[0, 'pn', '3p'], [0, 'tense', 'impf']] });
+T(130, 'movemur.', 'We are moved.', 'f', ['We move.', 'They are moved.', 'We were being moved.'], { p: [[0, 'pn', '1p'], [0, 'tense', 'pres']] });
+T(130, 'templa urbis mox ab hostibus delebuntur.', 'The temples of the city will soon be destroyed by the enemy.', 'f', ['The enemy will soon destroy the city with the temples.', 'The temple of the city will soon be destroyed by the enemy.', 'The temples of the city were soon destroyed by the enemy.'], { u: 1, g: [[5, ['delebuntur', 'delebunt', 'delentur', 'delebitur']]] });
+T(130, 'multi servi per vias ducebantur.', 'Many slaves were being led through the streets.', 'f', ['Many slaves were leading through the streets.', 'Many slaves are led through the streets.', 'Many slaves will be led through the streets.'], { u: 1, g: [[4, ['ducebantur', 'ducebant', 'ducuntur', 'ducebatur']]] });
+T(130, 'ille dux a multis militibus non amatur.', 'That leader is not loved by many soldiers.', 'f', ['That leader does not love many soldiers.', 'Many soldiers are not loved by that leader.', 'That leader was not loved by many soldiers.'], { u: 1 });
+T(130, 'Romani ab hostibus numquam vincentur.', 'The Romans will never be conquered by the enemy.', 'f', ['The Romans will never conquer the enemy.', 'The Romans are never conquered by the enemy.', 'The Roman will never be conquered by the enemy.'], { u: 1, g: [[4, ['vincentur', 'vincent', 'vincuntur', 'vincetur']]] });
+T(130, 'pueri ab illo magistro saepe puniuntur.', 'The boys are often punished by that teacher.', 'f', ['The boys often punish that teacher.', 'The boy is often punished by that teacher.', 'The boys were often punished by that teacher.'], { u: 1, g: [[5, ['puniuntur', 'puniunt', 'punitur', 'puniebant']]] });
+T(130, 'ab hostibus oppugnamur!', 'We are being attacked by the enemy!', 'f', ['We are attacking the enemy!', 'They are being attacked by the enemy!', 'We were attacked by the enemy!'], { u: 1 });
+T(130, 'multi equi ex agris ducebantur.', 'Many horses were being led out of the fields.', 'f', ['Many horses were leading out of the fields.', 'Many horses are led out of the fields.', 'Many horses will be led out of the fields.'], { u: 1 });
+T(130, 'laudaris quod fortis es, puer!', 'You are praised because you are brave, boy!', 'f', ['You praise because you are brave, boy!', 'He is praised because he is brave, boy!', 'You were praised because you were brave, boy!'], { u: 1 });
+T(130, 'ego ab omnibus puellis amor.', 'I am loved by all the girls.', 'f', ['I love all the girls.', 'All the girls are loved by me.', 'I was loved by all the girls.'], { u: 1, g: [[4, ['amor', 'amo', 'amatur', 'amabor']]] });
+T(130, 'dominus a servis timetur quod crudelis est.', 'The master is feared by the slaves because he is cruel.', 'f', ['The master fears the slaves because he is cruel.', 'The slaves are feared by the master because they are cruel.', 'The master was feared by the slaves because he was cruel.'], { u: 1 });
+T(130, 'multi agri ab hostibus delebantur.', 'Many fields were being destroyed by the enemy.', 'f', ['Many fields were destroying the enemy.', 'Many fields are destroyed by the enemy.', 'Many fields will be destroyed by the enemy.'], { u: 1 });
+T(130, 'verba longa a pueris parvis non saepe dicuntur.', 'Long words are not often said by small boys.', 'f', ['Small boys often say long words.', 'A long word is not often said by small boys.', 'Long words were not often said by small boys.']);
+T(130, 'hic servus a domino cras punietur.', 'This slave will be punished by the master tomorrow.', 'f', ['This slave will punish the master tomorrow.', 'This slave is punished by the master today.', 'These slaves will be punished by the master tomorrow.'], { u: 1, g: [[5, ['punietur', 'puniet', 'punitur', 'punientur']]] });
+T(130, 'cena bona a matre parabitur.', 'A good dinner will be prepared by mother.', 'f', ['Mother will eat a good dinner.', 'A good dinner is prepared by mother.', 'A good dinner was being prepared by mother.'], { u: 1, g: [[4, ['parabitur', 'parabit', 'paratur', 'parabantur']]] });
+T(130, 'templum magnum in hoc monte aedificabitur.', 'A great temple will be built on this mountain.', 'f', ['A great temple was built on this mountain.', 'Great temples will be built on this mountain.', 'He will build a great temple on this mountain.'], { u: 1 });
+T(130, 'multi discipuli a magistro cras laudabuntur.', 'Many pupils will be praised by the teacher tomorrow.', 'f', ['Many pupils will praise the teacher tomorrow.', 'One pupil will be praised by the teacher tomorrow.', 'Many pupils were praised by the teacher yesterday.'], { u: 1 });
+T(121, 'visus est.', 'He was seen.', 'g', ['He saw.', 'She was seen.', 'They were seen.'], { p: [[0, 'tense', 'perf', null, 'phrase']] });
+T(121, 'interfecta est.', 'She was killed.', 'g', ['She killed.', 'He was killed.', 'They were killed.']);
+T(121, 'visi sunt.', 'They were seen.', 'g', ['They saw.', 'He was seen.', 'They are seen.'], { p: [[1, 'pn', '3p']] });
+T(121, 'interfecti sumus.', 'We were killed.', 'g', ['We killed.', 'They were killed.', 'We are killed.'], { p: [[1, 'pn', '1p']] });
+T(121, 'portatae sumus.', 'We (f) were carried.', 'g', ['We carried.', 'They (f) were carried.', 'We are carried.']);
+T(121, 'victi sunt.', 'They were conquered.', 'g', ['They conquered.', 'He was conquered.', 'They are conquered.'], { p: [[1, 'pn', '3p'], [0, 'tense', 'perf', null, 'phrase']] });
+T(121, 'vulnerata es.', 'You (sg, f) were wounded.', 'g', ['You wounded.', 'She was wounded.', 'You (pl) were wounded.'], { p: [[1, 'pn', '2s']] });
+T(121, 'missus sum.', 'I was sent.', 'g', ['I sent.', 'He was sent.', 'I am sent.'], { g: [[1, ['sum', 'est', 'sunt', 'sumus']]], p: [[1, 'pn', '1s'], [0, 'tense', 'perf', null, 'phrase']] });
+T(121, 'capta est.', 'She was captured.', 'g', ['She captured.', 'He was captured.', 'She is captured.']);
+T(121, 'capti estis.', 'You (pl) were captured.', 'g', ['You (pl) captured.', 'We were captured.', 'You (sg) were captured.'], { g: [[1, ['estis', 'es', 'sunt', 'sumus']]], p: [[1, 'pn', '2p']] });
+T(121, 'puniti sumus.', 'We were punished.', 'g', ['We punished.', 'They were punished.', 'We are punished.'], { p: [[1, 'pn', '1p']] });
+T(121, 'dictum est.', 'It was said.', 'g', ['He said.', 'They were said.', 'It is said.']);
+T(121, 'moniti estis.', 'You (pl) were warned.', 'g', ['You (pl) warned.', 'They were warned.', 'You (sg) were warned.'], { p: [[1, 'pn', '2p']] });
+T(121, 'puer punitus est.', 'The boy was punished.', 'g', ['The boy punished.', 'The boys were punished.', 'The boy is punished.'], { u: 1, g: [[1, ['punitus', 'puniti', 'punita', 'punitum']]] });
+T(121, 'oppidum oppugnatum est.', 'The town was attacked.', 'g', ['The town attacked.', 'The towns were attacked.', 'The town is being attacked.'], { u: 1, g: [[1, ['oppugnatum', 'oppugnatus', 'oppugnata', 'oppugnati']]] });
+T(121, 'pueri puniti sunt.', 'The boys were punished.', 'g', ['The boys punished.', 'The boy was punished.', 'The boys are punished.'], { u: 1, g: [[1, ['puniti', 'punitus', 'punitae', 'punita']]] });
+T(121, 'puellae visae sunt.', 'The girls were seen.', 'g', ['The girls saw.', 'The girl was seen.', 'The girls are seen.'], { u: 1, g: [[1, ['visae', 'visa', 'visi', 'visus']]] });
+T(121, 'templum aedificatum est.', 'The temple was built.', 'g', ['The temple built.', 'The temples were built.', 'The temple is being built.'], { u: 1 });
+T(121, 'templa aedificata sunt.', 'The temples were built.', 'g', ['The temples built.', 'The temple was built.', 'The temples will be built.'], { u: 1, g: [[1, ['aedificata', 'aedificatum', 'aedificati', 'aedificatae']]] });
+T(121, 'mater amata est.', 'The mother was loved.', 'g', ['The mother loved.', 'The mothers were loved.', 'The mother is loved.'], { u: 1 });
+T(121, 'Romani victi sunt.', 'The Romans were conquered.', 'g', ['The Romans conquered.', 'The Roman was conquered.', 'The Romans are conquered.'], { u: 1, g: [[1, ['victi', 'victus', 'victae', 'victa']]] });
+T(121, 'verba audita sunt.', 'The words were heard.', 'g', ['The words heard.', 'The word was heard.', 'The words are being heard.'], { u: 1 });
+T(121, 'tela iacta sunt.', 'Spears were thrown.', 'g', ['They threw spears.', 'A spear was thrown.', 'Spears are being thrown.'], { u: 1 });
+T(121, 'urbs deleta est.', 'The city was destroyed.', 'g', ['The city destroyed.', 'The cities were destroyed.', 'The city is being destroyed.'], { u: 1, g: [[1, ['deleta', 'deletus', 'deletum', 'deletae']]] });
+T(121, 'senex interfectus est.', 'The old man was killed.', 'g', ['The old man killed.', 'The old men were killed.', 'The old man is being killed.'], { u: 1 });
+T(121, 'servus a domino punitus est.', 'The slave was punished by the master.', 'g', ['The slave punished the master.', 'The master was punished by the slave.', 'The slaves were punished by the master.'], { u: 1 });
+T(121, 'multa verba a rege dicta sunt.', 'Many words were spoken by the king.', 'g', ['The king heard many words.', 'The king was told many words.', 'Many words are spoken by the king.'], { u: 1 });
+T(130, 'missi sunt.', 'They were sent.', 'g', ['They sent.', 'They had been sent.', 'He was sent.'], { p: [[1, 'pn', '3p'], [0, 'tense', 'perf', null, 'phrase']] });
+T(130, 'vulneratus sum.', 'I was wounded.', 'g', ['I wounded.', 'He was wounded.', 'I had been wounded.'], { p: [[1, 'pn', '1s']] });
+T(130, 'occisa est.', 'She was killed.', 'g', ['She killed.', 'He had been killed.', 'They were killed.']);
+T(130, 'vocatus sum.', 'I was called.', 'g', ['I called.', 'I am called.', 'I had been called.'], { p: [[1, 'pn', '1s']] });
+T(130, 'laudatus sum.', 'I was praised.', 'g', ['I praised.', 'I shall be praised.', 'He was praised.']);
+T(130, 'ducti estis.', 'You (pl) were led.', 'g', ['You (pl) led.', 'They were led.', 'You (pl) had been led.'], { p: [[1, 'pn', '2p'], [0, 'tense', 'perf', null, 'phrase']] });
+T(130, 'pecunia amici seni data est.', 'The friend\'s money was given to the old man.', 'g', ['The old man gave his friend money.', 'The friend was given money by the old man.', 'The friend\'s money is given to the old man.'], { u: 1 });
+T(130, 'haec urbs ab hostibus oppugnata est.', 'This city was attacked by the enemy.', 'g', ['This city attacked the enemy.', 'These cities were attacked by the enemy.', 'This city is being attacked by the enemy.'], { u: 1 });
+T(130, 'multi milites ad urbem Troiam missi sunt.', 'Many soldiers were sent to the city of Troy.', 'g', ['Many soldiers sent men to the city of Troy.', 'One soldier was sent to the city of Troy.', 'Many soldiers are sent to the city of Troy.'], { u: 1 });
+T(130, 'miles gladio vulneratus est.', 'The soldier was wounded by a sword.', 'g', ['The soldier wounded with a sword.', 'The soldiers were wounded by a sword.', 'The soldier is wounded by a sword.'], { u: 1 });
+T(130, 'nuntius ad urbem missus est.', 'The messenger was sent to the city.', 'g', ['The messenger sent a man to the city.', 'The messengers were sent to the city.', 'The messenger is sent to the city.'], { u: 1 });
+T(130, 'multa arma militibus a duce data sunt.', 'Many weapons were given to the soldiers by the leader.', 'g', ['The soldiers gave many weapons to the leader.', 'Many weapons were given to the leader by the soldiers.', 'Many weapons are given to the soldiers by the leader.'], { u: 1 });
+T(130, 'multi Romani sagittis vulnerati sunt.', 'Many Romans were wounded by arrows.', 'g', ['Many Romans wounded with arrows.', 'One Roman was wounded by arrows.', 'Many Romans are wounded by arrows.'], { u: 1 });
+T(130, 'multae viae longae a Romanis aedificatae sunt.', 'Many long roads were built by the Romans.', 'g', ['The Romans built many long walls.', 'Many long roads are built by the Romans.', 'One long road was built by the Romans.'], { u: 1 });
+T(130, 'post decem annos urbs Troia capta est.', 'After ten years the city of Troy was captured.', 'g', ['After ten years the city of Troy captured the Greeks.', 'For ten years the city of Troy was attacked.', 'After ten years the city of Troy is captured.'], { u: 1 });
+T(130, 'hoc periculum a servis non visum est.', 'This danger was not seen by the slaves.', 'g', ['The slaves did not see this danger.', 'These dangers were not seen by the slaves.', 'This danger is not seen by the slaves.'], { u: 1 });
+T(130, 'ille equus vulneratus a milite hasta necatus est.', 'That wounded horse was killed by the soldier with a spear.', 'g p', ['That horse wounded the soldier with a spear.', 'That horse killed the wounded soldier with a spear.', 'That wounded horse is killed by the soldier with a spear.']);
+T(123, 'captus eras.', 'You (sg) had been captured.', 'h', ['You (sg) had captured.', 'You (sg) were captured.', 'He had been captured.'], { g: [[1, ['eras', 'es', 'erat', 'eratis']]], p: [[1, 'pn', '2s'], [0, 'tense', 'plupf', null, 'phrase']] });
+T(123, 'puniti eratis.', 'You (pl) had been punished.', 'h', ['You (pl) had punished.', 'You (pl) were punished.', 'They had been punished.'], { p: [[1, 'pn', '2p']] });
+T(123, 'missus eram.', 'I had been sent.', 'h', ['I had sent.', 'I was sent.', 'He had been sent.'], { p: [[1, 'pn', '1s'], [0, 'tense', 'plupf', null, 'phrase']] });
+T(123, 'iussi eramus.', 'We had been ordered.', 'h', ['We had ordered.', 'We were ordered.', 'They had been ordered.'], { p: [[1, 'pn', '1p']] });
+T(123, 'visa erat.', 'She had been seen.', 'h', ['She had seen.', 'She was seen.', 'They had been seen.']);
+T(123, 'nuntiatum erat.', 'It had been announced.', 'h', ['He had announced.', 'It was announced.', 'They had been announced.']);
+T(123, 'vulnerati eramus.', 'We had been wounded.', 'h', ['We had wounded.', 'We were wounded.', 'You (pl) had been wounded.'], { p: [[1, 'pn', '1p']] });
+T(123, 'occisus erat.', 'He had been killed.', 'h', ['He had killed.', 'He was killed.', 'They had been killed.'], { p: [[0, 'tense', 'plupf', null, 'phrase']] });
+T(123, 'tandem copiae paratae erant.', 'At last the forces had been prepared.', 'h', ['At last the forces had prepared.', 'At last the forces were prepared.', 'At last the force had been prepared.'], { u: 1, g: [[2, ['paratae', 'paratus', 'paratum', 'parati']]] });
+T(123, 'hastis vulneratus erat.', 'He had been wounded by spears.', 'h', ['He had wounded with spears.', 'He was wounded by spears.', 'She had been wounded by spears.'], { u: 1 });
+T(123, 'omnes muri ab hostibus deleti erant.', 'All the walls had been destroyed by the enemy.', 'h', ['All the walls had destroyed the enemy.', 'All the walls were destroyed by the enemy.', 'The whole wall had been destroyed by the enemy.'], { u: 1 });
+T(123, 'ab amicis relictus eram.', 'I had been left by my friends.', 'h', ['I had left my friends.', 'I was left by my friends.', 'My friends had been left by me.'], { u: 1 });
+T(123, 'Helena ad urbem Troiam ducta erat.', 'Helen had been led to the city of Troy.', 'h', ['Helen had led them to the city of Troy.', 'Helen was led to the city of Troy.', 'Helen is being led to the city of Troy.'], { u: 1, g: [[4, ['ducta', 'ductus', 'ductum', 'ducti']]] });
+T(123, 'naves ad urbem Troiam missae erant.', 'Ships had been sent to the city of Troy.', 'h', ['The ships had sent men to the city of Troy.', 'A ship had been sent to the city of Troy.', 'Ships were sent to the city of Troy.'], { u: 1 });
+T(130, 'missi erant.', 'They had been sent.', 'h', ['They had sent.', 'They were sent.', 'He had been sent.'], { p: [[1, 'pn', '3p'], [0, 'tense', 'plupf', null, 'phrase']] });
+T(130, 'occisi erant.', 'They had been killed.', 'h', ['They had killed.', 'They were killed.', 'He had been killed.'], { p: [[0, 'tense', 'plupf', null, 'phrase']] });
+T(130, 'conspecti eramus.', 'We had been caught sight of.', 'h', ['We had caught sight of.', 'We were caught sight of.', 'They had been caught sight of.'], { p: [[1, 'pn', '1p']] });
+T(130, 'oppidum ab hostibus iam deletum erat.', 'The town had already been destroyed by the enemy.', 'h', ['The town had already destroyed the enemy.', 'The town was already destroyed by the enemy.', 'The towns had already been destroyed by the enemy.'], { u: 1 });
+T(130, 'multae naves a Graecis paratae erant.', 'Many ships had been prepared by the Greeks.', 'h', ['Many ships had prepared the Greeks.', 'Many ships were prepared by the Greeks.', 'One ship had been prepared by the Greeks.'], { u: 1 });
+T(130, 'puer malus a magistro punitus erat.', 'The bad boy had been punished by the teacher.', 'h', ['The bad boy had punished the teacher.', 'The bad boy was punished by the teacher.', 'The bad boys had been punished by the teacher.'], { u: 1 });
+T(126, 'manere noluerunt.', 'They did not want to stay.', 'i', ['They wanted to stay.', 'They do not want to stay.', 'He did not want to stay.'], { p: [[1, 'pn', '3p']] });
+T(126, 'discedere voluerunt.', 'They wanted to leave.', 'i', ['They did not want to leave.', 'They want to leave.', 'We wanted to leave.'], { p: [[1, 'pn', '3p']] });
+T(126, 'visne mecum ire?', 'Do you want to go with me?', 'i', ['Do you want to go with him?', 'Do you not want to go with me?', 'Did you want to go with me?'], { u: 1 });
+T(126, 'effugere nolumus.', 'We do not want to escape.', 'i', ['We want to escape.', 'They do not want to escape.', 'We did not want to escape.'], { g: [[1, ['nolumus', 'nolunt', 'non vult', 'volumus']]], p: [[1, 'pn', '1p']] });
+T(126, 'ridere volebam.', 'I wanted to laugh.', 'i', ['I did not want to laugh.', 'I want to laugh.', 'He wanted to laugh.'], { p: [[1, 'pn', '1s'], [1, 'tense', 'impf']] });
+T(126, 'sapiens esse vult.', 'He wants to be wise.', 'i', ['He wants to be brave.', 'He does not want to be wise.', 'They want to be wise.'], { u: 1, g: [[2, ['vult', 'volunt', 'vis', 'volo']]], p: [[2, 'pn', '3s']] });
+T(126, 'hoc facere non vult.', 'He does not want to do this.', 'i', ['He wants to do this.', 'They do not want to do this.', 'He was not able to do this.'], { u: 1 });
+T(126, 'laborare nolo.', 'I do not want to work.', 'i', ['I want to work.', 'I am not able to work.', 'He does not want to work.'], { g: [[1, ['nolo', 'nolumus', 'non vult', 'volo']]], p: [[1, 'pn', '1s']] });
+T(126, 'ludere volo.', 'I want to play.', 'i', ['I do not want to play.', 'I wanted to play.', 'We want to play.'], { p: [[1, 'pn', '1s']] });
+T(126, 'cantare nolebat.', 'He did not want to sing.', 'i', ['He wanted to sing.', 'He does not want to sing.', 'I did not want to sing.'], { p: [[1, 'pn', '3s'], [1, 'tense', 'impf']] });
+T(126, 'Graeci Troiam oppugnare volebant.', 'The Greeks wanted to attack Troy.', 'i', ['The Greeks did not want to attack Troy.', 'The Greeks want to attack Troy.', 'The Trojans wanted to attack the Greeks.'], { u: 1 });
+T(126, 'hi discipuli laborare numquam volunt.', 'These pupils never want to work.', 'i', ['These pupils always want to work.', 'This pupil never wants to work.', 'These pupils never wanted to work.'], { u: 1, g: [[4, ['volunt', 'vult', 'volumus', 'vis']]] });
+T(126, 'Ulixes ad Graeciam redire volebat.', 'Ulysses wanted to return to Greece.', 'i', ['Ulysses did not want to return to Greece.', 'Ulysses wants to return to Greece.', 'Ulysses wanted to leave Greece.'], { u: 1 });
+T(126, 'hic puer laborare non vult.', 'This boy does not want to work.', 'i', ['This boy wants to work.', 'These boys do not want to work.', 'This boy did not want to work.'], { u: 1 });
+T(126, 'milites autem hoc facere nolebant.', 'However, the soldiers did not want to do this.', 'i', ['However, the soldiers wanted to do this.', 'However, the soldier did not want to do this.', 'However, the soldiers do not want to do this.'], { u: 1 });
+T(150, 'hunc ducem sequi nolo.', 'I do not want to follow this leader.', 'i v', ['I want to follow this leader.', 'This leader does not want to follow me.', 'We do not want to follow this leader.'], { u: 1 });
+T(127, 'paucis diebus veniam.', 'I shall come in a few days.', 'j', ['I shall come for a few days.', 'I came a few days ago.', 'He will come in a few days.'], { u: 1 });
+T(127, 'totam diem dormivi.', 'I slept for the whole day.', 'j', ['I slept on that day.', 'I shall sleep for the whole day.', 'He slept for the whole day.'], { u: 1 });
+T(127, 'paucis annis redibo.', 'I shall return in a few years.', 'j', ['I shall return for a few years.', 'I returned a few years ago.', 'We shall return in a few years.'], { u: 1 });
+T(127, 'septem dies laboravimus.', 'We worked for seven days.', 'j', ['We worked on the seventh day.', 'We shall work for seven days.', 'They worked for seven days.'], { u: 1 });
+T(127, 'quarto anno advenerunt.', 'They arrived in the fourth year.', 'j', ['They arrived for four years.', 'They will arrive in the fourth year.', 'He arrived in the fourth year.'], { u: 1 });
+T(127, 'paucis horis discedemus.', 'We shall leave in a few hours.', 'j', ['We shall leave for a few hours.', 'We left a few hours ago.', 'They will leave in a few hours.'], { u: 1 });
+T(127, 'eum tertia hora vidi.', 'I saw him at the third hour.', 'j', ['I saw him for three hours.', 'He saw me at the third hour.', 'I shall see him at the third hour.'], { u: 1 });
+T(127, 'multas horas non dormivit.', 'He did not sleep for many hours.', 'j', ['He did not sleep in many hours.', 'He slept for many hours.', 'They did not sleep for many hours.'], { u: 1 });
+T(127, 'multos dies laborabo.', 'I shall work for many days.', 'j', ['I shall work in many days.', 'I worked for many days.', 'He will work for many days.'], { u: 1 });
+T(127, 'multae naves a Graecis paucis diebus paratae sunt.', 'Many ships were prepared by the Greeks in a few days.', 'j g', ['Many ships were prepared by the Greeks for a few days.', 'The Greeks prepared one ship in a few days.', 'Many ships will be prepared by the Greeks in a few days.']);
+T(127, 'nautae trans mare multos dies navigaverunt.', 'The sailors sailed across the sea for many days.', 'j', ['The sailors sailed across the sea in many days.', 'The sailor sailed across the sea for many days.', 'The sailors will sail across the sea for many days.'], { u: 1 });
+T(127, 'Graeci Troiam multos annos oppugnaverunt.', 'The Greeks attacked Troy for many years.', 'j', ['The Greeks attacked Troy in many years.', 'The Trojans attacked the Greeks for many years.', 'The Greeks will attack Troy for many years.'], { u: 1 });
+T(127, 'tandem Graeci Troiam decimo anno ceperunt.', 'At last the Greeks captured Troy in the tenth year.', 'j', ['At last the Greeks captured Troy for ten years.', 'At last the Trojans captured Greece in the tenth year.', 'At last the Greeks will capture Troy in the tenth year.'], { u: 1 });
+T(127, 'Troiani contra Graecos multas horas pugnaverunt.', 'The Trojans fought against the Greeks for many hours.', 'j', ['The Trojans fought against the Greeks in a few hours.', 'The Greeks fought against the Trojans for many hours.', 'The Trojans will fight against the Greeks for many hours.'], { u: 1 });
+T(127, 'muri paucis horis deleti sunt.', 'The walls were destroyed in a few hours.', 'j g', ['The walls were destroyed for a few hours.', 'The wall was destroyed in a few hours.', 'The walls will be destroyed in a few hours.'], { u: 1 });
+T(127, 'omnes Graeci quinque diebus discesserunt.', 'All the Greeks left within five days.', 'j', ['All the Greeks left for five days.', 'All the Greeks will leave within five days.', 'All the Trojans left within five days.'], { u: 1 });
+T(127, 'Ulixes trans mare multos annos erravit.', 'Ulysses wandered across the sea for many years.', 'j', ['Ulysses wandered across the sea in many years.', 'Ulysses sailed across the sea in a few years.', 'Ulysses will wander across the sea for many years.'], { u: 1 });
+T(127, 'Ulixes nautas paucis horis redire iussit.', 'Ulysses ordered the sailors to return in a few hours.', 'j', ['Ulysses ordered the sailors to return for a few hours.', 'The sailors ordered Ulysses to return in a few hours.', 'Ulysses ordered the sailors to leave in a few hours.'], { u: 1 });
+T(129, 'servus multum cibum tulerat.', 'The slave had brought a lot of food.', 'k', ['The slave had eaten a lot of food.', 'The slave will bring a lot of food.', 'The slaves had brought a lot of food.'], { u: 1, g: [[3, ['tulerat', 'tulerant', 'fert', 'ferebat']]] });
+T(129, 'multam pecuniam cras feram.', 'I shall bring a lot of money tomorrow.', 'k', ['I brought a lot of money yesterday.', 'He will bring a lot of money tomorrow.', 'I am bringing a lot of money today.'], { u: 1, g: [[3, ['feram', 'feret', 'ferunt', 'tuli']]], p: [[3, 'pn', '1s'], [3, 'tense', 'fut']] });
+T(129, 'quid fers?', 'What are you carrying?', 'k', ['What is he carrying?', 'What were you carrying?', 'What will you carry?'], { g: [[1, ['fers', 'fert', 'ferimus', 'tulit']]], p: [[1, 'pn', '2s']] });
+T(129, 'milites arma ferunt.', 'The soldiers are carrying weapons.', 'k', ['The soldier is carrying weapons.', 'The soldiers carried weapons.', 'The soldiers will carry weapons.'], { u: 1, g: [[2, ['ferunt', 'fert', 'ferebat', 'feret']]], p: [[2, 'pn', '3p']] });
+T(129, 'quid servus ferebat?', 'What was the slave carrying?', 'k', ['What is the slave carrying?', 'What will the slave carry?', 'What were the slaves carrying?'], { u: 1, p: [[2, 'tense', 'impf']] });
+T(129, 'servus corpus ferebat.', 'The slave was carrying a body.', 'k', ['The slave is carrying a body.', 'The slaves were carrying a body.', 'The slave had carried a body.'], { u: 1, g: [[2, ['ferebat', 'ferebant', 'fert', 'ferunt']]] });
+T(130, 'feremur.', 'We shall be carried.', 'k f', ['We shall carry.', 'We are carried.', 'They will be carried.'], { p: [[0, 'pn', '1p'], [0, 'tense', 'fut']] });
+T(133, 'nautae clamantes ad navem ferebantur.', 'The sailors were carried, shouting, to the ship.', 'k f m', ['The sailors carried the shouting men to the ship.', 'The sailor was carried, shouting, to the ship.', 'The sailors are carried, shouting, to the ship.'], { u: 1 });
+T(132, 'hic est servus qui bene laborat.', 'This is the slave who works well.', 'l', ['This is the slave whom I like.', 'These are the slaves who work well.', 'This slave works well.'], { u: 1, g: [[3, ['qui', 'quae', 'quod', 'quem']]] });
+T(132, 'haec est ancilla quae bene laborat.', 'This is the maidservant who works well.', 'l', ['This is the maidservant whom I praise.', 'These are the maidservants who work well.', 'This maidservant worked well.'], { u: 1, g: [[3, ['quae', 'qui', 'quod', 'quam']]] });
+T(132, 'hoc est templum quod maximum est.', 'This is the temple which is very big.', 'l', ['This temple is bigger than that one.', 'These are the temples which are very big.', 'This is the temple which I see.'], { u: 1, g: [[3, ['quod', 'qui', 'quae', 'quem']]] });
+T(132, 'hi sunt servi qui heri fugerunt.', 'These are the slaves who ran away yesterday.', 'l', ['This is the slave who ran away yesterday.', 'These are the slaves whom we saw yesterday.', 'These slaves will run away tomorrow.'], { u: 1, g: [[3, ['qui', 'quos', 'quae', 'quorum']]] });
+T(132, 'hae sunt puellae quae bene cantant.', 'These are the girls who sing well.', 'l', ['This is the girl who sings well.', 'These are the girls whom I hear.', 'These girls sang well.'], { u: 1, g: [[3, ['quae', 'quas', 'qui', 'quarum']]] });
+T(132, 'ille magister est quem non amo.', 'That is the teacher whom I do not like.', 'l', ['That is the teacher who does not like me.', 'That teacher does not like me.', 'Those are the teachers whom I do not like.'], { u: 1, g: [[3, ['quem', 'qui', 'quod', 'cui']]] });
+T(132, 'illa puella pulchra est quam amo.', 'That beautiful girl is the one whom I love.', 'l', ['That beautiful girl is the one who loves me.', 'Those girls whom I love are beautiful.', 'That girl loves the beautiful boy.'], { u: 1, g: [[4, ['quam', 'quae', 'qui', 'quem']]] });
+T(132, 'hoc vinum est quod saepe bibo.', 'This is the wine which I often drink.', 'l', ['This is the wine which is often drunk.', 'This wine often drinks me.', 'These are the wines which I often drink.'], { u: 1, g: [[3, ['quod', 'quem', 'quam', 'qui']]] });
+T(132, 'illi servi sunt quos dominus saepe punit.', 'Those are the slaves whom the master often punishes.', 'l', ['Those are the slaves who often punish the master.', 'That is the slave whom the master often punishes.', 'Those slaves often punished the master.'], { u: 1, g: [[3, ['quos', 'qui', 'quem', 'quibus']]] });
+T(132, 'hastae quas fero longae sunt.', 'The spears which I am carrying are long.', 'l k', ['The spears which are carrying me are long.', 'The spear which I am carrying is long.', 'The spears which I carried were long.'], { u: 1, g: [[1, ['quas', 'quae', 'quam', 'quos']]] });
+T(132, 'hi sunt servi quibus pecuniam dedi.', 'These are the slaves to whom I gave money.', 'l', ['These are the slaves who gave me money.', 'This is the slave to whom I gave money.', 'These slaves gave money to me.'], { u: 1, g: [[3, ['quibus', 'qui', 'quos', 'quorum']]] });
+T(132, 'haec est puella cuius pater clarus est.', 'This is the girl whose father is famous.', 'l', ['This is the girl whose mother is famous.', 'This girl\'s father was famous.', 'These are the girls whose father is famous.'], { u: 1, g: [[3, ['cuius', 'quae', 'quam', 'cui']]] });
+T(132, 'hi sunt servi quorum dominus crudelis est.', 'These are the slaves whose master is cruel.', 'l', ['These are the slaves whose master is kind.', 'This is the slave whose master is cruel.', 'These slaves are cruel to their master.'], { u: 1, g: [[3, ['quorum', 'qui', 'quos', 'quibus']]] });
+T(132, 'puer quocum ludo amicus meus est.', 'The boy with whom I play is my friend.', 'l', ['The boy whom I play with is not my friend.', 'The boys with whom I play are my friends.', 'My friend plays with the boy.'], { u: 1 });
+T(132, 'verba quae dixit magister mala erant.', 'The words which the teacher said were bad.', 'l', ['The words which the teacher heard were bad.', 'The word which the teacher said was bad.', 'The teacher said bad words to the boy.'], { u: 1 });
+T(132, 'ibi est villa ex qua multi servi effugerunt.', 'There is the villa from which many slaves escaped.', 'l', ['There is the villa to which many slaves escaped.', 'Many slaves escaped into the villa.', 'There is the villa from which one slave escaped.']);
+T(132, 'femina alta quam vides perterrita est.', 'The tall woman whom you see is terrified.', 'l', ['The tall woman who sees you is terrified.', 'The tall women whom you see are terrified.', 'You see the terrified tall woman.'], { u: 1 });
+T(150, 'hic est servus bonus cui cibum dedi.', 'This is the good slave to whom I gave food.', 'l', ['This is the good slave who gave me food.', 'These are the good slaves to whom I gave food.', 'The good slave gave food to me.'], { u: 1 });
+T(132, 'miles pro patria pugnans occisus est.', 'The soldier was killed while fighting for his country.', 'm g', ['The soldier killed a man fighting for his country.', 'The soldiers were killed while fighting for their country.', 'The soldier fought for his country and was not killed.'], { u: 1 });
+T(132, 'pueri magistrum appropinquantem viderunt.', 'The boys saw the teacher approaching.', 'm', ['The teacher saw the boys approaching.', 'The boys, approaching, saw the teacher.', 'The boy saw the teacher approaching.'], { u: 1, g: [[2, ['appropinquantem', 'appropinquantes', 'appropinquans', 'appropinquantis']]] });
+T(132, 'feminas clamantes audivimus.', 'We heard the women shouting.', 'm', ['We heard the woman shouting.', 'The shouting women heard us.', 'We, shouting, heard the women.'], { u: 1, g: [[1, ['clamantes', 'clamantem', 'clamans', 'clamantium']]] });
+T(133, 'servi dominum appropinquantem viderunt.', 'The slaves saw the master approaching.', 'm', ['The master saw the slaves approaching.', 'The slave saw the master approaching.', 'The slaves, approaching, saw the master.'], { u: 1, g: [[2, ['appropinquantem', 'appropinquantes', 'appropinquans', 'appropinquanti']]] });
+T(133, 'feminas flentes videre numquam volumus.', 'We never want to see women weeping.', 'm i', ['We always want to see women weeping.', 'Weeping women never want to see us.', 'We never want to see a woman weeping.'], { u: 1 });
+T(133, 'milites fortiter pugnantes interfecti sunt.', 'The soldiers were killed while fighting bravely.', 'm g', ['The soldiers killed men fighting bravely.', 'The soldier was killed while fighting bravely.', 'The soldiers fought bravely and were not killed.'], { u: 1 });
+T(133, 'rex cives oppidum defendentes laudavit.', 'The king praised the citizens defending the town.', 'm', ['The citizens praised the king defending the town.', 'The king, defending the town, praised the citizens.', 'The king praised the citizen defending the town.'], { u: 1 });
+T(133, 'agricola equum suum ex agro currentem vidit.', 'The farmer saw his horse running out of the field.', 'm', ['The farmer, running out of the field, saw his horse.', 'The farmer saw his horses running out of the field.', 'The horse saw the farmer running out of the field.'], { u: 1 });
+T(133, 'puer puellam e villa exeuntem vidit.', 'The boy saw the girl going out of the villa.', 'm', ['The girl saw the boy going out of the villa.', 'The boy, going out of the villa, saw the girl.', 'The boy saw the girls going out of the villa.'], { u: 1 });
+T(133, 'servi dominum iterum clamantem audiverunt.', 'The slaves heard the master shouting again.', 'm', ['The master heard the slaves shouting again.', 'The slave heard the master shouting again.', 'The slaves, shouting again, heard the master.'], { u: 1, g: [[3, ['clamantem', 'clamantes', 'clamans', 'clamanti']]] });
+T(133, 'miles in muro stans magna voce clamabat.', 'The soldier standing on the wall was shouting in a loud voice.', 'm', ['The soldiers standing on the wall were shouting in a loud voice.', 'The soldier was standing on the wall in silence.', 'The soldier shouted to the man standing on the wall.'], { u: 1, g: [[3, ['stans', 'stantes', 'stantem', 'stanti']]] });
+T(133, 'milites in muro stantes magna voce clamabant.', 'The soldiers standing on the wall were shouting in a loud voice.', 'm', ['The soldier standing on the wall was shouting in a loud voice.', 'The soldiers were shouting to the men standing on the wall.', 'The soldiers standing on the wall were silent.'], { u: 1, g: [[3, ['stantes', 'stans', 'stantem', 'stantium']]] });
+T(133, 'servus in agris laborans multos equos vidit.', 'The slave, working in the fields, saw many horses.', 'm', ['The slave saw many horses working in the fields.', 'The slaves, working in the fields, saw many horses.', 'Many horses saw the slave working in the fields.'], { u: 1 });
+T(133, 'pater filiam suam vinum bibentem conspexit.', 'The father caught sight of his daughter drinking wine.', 'm', ['The daughter caught sight of her father drinking wine.', 'The father, drinking wine, caught sight of his daughter.', 'The father caught sight of his daughters drinking wine.'], { u: 1 });
+T(133, 'dominus ancillam cenam parantem laudavit.', 'The master praised the maidservant preparing dinner.', 'm', ['The maidservant praised the master preparing dinner.', 'The master, preparing dinner, praised the maidservant.', 'The master praised the maidservants preparing dinner.'], { u: 1, g: [[3, ['parantem', 'parantes', 'parans', 'paranti']]] });
+T(133, 'dominus crudelis servum effugientem occidit.', 'The cruel master killed the slave who was escaping.', 'm', ['The slave killed the cruel master who was escaping.', 'The cruel master, escaping, killed the slave.', 'The cruel master killed the slaves who were escaping.'], { u: 1 });
+T(135, 'venit ut pueros moneret.', 'He came to warn the boys.', 'n', ['He came because he warned the boys.', 'The boys came to warn him.', 'He came to warn the boy.'], { u: 1, g: [[3, ['moneret', 'monet', 'monebat', 'monerent']]] });
+T(135, 'veni ut pecuniam caperem.', 'I came to take the money.', 'n', ['I came so as not to take the money.', 'He came to take the money.', 'I came and took the money.'], { u: 1 });
+T(135, 'pugnaverunt ut urbem defenderent.', 'They fought to defend the city.', 'n', ['They fought so as not to defend the city.', 'He fought to defend the city.', 'They defended the city and fought.'], { u: 1, g: [[3, ['defenderent', 'defendunt', 'defenderet', 'defendebant']]] });
+T(135, 'venit ut reginam videret.', 'He came to see the queen.', 'n', ['The queen came to see him.', 'He came so as not to see the queen.', 'He came to see the king.'], { u: 1 });
+T(135, 'cucurri ut patrem servarem.', 'I ran to save my father.', 'n', ['My father ran to save me.', 'I ran so as not to save my father.', 'He ran to save his father.'], { u: 1 });
+T(135, 'festinaverunt ut cibum consumerent.', 'They hurried to eat the food.', 'n', ['They hurried so as not to eat the food.', 'He hurried to eat the food.', 'They hurried because they had eaten the food.'], { u: 1, g: [[3, ['consumerent', 'consumunt', 'consumeret', 'consumebant']]] });
+T(135, 'venerunt ut templum spectarent.', 'They came to look at the temple.', 'n', ['They came so as not to look at the temple.', 'He came to look at the temple.', 'They came to build the temple.'], { u: 1 });
+T(135, 'veni ut murum aedificarem.', 'I came to build a wall.', 'n', ['I came so as not to build a wall.', 'He came to build a wall.', 'I came to destroy a wall.'], { u: 1 });
+T(135, 'venit ut luderet.', 'He came to play.', 'n', ['He came so as not to play.', 'They came to play.', 'He came and played.'], { u: 1, g: [[2, ['luderet', 'ludit', 'luderent', 'ludebat']]] });
+T(135, 'cucurrit ne videretur.', 'He ran so as not to be seen.', 'n', ['He ran so as to be seen.', 'He ran so as not to see.', 'They ran so as not to be seen.'], { u: 1, g: [[2, ['videretur', 'videret', 'viderentur', 'videtur']]] });
+T(135, 'effugerunt ne punirentur.', 'They escaped so as not to be punished.', 'n f', ['They escaped so as to be punished.', 'They escaped so as not to punish.', 'He escaped so as not to be punished.'], { u: 1 });
+T(135, 'festinavi ne necarer.', 'I hurried so as not to be killed.', 'n f', ['I hurried so as to kill.', 'I hurried so as not to kill.', 'He hurried so as not to be killed.'], { u: 1 });
+T(135, 'bene laboravit ut laudaretur.', 'He worked well in order to be praised.', 'n f', ['He worked well in order to praise.', 'He worked well so as not to be praised.', 'They worked well in order to be praised.'], { u: 1 });
+T(135, 'servi currebant ut effugerent.', 'The slaves were running to escape.', 'n', ['The slaves were running so as not to escape.', 'The slave was running to escape.', 'The slaves ran because they had escaped.'], { u: 1 });
+T(135, 'servi currebant ne laborarent.', 'The slaves were running so as not to work.', 'n', ['The slaves were running in order to work.', 'The slave was running so as not to work.', 'The slaves were working so as not to run.'], { u: 1 });
+T(135, 'viri celeriter effugerunt ne perirent.', 'The men escaped quickly so as not to die.', 'n', ['The men escaped quickly in order to die.', 'The man escaped quickly so as not to die.', 'The men died quickly so as not to escape.'], { u: 1 });
+T(135, 'cives diu pugnabant ut urbem defenderent.', 'The citizens fought for a long time to defend the city.', 'n', ['The citizens fought for a long time so as not to defend the city.', 'The citizen fought for a long time to defend the city.', 'The citizens defended the city for a long time.'], { u: 1 });
+T(135, 'magister multos libros legebat ut sapiens esset.', 'The teacher used to read many books to be wise.', 'n', ['The teacher used to read many books because he was wise.', 'The wise teacher used to write many books.', 'The teacher used to read one book to be wise.'], { u: 1 });
+T(135, 'Graeci fortiter pugnaverunt ut urbem caperent.', 'The Greeks fought bravely to capture the city.', 'n', ['The Greeks fought bravely so as not to capture the city.', 'The Trojans fought bravely to capture the city.', 'The Greeks fought bravely to defend the city.'], { u: 1 });
+T(135, 'Troiani fortiter pugnaverunt ut urbem servarent.', 'The Trojans fought bravely to save the city.', 'n', ['The Trojans fought bravely to capture the city.', 'The Greeks fought bravely to save the city.', 'The Trojans fought bravely so as not to save the city.'], { u: 1 });
+T(135, 'Graeci Troiam oppugnaverunt ut Paridem punirent.', 'The Greeks attacked Troy to punish Paris.', 'n', ['The Greeks attacked Troy so as not to punish Paris.', 'Paris attacked Troy to punish the Greeks.', 'The Greeks attacked Troy because they had punished Paris.'], { u: 1 });
+T(137, 'dux militibus imperavit ut bene pugnarent.', 'The leader ordered the soldiers to fight well.', 'o', ['The soldiers ordered the leader to fight well.', 'The leader ordered the soldiers not to fight.', 'The leader ordered the soldier to fight well.'], { u: 1, g: [[5, ['pugnarent', 'pugnant', 'pugnaret', 'pugnabant']]] });
+T(137, 'dux militibus imperavit ne hostes timerent.', 'The leader ordered the soldiers not to fear the enemy.', 'o', ['The leader ordered the soldiers to fear the enemy.', 'The enemy ordered the soldiers not to fear the leader.', 'The leader ordered the soldier not to fear the enemy.'], { u: 1 });
+T(137, 'dux militibus imperavit ne dormirent.', 'The leader ordered the soldiers not to sleep.', 'o', ['The leader ordered the soldiers to sleep.', 'The soldiers ordered the leader not to sleep.', 'The leader ordered the soldier not to sleep.'], { u: 1, g: [[4, ['dormirent', 'dormiunt', 'dormiret', 'dormiebant']]] });
+T(137, 'dux militibus imperavit ne currerent.', 'The leader ordered the soldiers not to run.', 'o', ['The leader ordered the soldiers to run.', 'The leader ordered the soldiers not to fight.', 'The soldiers ordered the leader not to run.'], { u: 1 });
+T(137, 'dominus servo persuasit ut laboraret.', 'The master persuaded the slave to work.', 'o', ['The slave persuaded the master to work.', 'The master persuaded the slave not to work.', 'The master persuaded the slaves to work.'], { u: 1, g: [[4, ['laboraret', 'laborat', 'laborarent', 'laborabat']]] });
+T(137, 'dominus servo persuasit ne luderet.', 'The master persuaded the slave not to play.', 'o', ['The master persuaded the slave to play.', 'The slave persuaded the master not to play.', 'The master ordered the slave not to work.'], { u: 1 });
+T(137, 'dominus servo persuasit ut cibum pararet.', 'The master persuaded the slave to prepare food.', 'o', ['The slave persuaded the master to prepare food.', 'The master persuaded the slave not to prepare food.', 'The master persuaded the slave to eat the food.'], { u: 1 });
+T(137, 'dominus servo persuasit ut ad urbem iret.', 'The master persuaded the slave to go to the city.', 'o', ['The slave persuaded the master to go to the city.', 'The master persuaded the slave not to go to the city.', 'The master persuaded the slave to leave the city.'], { u: 1 });
+T(137, 'dux nautis imperavit ut naves aedificarent.', 'The leader ordered the sailors to build ships.', 'o', ['The sailors ordered the leader to build ships.', 'The leader ordered the sailors to destroy the ships.', 'The leader ordered the sailor to build a ship.'], { u: 1 });
+T(137, 'dominus servum monuit ne hoc faceret.', 'The master warned the slave not to do this.', 'o', ['The master warned the slave to do this.', 'The slave warned the master not to do this.', 'The master warned the slaves not to do this.'], { u: 1, g: [[5, ['faceret', 'facit', 'facerent', 'faciebat']]] });
+T(137, 'magister discipulos saepe monebat ut laborarent.', 'The teacher often warned the pupils to work.', 'o', ['The pupils often warned the teacher to work.', 'The teacher often warned the pupils not to work.', 'The teacher often warned the pupil to work.'], { u: 1 });
+T(137, 'pater me monuit ne illum librum legerem.', 'My father warned me not to read that book.', 'o', ['My father warned me to read that book.', 'I warned my father not to read that book.', 'My father warned me not to write that book.'], { u: 1 });
+T(137, 'dominus mihi persuasit ut manerem.', 'The master persuaded me to stay.', 'o', ['I persuaded the master to stay.', 'The master persuaded me not to stay.', 'The master persuaded me to leave.'], { u: 1, g: [[4, ['manerem', 'manet', 'maneret', 'manebam']]] });
+T(137, 'te monui ne superbus esses.', 'I warned you not to be proud.', 'o', ['I warned you to be proud.', 'You warned me not to be proud.', 'I warned you not to be lazy.'], { u: 1 });
+T(137, 'mater filium rogavit ne ad urbem iret.', 'The mother asked her son not to go to the city.', 'o', ['The mother asked her son to go to the city.', 'The son asked his mother not to go to the city.', 'The mother asked her daughter not to go to the city.'], { u: 1 });
+T(137, 'regina civibus persuasit ut bene laborarent.', 'The queen persuaded the citizens to work well.', 'o', ['The citizens persuaded the queen to work well.', 'The queen persuaded the citizens not to work.', 'The queen persuaded the citizen to work well.'], { u: 1 });
+T(137, 'pater filiam monuit ne in media via luderet.', 'The father warned his daughter not to play in the middle of the road.', 'o', ['The father warned his daughter to play in the middle of the road.', 'The daughter warned her father not to play in the middle of the road.', 'The father warned his son not to play in the middle of the road.']);
+T(137, 'magistrum rogavimus ut statim discederet.', 'We asked the teacher to leave at once.', 'o', ['The teacher asked us to leave at once.', 'We asked the teacher not to leave at once.', 'We asked the teacher to arrive at once.'], { u: 1 });
+T(137, 'puero imperavi ut laboraret.', 'I ordered the boy to work.', 'o', ['The boy ordered me to work.', 'I ordered the boy not to work.', 'I ordered the boys to work.'], { u: 1 });
+T(137, 'patri persuasi ut pecuniam mihi daret.', 'I persuaded my father to give me money.', 'o', ['My father persuaded me to give him money.', 'I persuaded my father not to give me money.', 'I persuaded my mother to give me money.'], { u: 1 });
+T(137, 'uxor domino persuasit ut illum servum liberaret.', 'The wife persuaded the master to free that slave.', 'o', ['The master persuaded his wife to free that slave.', 'The wife persuaded the master to punish that slave.', 'The wife persuaded the master not to free that slave.'], { u: 1 });
+T(139, 'oppidum captum deletum est.', 'The captured town was destroyed.', 'p g', ['The destroyed town was captured.', 'The captured towns were destroyed.', 'The town captured and destroyed them.'], { u: 1 });
+T(139, 'puella, ab amicis relicta, flebat.', 'The girl, left by her friends, was weeping.', 'p', ['The girl left her friends and was weeping.', 'The girls, left by their friends, were weeping.', 'The friends, left by the girl, were weeping.'], { u: 1 });
+T(139, 'milites, a duce laudati, magna praemia acceperunt.', 'The soldiers, praised by the leader, received great rewards.', 'p', ['The soldiers praised the leader and received great rewards.', 'The leader, praised by the soldiers, received great rewards.', 'The soldier, praised by the leader, received a great reward.'], { u: 1 });
+T(139, 'cena, ab ancilla parata, ab omnibus laudata est.', 'The dinner, prepared by the maidservant, was praised by everyone.', 'p g', ['The maidservant prepared the dinner and praised everyone.', 'The dinner was prepared by everyone and praised by the maidservant.', 'The dinners, prepared by the maidservant, were praised by everyone.']);
+T(139, 'multae naves paratae ad Menelaum missae sunt.', 'Many ships, having been prepared, were sent to Menelaus.', 'p g', ['Menelaus prepared many ships and sent them.', 'Many ships were prepared by Menelaus and sent.', 'One ship, having been prepared, was sent to Menelaus.'], { u: 1 });
+T(139, 'urbs diu oppugnata, tandem capta est.', 'The city, attacked for a long time, was at last captured.', 'p g', ['The city attacked for a long time and at last captured them.', 'The cities, attacked for a long time, were at last captured.', 'The city was captured at once and attacked for a long time.'], { u: 1 });
+T(139, 'multi cives, ab hostibus vulnerati, ex urbe fugerunt.', 'Many citizens, wounded by the enemy, fled from the city.', 'p', ['Many citizens wounded the enemy and fled from the city.', 'The enemy, wounded by many citizens, fled from the city.', 'One citizen, wounded by the enemy, fled from the city.']);
+T(139, 'naves, tempestate deletae, numquam redierunt.', 'The ships, destroyed by a storm, never returned.', 'p', ['The ships destroyed the storm and never returned.', 'The ship, destroyed by a storm, never returned.', 'The ships, destroyed by a storm, soon returned.'], { u: 1 });
+T(139, 'puer puellam visam amavit.', 'The boy loved the girl once he had seen her.', 'p', ['The girl loved the boy once she had seen him.', 'The boy, having been seen, loved the girl.', 'The boy saw the girl but did not love her.'], { u: 1, g: [[2, ['visam', 'visum', 'visa', 'visus']]] });
+T(139, 'puella puerum visum amavit.', 'The girl loved the boy once she had seen him.', 'p', ['The boy loved the girl once he had seen her.', 'The girl, having been seen, loved the boy.', 'The girl saw the boy but did not love him.'], { u: 1, g: [[2, ['visum', 'visam', 'visus', 'visa']]] });
+T(139, 'vir librum acceptum legit.', 'The man read the book he had received.', 'p', ['The man received the book he had read.', 'The men read the books they had received.', 'The man wrote the book he had received.'], { u: 1, g: [[2, ['acceptum', 'acceptam', 'acceptus', 'accepti']]] });
+T(139, 'hostes urbem oppugnatam ceperunt.', 'The enemy captured the city they had attacked.', 'p', ['The enemy attacked the city they had captured.', 'The city captured the enemy who had attacked it.', 'The enemy captured the cities they had attacked.'], { u: 1, g: [[2, ['oppugnatam', 'oppugnatum', 'oppugnata', 'oppugnati']]] });
+T(139, 'hostes urbem captam deleverunt.', 'The enemy destroyed the city they had captured.', 'p', ['The enemy captured the city they had destroyed.', 'The enemy destroyed the cities they had captured.', 'The city destroyed the enemy who had captured it.'], { u: 1 });
+T(139, 'Romani Graecos vulneratos occiderunt.', 'The Romans killed the wounded Greeks.', 'p', ['The wounded Romans killed the Greeks.', 'The Greeks killed the wounded Romans.', 'The Romans wounded the Greeks they had killed.'], { u: 1, g: [[2, ['vulneratos', 'vulneratus', 'vulnerati', 'vulneratas']]] });
+T(139, 'servus cibum captum consumpsit.', 'The slave ate the food he had taken.', 'p', ['The slave took the food he had eaten.', 'The slaves ate the food they had taken.', 'The slave took the food and did not eat it.'], { u: 1 });
+T(139, 'Menelaus copias paratas ad urbem Troiam misit.', 'Menelaus sent the forces he had prepared to the city of Troy.', 'p', ['Menelaus prepared the forces he had sent to Troy.', 'The forces sent Menelaus to the city of Troy.', 'Menelaus sent the forces to the city of Troy unprepared.'], { u: 1 });
+T(139, 'pater filium punitum ex oppido misit.', 'The father sent his punished son out of the town.', 'p', ['The father punished his son and kept him in the town.', 'The son sent his punished father out of the town.', 'The father sent his punished sons out of the town.'], { u: 1 });
+T(140, 'omnes agricolae ruri habitant.', 'All farmers live in the country.', 'q', ['All farmers live in the city.', 'All farmers go to the country.', 'Every farmer lives in the country.'], { u: 1 });
+T(140, 'dux Roma prima luce discessit.', 'The leader left Rome at dawn.', 'q j', ['The leader arrived at Rome at dawn.', 'The leader left Rome at dusk.', 'The leaders left Rome at dawn.'], { u: 1 });
+T(140, 'rus cras ibimus.', 'We shall go to the country tomorrow.', 'q', ['We shall go from the country tomorrow.', 'We went to the country yesterday.', 'They will go to the country tomorrow.'], { u: 1 });
+T(140, 'puer domo discessit et ad urbem festinavit.', 'The boy left home and hurried to the city.', 'q', ['The boy left the city and hurried home.', 'The boy stayed at home and did not hurry to the city.', 'The boys left home and hurried to the city.'], { u: 1 });
+T(141, 'domino viso, servi fugerunt.', 'When the master had been seen, the slaves fled.', 'r', ['When the slaves had been seen, the master fled.', 'The slaves saw the master but did not flee.', 'When the master had been seen, the slave fled.'], { u: 1, g: [[1, ['viso', 'visus', 'visum', 'visi']]] });
+T(141, 'hostibus visis, milites timebant.', 'When the enemy had been seen, the soldiers were afraid.', 'r', ['When the soldiers had been seen, the enemy were afraid.', 'The soldiers saw the enemy and were not afraid.', 'When the enemy had been seen, the soldier was afraid.'], { u: 1, g: [[1, ['visis', 'visos', 'visi', 'viso']]] });
+T(142, 'magister, discipulo punito, risit.', 'When the pupil had been punished, the teacher laughed.', 'r', ['When the teacher had been punished, the pupil laughed.', 'The teacher punished the pupil and wept.', 'When the pupils had been punished, the teacher laughed.'], { u: 1, g: [[2, ['punito', 'punitus', 'punitum', 'puniti']]] });
+T(142, 'multis servis liberatis, dominus laetus erat.', 'When many slaves had been set free, the master was happy.', 'r', ['When the master had been set free, the many slaves were happy.', 'The master set many slaves free and was sad.', 'When one slave had been set free, the master was happy.'], { u: 1 });
+T(142, 'puella pulcherrima conspecta, puer laetissimus erat.', 'When the very beautiful girl had been caught sight of, the boy was very happy.', 'r', ['When the boy had been caught sight of, the very beautiful girl was very happy.', 'The very beautiful girl caught sight of the boy and was very happy.', 'The boy caught sight of the very beautiful girl and was very sad.'], { u: 1 });
+T(142, 'hoc audito, puella magnopere timebat.', 'When this had been heard, the girl was very frightened.', 'r', ['When the girl had been heard, this frightened her greatly.', 'The girl heard this and was not afraid.', 'When these things had been heard, the girls were very frightened.'], { u: 1, g: [[1, ['audito', 'auditus', 'auditum', 'auditis']]] });
+T(142, 'servi, domino saevo viso, timebant.', 'When the savage master had been seen, the slaves were afraid.', 'r', ['When the slaves had been seen, the savage master was afraid.', 'The slaves saw the savage master but were not afraid.', 'When the savage master had been seen, the slave was afraid.'], { u: 1 });
+T(142, 'cibo consumpto, nautae dormiverunt.', 'When the food had been eaten, the sailors slept.', 'r', ['When the sailors had slept, they ate the food.', 'The sailors ate the food but did not sleep.', 'When the food had been eaten, the sailor slept.'], { u: 1, g: [[1, ['consumpto', 'consumptus', 'consumptum', 'consumptis']]] });
+T(142, 'armis paratis, milites clamantes ruerunt.', 'When the weapons had been prepared, the soldiers charged, shouting.', 'r m', ['When the soldiers had been prepared, the weapons charged, shouting.', 'The soldiers prepared their weapons and did not charge.', 'When the weapons had been prepared, the soldier charged, shouting.'], { u: 1 });
+T(142, 'hoc libro lecto, puella tristis erat.', 'When this book had been read, the girl was sad.', 'r', ['When this book had been written, the girl was sad.', 'The girl read this book and was happy.', 'When these books had been read, the girls were sad.'], { u: 1 });
+T(142, 'hostibus victis, Romani discesserunt.', 'When the enemy had been conquered, the Romans left.', 'r', ['When the Romans had been conquered, the enemy left.', 'The Romans conquered the enemy and stayed.', 'When the enemy had been conquered, the Roman left.'], { u: 1, g: [[1, ['victis', 'victos', 'victi', 'victo']]] });
+T(144, 'video puerum currere.', 'I see that the boy is running.', 's', ['I see the boy and run.', 'I see that the boys are running.', 'The boy sees that I am running.'], { u: 1, g: [[1, ['puerum', 'puer', 'pueri', 'puero']]] });
+T(144, 'video pueros currere.', 'I see that the boys are running.', 's', ['I see that the boy is running.', 'The boys see that I am running.', 'I saw that the boys were running.'], { u: 1 });
+T(144, 'vidi puerum currere.', 'I saw that the boy was running.', 's', ['I see that the boy is running.', 'The boy saw that I was running.', 'I saw that the boys were running.'], { u: 1 });
+T(144, 'audio puellam clamare.', 'I hear that the girl is shouting.', 's', ['I hear that the girls are shouting.', 'The girl hears that I am shouting.', 'I heard that the girl was shouting.'], { u: 1 });
+T(144, 'audivi puellas clamare.', 'I heard that the girls were shouting.', 's', ['I heard that the girl was shouting.', 'I hear that the girls are shouting.', 'The girls heard that I was shouting.'], { u: 1 });
+T(144, 'scio milites venire.', 'I know that the soldiers are coming.', 's', ['I know that the soldier is coming.', 'The soldiers know that I am coming.', 'I knew that the soldiers were coming.'], { u: 1 });
+T(144, 'sciebam milites venire.', 'I knew that the soldiers were coming.', 's', ['I know that the soldiers are coming.', 'The soldiers knew that I was coming.', 'I knew that the soldier was coming.'], { u: 1 });
+T(144, 'scio agricolas laborare.', 'I know that the farmers are working.', 's', ['I know that the farmer is working.', 'The farmers know that I am working.', 'I knew that the farmers were working.'], { u: 1, g: [[1, ['agricolas', 'agricolae', 'agricola', 'agricolam']]] });
+T(144, 'sciebam agricolam laborare.', 'I knew that the farmer was working.', 's', ['I know that the farmer is working.', 'I knew that the farmers were working.', 'The farmer knew that I was working.'], { u: 1 });
+T(144, 'puer dicit hanc puellam pulchram esse.', 'The boy says that this girl is beautiful.', 's', ['The boy said that this girl was beautiful.', 'This girl says that the boy is beautiful.', 'The boy says that these girls are beautiful.'], { u: 1, g: [[4, ['pulchram', 'pulchra', 'pulchrae', 'pulchras']]] });
+T(144, 'puer dixit hanc puellam pulchram esse.', 'The boy said that this girl was beautiful.', 's', ['The boy says that this girl is beautiful.', 'This girl said that the boy was beautiful.', 'The boy said that that girl was ugly.'], { u: 1 });
+T(144, 'audio magistrum bonum esse.', 'I hear that the teacher is good.', 's', ['I hear that the teachers are good.', 'I heard that the teacher was good.', 'The teacher hears that I am good.'], { u: 1 });
+T(144, 'scio hos servos effugere.', 'I know that these slaves are escaping.', 's', ['I know that this slave is escaping.', 'These slaves know that I am escaping.', 'I knew that these slaves were escaping.'], { u: 1, g: [[1, ['hos', 'hi', 'hunc', 'his']]] });
+T(144, 'sciebam hunc servum effugere.', 'I knew that this slave was escaping.', 's', ['I know that this slave is escaping.', 'I knew that these slaves were escaping.', 'This slave knew that I was escaping.'], { u: 1 });
+T(144, 'video omnes discipulos laborare.', 'I see that all the pupils are working.', 's', ['I see that all the pupils were working.', 'All the pupils see that I am working.', 'I see that one pupil is working.'], { u: 1 });
+T(144, 'magister scit puerum non laborare.', 'The teacher knows that the boy is not working.', 's', ['The boy knows that the teacher is not working.', 'The teacher knew that the boy was not working.', 'The teacher knows that the boy is working.'], { u: 1 });
+T(144, 'magister sciebat puerum non laborare.', 'The teacher knew that the boy was not working.', 's', ['The teacher knows that the boy is not working.', 'The boy knew that the teacher was not working.', 'The teacher knew that the boy was working.'], { u: 1 });
+T(144, 'pater scit filium pecuniam amare.', 'The father knows that his son loves money.', 's', ['The son knows that his father loves money.', 'The father knew that his son loved money.', 'The father knows that his son loves the girl.'], { u: 1 });
+T(144, 'pueri sciebant hunc magistrum bonum esse.', 'The boys knew that this teacher was good.', 's', ['The boys know that this teacher is good.', 'This teacher knew that the boys were good.', 'The boys knew that these teachers were good.'], { u: 1 });
+T(144, 'scimus omnes magistros sapientes esse.', 'We know that all teachers are wise.', 's', ['We know that all teachers were wise.', 'All teachers know that we are wise.', 'We know that one teacher is wise.'], { u: 1, g: [[3, ['sapientes', 'sapiens', 'sapientem', 'sapientis']]] });
+T(144, 'video te tandem bene laborare.', 'I see that you are working well at last.', 's', ['You see that I am working well at last.', 'I saw that you were working well at last.', 'I see that you are not working well at last.'], { u: 1 });
+T(144, 'dicunt Romanos oppidum oppugnare.', 'They say that the Romans are attacking the town.', 's', ['They say that the Romans attacked the town.', 'The Romans say that they are attacking the town.', 'They say that the town is attacking the Romans.'], { u: 1 });
+T(144, 'servi sciunt dominum iam appropinquare.', 'The slaves know that the master is already approaching.', 's', ['The master knows that the slaves are already approaching.', 'The slaves knew that the master was already approaching.', 'The slave knows that the master is already approaching.'], { u: 1 });
+T(144, 'dux scit milites fortes esse.', 'The leader knows that the soldiers are brave.', 's', ['The soldiers know that the leader is brave.', 'The leader knew that the soldiers were brave.', 'The leader knows that the soldier is brave.'], { u: 1, g: [[3, ['fortes', 'fortis', 'fortem', 'forti']]] });
+T(144, 'audio multos servos effugere.', 'I hear that many slaves are escaping.', 's', ['I hear that one slave is escaping.', 'Many slaves hear that I am escaping.', 'I heard that many slaves were escaping.'], { u: 1 });
+T(144, 'rex vidit hostes muros delere.', 'The king saw that the enemy were destroying the walls.', 's', ['The king saw that the enemy had destroyed the walls.', 'The enemy saw that the king was destroying the walls.', 'The king sees that the enemy are destroying the walls.'], { u: 1 });
+T(144, 'rex vidit cives urbem defendere.', 'The king saw that the citizens were defending the city.', 's', ['The citizens saw that the king was defending the city.', 'The king sees that the citizens are defending the city.', 'The king saw that the citizen was defending the city.'], { u: 1 });
+T(144, 'Romani sciebant Graecos appropinquare.', 'The Romans knew that the Greeks were approaching.', 's', ['The Greeks knew that the Romans were approaching.', 'The Romans know that the Greeks are approaching.', 'The Romans knew that the Greek was approaching.'], { u: 1 });
+T(144, 'sciebamus hunc senem ambulare non posse.', 'We knew that this old man was not able to walk.', 's', ['We knew that this old man was able to walk.', 'This old man knew that we were not able to walk.', 'We know that this old man is not able to walk.'], { u: 1 });
+T(144, 'puer puniri non vult.', 'The boy does not want to be punished.', 't i', ['The boy does not want to punish.', 'The boy wants to be punished.', 'The boys do not want to be punished.'], { u: 1, g: [[1, ['puniri', 'punire', 'punit', 'punitur']]] });
+T(145, 'dux multa tela iaci iussit.', 'The leader ordered many spears to be thrown.', 't', ['The leader ordered many spears to throw.', 'The leader threw many spears.', 'The leader ordered one spear to be thrown.'], { u: 1, g: [[3, ['iaci', 'iacere', 'iacit', 'iacitur']]] });
+T(145, 'cives urbem bene defendi volebant.', 'The citizens wanted the city to be defended well.', 't i', ['The citizens wanted to defend the city well.', 'The city wanted the citizens to be defended well.', 'The citizens did not want the city to be defended.'], { u: 1, g: [[3, ['defendi', 'defendere', 'defendit', 'defenditur']]] });
+T(145, 'ab hostibus capi nolumus.', 'We do not want to be captured by the enemy.', 't i', ['We do not want to capture the enemy.', 'We want to be captured by the enemy.', 'The enemy do not want to be captured by us.'], { u: 1, g: [[2, ['capi', 'capere', 'capit', 'capimur']]] });
+T(145, 'dominus hunc servum interfici iussit.', 'The master ordered this slave to be killed.', 't', ['The master ordered this slave to kill.', 'This slave ordered the master to be killed.', 'The master killed this slave.'], { u: 1 });
+T(145, 'Romani ab hostibus vinci numquam volebant.', 'The Romans never wanted to be conquered by the enemy.', 't i', ['The Romans never wanted to conquer the enemy.', 'The enemy never wanted to be conquered by the Romans.', 'The Romans always wanted to be conquered by the enemy.'], { u: 1 });
+T(145, 'rex pecuniam hostibus tradi iussit.', 'The king ordered the money to be handed over to the enemy.', 't', ['The king ordered the enemy to hand over the money.', 'The enemy ordered the king to hand over the money.', 'The king handed over the money to the enemy.'], { u: 1 });
+T(145, 'cives Troiani sciebant urbem capi.', 'The Trojan citizens knew that the city was being captured.', 't s', ['The Trojan citizens knew that the city had been captured.', 'The Trojan citizens knew that they were capturing the city.', 'The city knew that the Trojan citizens were being captured.'], { u: 1 });
+T(145, 'rex vidit templa Troiae a Graecis deleri.', 'The king saw that the temples of Troy were being destroyed by the Greeks.', 't s', ['The king saw that the Greeks were being destroyed by the temples of Troy.', 'The king saw that the temples of Troy had been destroyed by the Greeks.', 'The Greeks saw that the temples of Troy were being destroyed by the king.'], { u: 1 });
+T(145, 'rex vidit multos cives a Graecis occidi.', 'The king saw that many citizens were being killed by the Greeks.', 't s', ['The king saw that many citizens were killing the Greeks.', 'The Greeks saw that many citizens were being killed by the king.', 'The king saw that one citizen was being killed by the Greeks.'], { u: 1 });
+T(145, 'cives nesciebant equum ingentem a Graecis aedificari.', 'The citizens did not know that a huge horse was being built by the Greeks.', 't s', ['The citizens knew that a huge horse was being built by the Greeks.', 'The Greeks did not know that a huge horse was being built by the citizens.', 'The citizens did not know that the Greeks had built a small horse.'], { u: 1 });
+T(145, 'Ulixes vidit naves suas tempestate deleri.', 'Ulysses saw that his ships were being destroyed by a storm.', 't s', ['Ulysses saw that his ships were destroying the storm.', 'Ulysses saw that his ship had been destroyed by a storm.', 'His men saw that Ulysses\' ships were being destroyed by a storm.'], { u: 1 });
+T(147, 'audio nuntium advenisse.', 'I hear that the messenger has arrived.', 'u', ['I hear that the messenger is arriving.', 'I hear that the messengers have arrived.', 'The messenger hears that I have arrived.'], { u: 1, g: [[2, ['advenisse', 'advenire', 'advenit', 'advenerat']]] });
+T(147, 'audivi nuntios advenisse.', 'I heard that the messengers had arrived.', 'u', ['I heard that the messengers were arriving.', 'I hear that the messengers have arrived.', 'I heard that the messenger had arrived.'], { u: 1 });
+T(147, 'scio illum puerum hoc fecisse.', 'I know that that boy has done this.', 'u', ['I know that that boy is doing this.', 'That boy knows that I have done this.', 'I know that those boys have done this.'], { u: 1, g: [[4, ['fecisse', 'facere', 'fecit', 'facit']]] });
+T(147, 'sciebam pueros hoc fecisse.', 'I knew that the boys had done this.', 'u', ['I knew that the boys were doing this.', 'I know that the boys have done this.', 'I knew that the boy had done this.'], { u: 1 });
+T(147, 'sciebamus hos milites bene pugnavisse.', 'We knew that these soldiers had fought well.', 'u', ['We knew that these soldiers were fighting well.', 'These soldiers knew that we had fought well.', 'We knew that this soldier had fought well.'], { u: 1 });
+T(147, 'video Graecos tandem Troiam cepisse.', 'I see that the Greeks have at last captured Troy.', 'u', ['I see that the Greeks are at last capturing Troy.', 'I see that Troy has at last captured the Greeks.', 'I saw that the Greeks had at last captured Troy.'], { u: 1 });
+T(147, 'nuntius dicit hostes urbem cepisse.', 'The messenger says that the enemy have captured the city.', 'u', ['The messenger says that the enemy are capturing the city.', 'The enemy say that the messenger has captured the city.', 'The messenger said that the enemy had captured the city.'], { u: 1, g: [[4, ['cepisse', 'capere', 'ceperunt', 'capiunt']]] });
+T(147, 'nuntius dixit hostes urbem cepisse.', 'The messenger said that the enemy had captured the city.', 'u', ['The messenger said that the enemy were capturing the city.', 'The messenger says that the enemy have captured the city.', 'The enemy said that the messenger had captured the city.'], { u: 1 });
+T(147, 'nuntius dicit urbem ab hostibus captam esse.', 'The messenger says that the city has been captured by the enemy.', 'u', ['The messenger says that the city has captured the enemy.', 'The messenger said that the city had been captured by the enemy.', 'The messenger says that the city is being captured by the enemy.'], { u: 1 });
+T(147, 'nuntius dixit urbem ab hostibus captam esse.', 'The messenger said that the city had been captured by the enemy.', 'u', ['The messenger said that the city was being captured by the enemy.', 'The messenger said that the city had captured the enemy.', 'The messenger says that the city has been captured by the enemy.'], { u: 1 });
+T(147, 'magister scit omnes discipulos bene laboravisse.', 'The teacher knows that all the pupils have worked well.', 'u', ['The teacher knows that all the pupils are working well.', 'All the pupils know that the teacher has worked well.', 'The teacher knew that all the pupils had worked well.'], { u: 1 });
+T(147, 'dux scit militem multa vulnera accepisse.', 'The leader knows that the soldier has received many wounds.', 'u', ['The leader knows that the soldier is receiving many wounds.', 'The soldier knows that the leader has received many wounds.', 'The leader knows that the soldiers have received many wounds.'], { u: 1 });
+T(147, 'scio Romanos multas gentes vicisse.', 'I know that the Romans have conquered many peoples.', 'u', ['I know that the Romans are conquering many peoples.', 'I know that many peoples have conquered the Romans.', 'I knew that the Romans had conquered many peoples.'], { u: 1 });
+T(147, 'audio te hunc librum legisse.', 'I hear that you have read this book.', 'u', ['I hear that you are reading this book.', 'You hear that I have read this book.', 'I hear that you have written this book.'], { u: 1 });
+T(147, 'ille puer dixit se multos libros legisse.', 'That boy said that he had read many books.', 'u', ['That boy said that he was reading many books.', 'That boy said that I had read many books.', 'Those boys said that they had read many books.'], { u: 1 });
+T(147, 'Troiani viderunt Graecos multas naves paravisse.', 'The Trojans saw that the Greeks had prepared many ships.', 'u', ['The Trojans saw that the Greeks were preparing many ships.', 'The Greeks saw that the Trojans had prepared many ships.', 'The Trojans saw that the Greeks had destroyed many ships.'], { u: 1 });
+T(147, 'Graeci sciebant Troianos urbem bene defendisse.', 'The Greeks knew that the Trojans had defended the city well.', 'u', ['The Greeks knew that the Trojans were defending the city well.', 'The Trojans knew that the Greeks had defended the city well.', 'The Greeks knew that the Trojans had not defended the city.'], { u: 1 });
+T(147, 'Troiani nesciebant Graecos equum ingentem aedificavisse.', 'The Trojans did not know that the Greeks had built a huge horse.', 'u', ['The Trojans knew that the Greeks had built a huge horse.', 'The Greeks did not know that the Trojans had built a huge horse.', 'The Trojans did not know that the Greeks were building a small horse.'], { u: 1 });
+T(147, 'Graeci sciebant se Troianos vicisse.', 'The Greeks knew that they had conquered the Trojans.', 'u', ['The Greeks knew that the Trojans had conquered them.', 'The Trojans knew that they had conquered the Greeks.', 'The Greeks knew that they were conquering the Trojans.'], { u: 1 });
+T(147, 'cives viderunt multa templa a Graecis deleta esse.', 'The citizens saw that many temples had been destroyed by the Greeks.', 'u', ['The citizens saw that the Greeks had been destroyed by many temples.', 'The Greeks saw that many temples had been destroyed by the citizens.', 'The citizens saw that many temples were being destroyed by the Greeks.']);
+T(147, 'Ulixes sciebat se uxorem suam diu non vidisse.', 'Ulysses knew that he had not seen his wife for a long time.', 'u', ['Ulysses knew that his wife had not seen him for a long time.', 'Ulysses knew that he would soon see his wife.', 'Ulysses knew that he had seen his wife recently.']);
+T(147, 'Polyphemus vidit Graecos cibum suum cepisse.', 'Polyphemus saw that the Greeks had taken his food.', 'u', ['The Greeks saw that Polyphemus had taken their food.', 'Polyphemus saw that the Greeks were taking his food.', 'Polyphemus saw that the Greeks had given him food.'], { u: 1 });
+T(147, 'comites Ulixis sciebant se malos fuisse.', 'The companions of Ulysses knew that they had been bad.', 'u', ['The companions of Ulysses knew that he had been bad.', 'Ulysses knew that his companions had been bad.', 'The companions of Ulysses knew that they had been good.'], { u: 1 });
+T(147, 'Eurylochus dixit se deam timuisse.', 'Eurylochus said that he had feared the goddess.', 'u', ['Eurylochus said that the goddess had feared him.', 'The goddess said that she had feared Eurylochus.', 'Eurylochus said that he feared the goddess.'], { u: 1 });
+T(147, 'vir dixit se multas feminas pulchras amavisse.', 'The man said that he had loved many beautiful women.', 'u', ['The man said that many beautiful women had loved him.', 'The man said that he loved many beautiful women.', 'The woman said that she had loved many handsome men.'], { u: 1 });
+T(147, 'scio me discipulum optimum esse.', 'I know that I am a very good pupil.', 's', ['I know that he is a very good pupil.', 'I knew that I was a very good pupil.', 'I know that I am a very bad pupil.'], { u: 1 });
+T(147, 'puella dixit se timere.', 'The girl said that she was afraid.', 's', ['The girl said that he was afraid.', 'The girls said that they were afraid.', 'The girl says that she is afraid.'], { u: 1, g: [[2, ['se', 'eam', 'sui', 'sibi']]] });
+T(147, 'Iulius Caesar sciebat se ducem bonum esse.', 'Julius Caesar knew that he was a good leader.', 's', ['Julius Caesar knew that he was a bad leader.', 'Julius Caesar knows that he is a good leader.', 'The leader knew that Julius Caesar was good.'], { u: 1 });
+T(147, 'milites dixerunt se pugnare velle.', 'The soldiers said that they wanted to fight.', 's i', ['The soldiers said that they did not want to fight.', 'The soldier said that he wanted to fight.', 'The soldiers say that they want to fight.'], { u: 1 });
+T(147, 'omnes puellae sciunt se meliores quam pueros esse.', 'All girls know that they are better than boys.', 's', ['All boys know that they are better than girls.', 'All girls know that they are worse than boys.', 'All girls knew that they were better than boys.']);
+T(147, 'regina credebat se mulierem pulcherrimam esse.', 'The queen believed that she was a very beautiful woman.', 's', ['The queen believed that she was a very wise woman.', 'The queen believes that she is a very beautiful woman.', 'The woman believed that the queen was very beautiful.'], { u: 1 });
+T(147, 'Polyphemus dixit se vinum amare.', 'Polyphemus said that he loved wine.', 's', ['Polyphemus said that he hated wine.', 'Polyphemus says that he loves wine.', 'Ulysses said that Polyphemus loved wine.'], { u: 1 });
+T(147, 'Graeci credebant se Troiam capere non posse.', 'The Greeks believed that they could not capture Troy.', 's', ['The Greeks believed that they could capture Troy.', 'The Trojans believed that they could not capture Greece.', 'The Greeks believe that they cannot capture Troy.'], { u: 1 });
+T(149, 'conatur.', 'He tries.', 'v', ['He is tried.', 'They try.', 'He tried.'], { p: [[0, 'pn', '3s'], [0, 'tense', 'pres']] });
+T(149, 'hortatur.', 'He encourages.', 'v', ['He is encouraged.', 'They encourage.', 'He encouraged.'], { p: [[0, 'pn', '3s']] });
+T(149, 'ingrederis.', 'You (sg) enter.', 'v', ['You (sg) are entered.', 'You (pl) enter.', 'He enters.'], { p: [[0, 'pn', '2s']] });
+T(149, 'proficiscimur.', 'We set out.', 'v', ['We are set out.', 'They set out.', 'We were setting out.'], { p: [[0, 'pn', '1p'], [0, 'tense', 'pres']] });
+T(149, 'loquuntur.', 'They speak.', 'v', ['They are spoken.', 'He speaks.', 'They spoke.'], { g: [[0, ['loquuntur', 'loquitur', 'loquimur', 'locuti']]], p: [[0, 'pn', '3p']] });
+T(149, 'sequuntur.', 'They follow.', 'v', ['They are followed.', 'He follows.', 'They will follow.'], { p: [[0, 'pn', '3p']] });
+T(149, 'conor.', 'I try.', 'v', ['I am tried.', 'He tries.', 'I shall try.'], { p: [[0, 'pn', '1s']] });
+T(149, 'sequor.', 'I follow.', 'v', ['I am followed.', 'He follows.', 'I shall follow.'], { p: [[0, 'pn', '1s']] });
+T(149, 'sequebar.', 'I was following.', 'v', ['I was being followed.', 'I follow.', 'He was following.'], { p: [[0, 'pn', '1s'], [0, 'tense', 'impf']] });
+T(149, 'loquebantur.', 'They were speaking.', 'v', ['They were being spoken.', 'They speak.', 'He was speaking.'], { p: [[0, 'pn', '3p'], [0, 'tense', 'impf']] });
+T(149, 'proficiscebatur.', 'He was setting out.', 'v', ['He was being set out.', 'He sets out.', 'They were setting out.'], { p: [[0, 'pn', '3s'], [0, 'tense', 'impf']] });
+T(149, 'sequemur.', 'We shall follow.', 'v', ['We shall be followed.', 'We follow.', 'They will follow.'], { g: [[0, ['sequemur', 'sequimur', 'sequebamur', 'sequentur']]], p: [[0, 'pn', '1p'], [0, 'tense', 'fut']] });
+T(149, 'ingredientur.', 'They will enter.', 'v', ['They will be entered.', 'They enter.', 'He will enter.'], { p: [[0, 'pn', '3p'], [0, 'tense', 'fut']] });
+T(149, 'conabitur.', 'He will try.', 'v', ['He will be tried.', 'He tries.', 'They will try.'], { p: [[0, 'pn', '3s'], [0, 'tense', 'fut']] });
+T(149, 'conatus est.', 'He tried.', 'v', ['He was tried.', 'He tries.', 'She tried.'], { p: [[0, 'tense', 'perf', null, 'phrase']] });
+T(149, 'locuta est.', 'She spoke.', 'v', ['She was spoken.', 'He spoke.', 'She had spoken.']);
+T(149, 'conati sunt.', 'They tried.', 'v', ['They were tried.', 'He tried.', 'They had tried.'], { p: [[1, 'pn', '3p'], [0, 'tense', 'perf', null, 'phrase']] });
+T(149, 'profecti erant.', 'They had set out.', 'v', ['They had been set out.', 'They set out.', 'He had set out.'], { p: [[1, 'pn', '3p'], [0, 'tense', 'plupf', null, 'phrase']] });
+T(149, 'secutus est.', 'He followed.', 'v', ['He was followed.', 'He follows.', 'They followed.']);
+T(149, 'locuti sumus.', 'We spoke.', 'v', ['We were spoken.', 'They spoke.', 'We had spoken.'], { p: [[1, 'pn', '1p']] });
+T(149, 'dux bonus milites suos semper hortatur.', 'A good leader always encourages his soldiers.', 'v', ['A good leader is always encouraged by his soldiers.', 'The soldiers always encourage their good leader.', 'A good leader never encourages his soldiers.'], { u: 1, g: [[5, ['hortatur', 'hortantur', 'hortatus', 'hortari']]] });
+T(149, 'hoc facere cras conabor.', 'I shall try to do this tomorrow.', 'v', ['I tried to do this yesterday.', 'He will try to do this tomorrow.', 'I shall not try to do this tomorrow.'], { u: 1, g: [[3, ['conabor', 'conatur', 'conor', 'conati']]] });
+T(149, 'rex multa verba civibus locutus est.', 'The king spoke many words to the citizens.', 'v', ['The citizens spoke many words to the king.', 'The king heard many words from the citizens.', 'The king will speak many words to the citizens.'], { u: 1 });
+T(149, 'mater filium hortata est ut bene laboraret.', 'The mother encouraged her son to work well.', 'v o', ['The son encouraged his mother to work well.', 'The mother encouraged her son not to work.', 'The mother encouraged her daughter to work well.'], { u: 1 });
+T(149, 'servi ex urbe effugere conati sunt.', 'The slaves tried to escape from the city.', 'v', ['The slaves escaped from the city.', 'The slave tried to escape from the city.', 'The slaves tried to enter the city.'], { u: 1 });
+T(149, 'ille puer hanc puellam sequebatur.', 'That boy was following this girl.', 'v', ['This girl was following that boy.', 'That boy is following this girl.', 'Those boys were following this girl.'], { u: 1, g: [[4, ['sequebatur', 'sequebantur', 'sequitur', 'sequetur']]] });
+T(149, 'milites ex oppido capto profecti sunt.', 'The soldiers set out from the captured town.', 'v p', ['The soldiers captured the town and stayed.', 'The soldier set out from the captured town.', 'The soldiers set out for the captured town.'], { u: 1 });
+T(149, 'Menelaus ad urbem Troiam profectus est.', 'Menelaus set out for the city of Troy.', 'v', ['Menelaus set out from the city of Troy.', 'Menelaus will set out for the city of Troy.', 'Paris set out for the city of Troy.'], { u: 1 });
+T(149, 'multae naves eum secutae sunt.', 'Many ships followed him.', 'v', ['He followed many ships.', 'One ship followed him.', 'Many ships will follow him.'], { u: 1 });
+T(149, 'Graeci Troiam celeriter capere conati sunt.', 'The Greeks tried to capture Troy quickly.', 'v', ['The Greeks captured Troy quickly.', 'The Trojans tried to capture Greece quickly.', 'The Greeks tried to capture Troy slowly.'], { u: 1 });
+T(149, 'dux multa verba amicis locutus est.', 'The leader spoke many words to his friends.', 'v', ['His friends spoke many words to the leader.', 'The leader heard many words from his friends.', 'The leader will speak many words to his friends.'], { u: 1 });
+T(149, 'Graeci domum redire conabantur.', 'The Greeks were trying to return home.', 'v q', ['The Greeks were trying to leave home.', 'The Greeks returned home.', 'The Trojans were trying to return home.'], { u: 1 });
+T(150, 'puella loquitur.', 'The girl speaks.', 'v', ['The girl is spoken to.', 'The girls speak.', 'The girl spoke.'], { g: [[1, ['loquitur', 'loquuntur', 'loquor', 'locuta']]] });
+T(150, 'senex ambulare conatus est.', 'The old man tried to walk.', 'v', ['The old man walked.', 'The old men tried to walk.', 'The old man tries to walk.'], { u: 1 });
+T(150, 'mater filiam secuta est.', 'The mother followed her daughter.', 'v', ['The daughter followed her mother.', 'The mother was followed by her daughter.', 'The mother will follow her daughter.'], { u: 1 });
+T(150, 'nautae proficiscuntur.', 'The sailors set out.', 'v', ['The sailor sets out.', 'The sailors are set out.', 'The sailors set out yesterday.']);
+T(150, 'duces milites hortabantur.', 'The leaders were encouraging the soldiers.', 'v', ['The soldiers were encouraging the leaders.', 'The leader was encouraging the soldiers.', 'The leaders encourage the soldiers.'], { u: 1 });
+T(150, 'custodes servos secuti sunt.', 'The guards followed the slaves.', 'v', ['The slaves followed the guards.', 'The guard followed the slaves.', 'The guards were followed by the slaves.'], { u: 1 });
+T(150, 'naves ex insula profectae sunt.', 'The ships set out from the island.', 'v', ['The ships set out for the island.', 'The ship set out from the island.', 'The ships will set out from the island.'], { u: 1 });
+T(150, 'nolite loqui, discipuli! me audite!', 'Do not speak, pupils! Listen to me!', 'v c', ['Speak, pupils! Listen to me!', 'Do not listen, pupils! Speak to me!', 'Do not speak, pupil! Listen to me!'], { u: 1 });
+T(150, 'hic puer laborare numquam conatur.', 'This boy never tries to work.', 'v', ['This boy always tries to work.', 'These boys never try to work.', 'This boy never tried to work.'], { u: 1 });
+T(150, 'dux civibus persuasit ut se sequerentur.', 'The leader persuaded the citizens to follow him.', 'v o', ['The citizens persuaded the leader to follow them.', 'The leader persuaded the citizens not to follow him.', 'The leader persuaded the citizen to follow him.'], { u: 1 });
+T(150, 'dominus servo imperavit ut in villam ingrederetur.', 'The master ordered the slave to go into the villa.', 'v o', ['The slave ordered the master to go into the villa.', 'The master ordered the slave to leave the villa.', 'The master ordered the slaves to go into the villa.'], { u: 1 });
+T(150, 'Menelaus Graecos hortatus est ut ad urbem statim proficiscerentur.', 'Menelaus encouraged the Greeks to set out for the city at once.', 'v o', ['The Greeks encouraged Menelaus to set out for the city at once.', 'Menelaus encouraged the Greeks not to set out for the city.', 'Menelaus encouraged the Trojans to set out for the city at once.']);
+T(150, 'Graeci ex urbe mox proficisci volebant.', 'The Greeks wanted to set out from the city soon.', 'v i', ['The Greeks did not want to set out from the city.', 'The Greeks set out from the city soon.', 'The Trojans wanted to set out from the city soon.'], { u: 1 });
+T(150, 'viri mortui numquam loquuntur.', 'Dead men never speak.', 'v', ['Dead men always speak.', 'A dead man never speaks.', 'Dead men are never spoken about.'], { u: 1 });
+T(152, 'pueri, cum magistrum vidissent, fugerunt.', 'When the boys had seen the teacher, they fled.', 'w', ['When the teacher had seen the boys, he fled.', 'The boys fled with the teacher.', 'When the boy had seen the teacher, he fled.'], { u: 1, g: [[3, ['vidissent', 'viderunt', 'vident', 'videbant']]] });
+T(152, 'magister, cum puerum punivisset, risit.', 'When the teacher had punished the boy, he laughed.', 'w', ['When the boy had punished the teacher, he laughed.', 'The teacher laughed with the boy.', 'When the teacher had punished the boy, he wept.'], { u: 1, g: [[3, ['punivisset', 'punivit', 'punit', 'puniebat']]] });
+T(152, 'milites, cum multos viros occidissent, urbem ceperunt.', 'When the soldiers had killed many men, they captured the city.', 'w', ['When many men had killed the soldiers, they captured the city.', 'The soldiers captured the city with many men.', 'When the soldiers had captured the city, they killed many men.'], { u: 1 });
+T(152, 'Romani, cum urbem cepissent, eam deleverunt.', 'When the Romans had captured the city, they destroyed it.', 'w', ['When the Romans had destroyed the city, they captured it.', 'The Romans captured the city with them.', 'When the city had captured the Romans, it destroyed them.'], { u: 1 });
+T(152, 'poeta, cum librum scripsisset, laetus erat.', 'When the poet had written the book, he was happy.', 'w', ['When the poet had read the book, he was happy.', 'The poet was happy with the book.', 'When the poet had written the book, he was sad.'], { u: 1 });
+T(152, 'servi, cum opus fecissent, laeti erant.', 'When the slaves had done the work, they were happy.', 'w', ['When the slaves had done the work, they were sad.', 'The slaves were happy with the work.', 'When the slave had done the work, he was happy.'], { u: 1 });
+T(152, 'milites, cum bene pugnavissent, multa praemia acceperunt.', 'When the soldiers had fought well, they received many rewards.', 'w', ['When the soldiers had fought badly, they received many rewards.', 'The soldiers received many rewards with which they had fought well.', 'When the soldier had fought well, he received many rewards.'], { u: 1 });
+T(152, 'milites, cum hostes vidissent, timebant.', 'When the soldiers had seen the enemy, they were afraid.', 'w', ['When the enemy had seen the soldiers, they were afraid.', 'The soldiers were afraid with the enemy.', 'When the soldiers had seen the enemy, they were not afraid.'], { u: 1 });
+T(152, 'cum Romani hostes conspexissent, statim oppugnaverunt.', 'When the Romans had caught sight of the enemy, they attacked at once.', 'w', ['When the enemy had caught sight of the Romans, they attacked at once.', 'The Romans attacked at once with the enemy.', 'When the Romans had caught sight of the enemy, they fled at once.'], { u: 1 });
+T(152, 'Paris, cum Helenam vidisset, eam statim amavit.', 'When Paris had seen Helen, he loved her at once.', 'w', ['When Helen had seen Paris, she loved him at once.', 'Paris loved Helen at once, with her.', 'When Paris had seen Helen, he hated her at once.'], { u: 1 });
+T(152, 'Menelaus, cum Paris Helenam cepisset, iratus erat.', 'Since Paris had taken Helen, Menelaus was angry.', 'w', ['Since Menelaus had taken Helen, Paris was angry.', 'Menelaus was angry with Paris and Helen.', 'Since Paris had taken Helen, Menelaus was happy.'], { u: 1 });
+T(152, 'milites, cum omnia paravissent, profecti sunt.', 'When the soldiers had prepared everything, they set out.', 'w v', ['When the soldiers had set out, they prepared everything.', 'The soldiers set out with everything.', 'When the soldier had prepared everything, he set out.'], { u: 1 });
+T(152, 'cives, cum equum conspexissent, eum in urbem duxerunt.', 'When the citizens had caught sight of the horse, they led it into the city.', 'w', ['When the horse had caught sight of the citizens, it led them into the city.', 'The citizens led the horse out of the city.', 'When the citizens had caught sight of the horse, they burned it.']);
+T(152, 'Graeci, cum Troiam delevissent, ad Graeciam redierunt.', 'When the Greeks had destroyed Troy, they returned to Greece.', 'w', ['When the Trojans had destroyed Greece, they returned to Troy.', 'The Greeks returned to Greece with Troy.', 'When the Greeks had captured Troy, they stayed there.'], { u: 1 });
+T(152, 'agricola, cum in agris laboraret, multos equos vidit.', 'While the farmer was working in the fields, he saw many horses.', 'w', ['While the horses were working in the fields, they saw the farmer.', 'The farmer worked in the fields with many horses.', 'While the farmer was working in the fields, he saw one horse.']);
+T(152, 'milites, cum fessi essent, non bene pugnaverunt.', 'Since the soldiers were tired, they did not fight well.', 'w', ['Since the soldiers were tired, they fought well.', 'The soldiers fought well with the tired men.', 'Since the soldier was tired, he did not fight well.'], { u: 1, g: [[3, ['essent', 'erant', 'sunt', 'esset']]] });
+T(152, 'dux, cum dormiret, a servo occisus est.', 'While the leader was sleeping, he was killed by a slave.', 'w g', ['While the slave was sleeping, he was killed by the leader.', 'The leader slept with a slave and was killed.', 'While the leader was sleeping, he killed a slave.'], { u: 1 });
+T(152, 'milites, cum hostes timerent, pugnare nolebant.', 'Since the soldiers feared the enemy, they did not want to fight.', 'w i', ['Since the enemy feared the soldiers, they did not want to fight.', 'Since the soldiers feared the enemy, they wanted to fight.', 'The soldiers did not want to fight with the enemy.'], { u: 1 });
+T(152, 'dominus, cum servum non amaret, eum interfecit.', 'Since the master did not like the slave, he killed him.', 'w', ['Since the slave did not like the master, he killed him.', 'Since the master liked the slave, he set him free.', 'The master killed the slave with whom he did not live.'], { u: 1 });
+T(152, 'pueri, cum magistrum non amarent, non laborabant.', 'Since the boys did not like the teacher, they were not working.', 'w', ['Since the teacher did not like the boys, he was not working.', 'Since the boys liked the teacher, they were working.', 'The boys were not working with the teacher.'], { u: 1 });
+T(152, 'magister, cum pueri non laborarent, iratus erat.', 'Since the boys were not working, the teacher was angry.', 'w', ['Since the teacher was not working, the boys were angry.', 'Since the boys were working, the teacher was happy.', 'The teacher was angry with the boy who was not working.'], { u: 1 });
+T(152, 'magister, cum iratus esset, puerum punivit.', 'Since the teacher was angry, he punished the boy.', 'w', ['Since the boy was angry, he punished the teacher.', 'Since the teacher was happy, he praised the boy.', 'The teacher punished the boy with anger.'], { u: 1 });
+T(152, 'cum magister puerum punivisset, puer tristis erat.', 'When the teacher had punished the boy, the boy was sad.', 'w', ['When the boy had punished the teacher, the teacher was sad.', 'When the teacher had punished the boy, the boy was happy.', 'The boy was sad with the teacher.'], { u: 1 });
+T(152, 'puer, cum tristis esset, flevit.', 'Since the boy was sad, he wept.', 'w', ['Since the boy was happy, he laughed.', 'The boy wept with sadness.', 'Since the boys were sad, they wept.'], { u: 1, g: [[3, ['esset', 'erat', 'est', 'essent']]] });
+T(152, 'magister, cum perterritus esset, fugit.', 'Since the teacher was terrified, he fled.', 'w', ['Since the teacher was terrified, he stayed.', 'The teacher fled with the terrified boy.', 'Since the teachers were terrified, they fled.'], { u: 1 });
+T(152, 'pueri, cum magister fugisset, non laboraverunt.', 'When the teacher had fled, the boys did not work.', 'w', ['When the boys had fled, the teacher did not work.', 'When the teacher had fled, the boys worked hard.', 'The boys did not work with the teacher who had fled.'], { u: 1 });
+T(152, 'cum servus celeriter curreret, nemo eum capere poterat.', 'Since the slave was running quickly, no one could catch him.', 'w', ['Since the slave was running slowly, everyone could catch him.', 'When no one was running quickly, the slave could catch them.', 'Since the slaves were running quickly, no one could catch them.']);
+T(154, 'servus, effugere conatus, a domino captus est.', 'The slave, having tried to escape, was captured by the master.', 'x', ['The slave, having been captured by the master, tried to escape.', 'The master, having tried to escape, was captured by the slave.', 'The slaves, having tried to escape, were captured by the master.'], { u: 1 });
+T(154, 'puellae, prima luce profectae, ad urbem mox advenerunt.', 'The girls, having set out at dawn, soon arrived at the city.', 'x j', ['The girls, having set out at dusk, soon arrived at the city.', 'The girl, having set out at dawn, soon arrived at the city.', 'The girls soon set out from the city at dawn.']);
+T(154, 'dux, milites suos hortatus, in proelium ruit.', 'The leader, having encouraged his soldiers, charged into battle.', 'x', ['The leader, encouraged by his soldiers, charged into battle.', 'The soldiers, having encouraged their leader, charged into battle.', 'The leader, having encouraged his soldiers, fled from battle.'], { u: 1 });
+T(154, 'miles, multa vulnera passus, mortuus est.', 'The soldier, having suffered many wounds, died.', 'x', ['The soldier, having given many wounds, died.', 'The soldiers, having suffered many wounds, died.', 'The soldier suffered many wounds but did not die.'], { u: 1 });
+T(154, 'servi, e templo egressi, domum festinaverunt.', 'The slaves, having gone out of the temple, hurried home.', 'x q', ['The slaves, having gone into the temple, hurried home.', 'The slave, having gone out of the temple, hurried home.', 'The slaves hurried from home into the temple.'], { u: 1 });
+T(154, 'milites, ducem diu secuti, contra hostes tandem pugnaverunt.', 'The soldiers, having followed the leader for a long time, at last fought against the enemy.', 'x j', ['The leader, having followed the soldiers for a long time, at last fought against the enemy.', 'The soldiers, having been followed by the leader for a long time, at last fought.', 'The soldiers followed the enemy for a long time and did not fight.']);
+T(154, 'milites Graeci, e Graecia profecti, ad urbem Troiam navigaverunt.', 'The Greek soldiers, having set out from Greece, sailed to the city of Troy.', 'x', ['The Greek soldiers, having set out from Troy, sailed to Greece.', 'The Trojan soldiers, having set out from Greece, sailed to Troy.', 'The Greek soldier, having set out from Greece, sailed to the city of Troy.']);
+T(154, 'Menelaus, omnes Graecos hortatus, eos naves parare iussit.', 'Menelaus, having encouraged all the Greeks, ordered them to prepare ships.', 'x', ['Menelaus, encouraged by all the Greeks, ordered them to prepare ships.', 'All the Greeks, having encouraged Menelaus, ordered him to prepare ships.', 'Menelaus, having encouraged all the Greeks, ordered them to destroy the ships.']);
+T(154, 'Graeci, ex equo egressi, multos Troianos occiderunt.', 'The Greeks, having come out of the horse, killed many Trojans.', 'x', ['The Greeks, having gone into the horse, killed many Trojans.', 'The Trojans, having come out of the horse, killed many Greeks.', 'The Greeks came out of the horse but killed no Trojans.'], { u: 1 });
+T(154, 'cives, multa vulnera passi, a Graecis occisi sunt.', 'The citizens, having suffered many wounds, were killed by the Greeks.', 'x', ['The citizens, having given many wounds, killed the Greeks.', 'The Greeks, having suffered many wounds, were killed by the citizens.', 'The citizen, having suffered many wounds, was killed by the Greeks.']);
+T(154, 'ceteri Graeci, in urbem ingressi, multos Troianos interfecerunt.', 'The other Greeks, having entered the city, killed many Trojans.', 'x', ['The other Greeks, having left the city, killed many Trojans.', 'The other Trojans, having entered the city, killed many Greeks.', 'The other Greeks entered the city but killed no Trojans.']);
+T(154, 'naves, e portu profectae, ad urbem Troiam mox advenerunt.', 'The ships, having set out from the harbour, soon arrived at the city of Troy.', 'x', ['The ships, having set out from Troy, soon arrived at the harbour.', 'The ship, having set out from the harbour, soon arrived at the city of Troy.', 'The ships soon set out from the harbour for Troy.']);
+T(154, 'multi Troiani, in proelio mortui, ab omnibus civibus laudati sunt.', 'Many Trojans, having died in the battle, were praised by all the citizens.', 'x g', ['Many Trojans, having died in the battle, praised all the citizens.', 'All the citizens, having died in the battle, were praised by many Trojans.', 'One Trojan, having died in the battle, was praised by all the citizens.']);
+
 
 // ════════════════════════════════════════════════════════════════
 // HELPERS
@@ -627,26 +1588,27 @@ const PN_LABEL = { '1s': '1st person singular', '2s': '2nd person singular', '3s
 const CASE_NAME = { nom: 'nominative', voc: 'vocative', acc: 'accusative', gen: 'genitive', dat: 'dative', abl: 'ablative' };
 const NUM_NAME = { sg: 'singular', pl: 'plural' };
 const caseLabel = c => { const [cs, n] = c.split(' '); return CASE_NAME[cs] + ' ' + NUM_NAME[n]; };
-const TENSE_NAME = { pres: 'present', impf: 'imperfect', perf: 'perfect' };
+const TENSE_NAME = { pres: 'present', impf: 'imperfect', perf: 'perfect', fut: 'future', plupf: 'pluperfect' };
 const GLUE = new Set(['ad', 'a', 'ab', 'e', 'ex', 'in', 'cum', 'contra', 'per', 'prope', 'trans', 'de', 'non']);
 
 // ════════════════════════════════════════════════════════════════
 // QUESTION BUILDING
 // ════════════════════════════════════════════════════════════════
-function tensesAllowed() { const t = ['pres']; if (ticked.has('Q')) t.push('impf'); if (ticked.has('R')) t.push('perf'); return t; }
-function casesAllowed() { return ticked.has('H') ? ['nom', 'voc', 'acc', 'gen', 'dat', 'abl'] : ['nom', 'acc']; }
+function tensesAllowed() { if (topLevel() >= 3) return ['pres', 'impf', 'fut', 'perf', 'plupf']; const t = ['pres'], l2 = hasL2(); if (l2 || ticked.has('Q')) t.push('impf'); if (l2 || ticked.has('R')) t.push('perf'); if (ticked.has('T')) t.push('fut'); if (ticked.has('Y')) t.push('plupf'); return t; }
+function casesAllowed() { return ticked.has('H') || hasL2() ? ['nom', 'voc', 'acc', 'gen', 'dat', 'abl'] : ['nom', 'acc']; }
 
 // Which question types this sentence can make with the current ticks
 function itemTypes(it) {
   const out = [];
   if (types.has('tr')) out.push('tr');
   if (types.has('un') && it.u) { const n = words(it.lat).length; if (n >= 3 && n <= 7) out.push('un'); }
-  if (types.has('gap') && (it.g || []).some(g => subset(extraTags(g[2]), ticked))) out.push('gap');
+  if (types.has('gap') && (it.g || []).some(g => subset(extraTags(g[2]), effTicked()))) out.push('gap');
   if (types.has('parse') && (it.p || []).some(p => p[1] !== 'tense' || tensesAllowed().length > 1)) out.push('parse');
   return out;
 }
 function availableItems() {
-  return BANK.filter(it => subset(it.t, ticked) && itemTypes(it).length);
+  const eff = effTicked();
+  return BANK.filter(it => subset(it.t, eff) && itemTypes(it).length);
 }
 
 function makeQuestion(it, type) {
@@ -658,7 +1620,7 @@ function makeQuestion(it, type) {
     q.hint = topTable(it.t);
     q.answer = it.en;
   } else if (type === 'gap') {
-    const g = pick(it.g.filter(g => subset(extraTags(g[2]), ticked)));
+    const g = pick(it.g.filter(g => subset(extraTags(g[2]), effTicked())));
     q.gapIdx = g[0];
     q.prompt = 'Choose the Latin word that fits the gap.';
     q.opts = shuffle(g[1].map((o, i) => ({ text: o, ok: i === 0, latin: true })));
@@ -668,7 +1630,7 @@ function makeQuestion(it, type) {
     const ps = it.p.filter(p => p[1] !== 'tense' || tensesAllowed().length > 1);
     const p = pick(ps);
     q.target = p[0];
-    const word = w[p[0]];
+    const word = p[4] === 'phrase' ? it.lat.replace(/[.!?]$/, '') : w[p[0]];
     let opts = [];
     if (p[1] === 'pn') {
       q.prompt = `Give the person and number of ${word}.`;
@@ -685,12 +1647,12 @@ function makeQuestion(it, type) {
       const rest = shuffle(all.filter(c => c !== p[2] && !near.includes(c)));
       const wrong = [...near.slice(0, 2), ...rest, ...near.slice(2)].slice(0, 3);
       opts = [p[2], ...wrong].map(c => ({ text: caseLabel(c), ok: c === p[2] }));
-      q.hint = p[3] || (ticked.has('H') ? 'puella' : 'puellaNA');
+      q.hint = p[3] || (ticked.has('H') || hasL2() ? 'puella' : 'puellaNA');
       q.answer = caseLabel(p[2]);
     } else {
       q.prompt = `What tense is ${word}?`;
       opts = tensesAllowed().map(t => ({ text: TENSE_NAME[t], ok: t === p[2] }));
-      q.hint = 'tenses';
+      q.hint = p[2] === 'fut' ? 'fut' : p[2] === 'plupf' ? 'plupf' : 'tenses';
       q.answer = TENSE_NAME[p[2]];
     }
     q.opts = shuffle(opts);
@@ -698,7 +1660,7 @@ function makeQuestion(it, type) {
     q.prompt = 'Put the Latin words in order to match the English. You will not need every word.';
     q.tokens = w;
     let decoys = [];
-    const g = (it.g || []).find(g => subset(extraTags(g[2]), ticked));
+    const g = (it.g || []).find(g => subset(extraTags(g[2]), effTicked()));
     if (g) decoys = shuffle(g[1].slice(1)).filter(d => !w.map(lc).includes(lc(d))).slice(0, 2);
     q.bank = shuffle([...w, ...decoys]);
     q.hint = topTable(it.t);
@@ -709,7 +1671,7 @@ function makeQuestion(it, type) {
   return q;
 }
 // The one grammar point a question tests (used for the revision list at the end)
-const HINT_TAG = { amo: 'A', pres: 'F', sum: 'D', puellaNA: 'B', puella: 'H', servus: 'I', ager: 'I', bellum: 'L', bonus: 'E', miser: 'P', prep: 'J', ego: 'K', imp: 'M', inf: 'O', impf: 'Q', perf: 'R' };
+const HINT_TAG = { deppart: 'x', cumsubj: 'w', deponent: 'v', perfinf: 'u', infpass: 't', indst: 's', ablabs: 'r', place: 'q', ppp: 'p', indcmd: 'o', purpose: 'n', prespart: 'm', qui: 'l', fero: 'k', time: 'j', volo: 'i', perfpass: 'g', passive: 'f', decl3: 'S', fut: 'T', eo: 'U', que: 'V', hic: 'W', ille: 'W', is: 'X', pron: 'X', plupf: 'Y', adj3: 'Z', comp: 'a', irrcomp: 'a', possum: 'b', noli: 'c', nonne: 'd', se: 'e', amo: 'A', pres: 'F', sum: 'D', puellaNA: 'B', puella: 'H', servus: 'I', ager: 'I', bellum: 'L', bonus: 'E', miser: 'P', prep: 'J', ego: 'K', imp: 'M', inf: 'O', impf: 'Q', perf: 'R' };
 function topTag(tags) { for (const k of TAG_ORDER) if (tags.includes(k)) return k; return tags[0]; }
 function focusTag(q) {
   const t = q.it.t;
@@ -718,12 +1680,17 @@ function focusTag(q) {
     f = HINT_TAG[q.hint];
     if (q.type === 'parse' && q.hint === 'puella' && /^(nominative|accusative)/.test(q.answer)) f = 'B';
   } else if (q.type === 'parse') {
-    f = q.answer === 'imperfect' ? 'Q' : q.answer === 'perfect' ? 'R' : (t.includes('F') ? 'F' : 'A');
+    f = q.answer === 'future' ? 'T' : q.answer === 'pluperfect' ? 'Y' : q.answer === 'imperfect' ? 'Q' : q.answer === 'perfect' ? 'R' : (t.includes('F') ? 'F' : 'A');
   }
   return f && t.includes(f) ? f : topTag(t);
 }
 function topTable(tags) { for (const k of TAG_ORDER) if (tags.includes(k)) return TAG_TABLE[k]; return 'amo'; }
 function verbTable(tags) {
+  for (const k of 'xwvutsrqponmlkjihgf') if (tags.includes(k)) return TAG_TABLE[k];
+  if (tags.includes('b')) return 'possum';
+  if (tags.includes('Y')) return 'plupf';
+  if (tags.includes('U')) return 'eo';
+  if (tags.includes('T')) return 'fut';
   if (tags.includes('R')) return 'perf';
   if (tags.includes('Q')) return 'impf';
   if (tags.includes('F')) return 'pres';
@@ -756,6 +1723,7 @@ function buildFrom(pool) {
     const type = typeCycle[0];
     let cands = pool.filter(it => !used.has(it) && it.t.includes(tag) && itemTypes(it).includes(type));
     let chosenType = type;
+    if (!cands.length) cands = pool.filter(it => !used.has(it) && it.t.some(k => ticked.has(k)) && itemTypes(it).includes(type));
     if (!cands.length) cands = pool.filter(it => !used.has(it) && itemTypes(it).includes(type));
     if (!cands.length) {
       cands = pool.filter(it => !used.has(it) && it.t.includes(tag));

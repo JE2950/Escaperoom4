@@ -1,12 +1,12 @@
 # Urbs Sepulta
 
-A first-person Latin mystery for Common Entrance Level 1. Two levels:
+A first-person Latin mystery for Common Entrance Levels 1 to 3 and Scholarship. Three cases:
 
-1. **The Buried City.** A Roman city under Vesuvius lives the same day over and over. Find who will put out Vulcan's fire.
-2. **The Rubicon.** Caesar's camp, the night of 10 January 49 BC. Find who will steal the eagle of the Thirteenth Legion.
-3. **The Ides of March.** The house of Brutus, the night of 14 March 44 BC. Find who murdered Felix the scribe, and uncover the plot against Caesar.
+1. **Case 1: The Buried City.** A Roman city under Vesuvius lives the same day over and over. Find who will put out Vulcan's fire.
+2. **Case 2: The Rubicon.** Caesar's camp, the night of 10 January 49 BC. Find who will steal the eagle of the Thirteenth Legion.
+3. **Case 3: The Ides of March.** The house of Brutus, the night of 14 March 44 BC. Find who murdered Felix the scribe, and uncover the plot against Caesar.
 
-Each level has five people with three Latin tasks each: 15 questions per level. The questions come from *Prep School Latin* by R. C. Bass (CC BY-NC-SA).
+Each case has five people with three Latin tasks each: 15 questions per case. The questions come from *Prep School Latin* by R. C. Bass (CC BY-NC-SA). The title screen sets the grammar: any chapter range in Level 1, or the whole of Level 2, Level 3 or Scholarship (Bass Ch 74–116, 117–140 and 141–154). Ticking a higher level assumes the levels below it.
 
 ## Playing it
 

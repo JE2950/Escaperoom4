@@ -4,7 +4,7 @@
 // ════════════════════════════════════════════════════════════════
 function buildSetup() {
   $('presets').innerHTML = PRESETS.map((p, i) => `<button class="btn small" data-preset="${i}">${esc(p.label)}</button>`).join('') + `<button class="btn small" data-preset="clear">Clear all</button>`;
-  $('ticks').innerHTML = GRAMMAR.map(g => `<label class="tick"><input type="checkbox" data-g="${g.k}"><span class="box"></span><span>${esc(g.name)}<span class="ch">${esc(g.ch)}</span></span></label>`).join('');
+  $('ticks').innerHTML = GRAMMAR.map(g => (g.k === 'A' ? '<div class="lvhead">CE Level 1 <span>· Bass Ch 1–73</span></div>' : g.k === 'S' ? '<div class="lvhead">CE Level 2 <span>· Bass Ch 74–116 · assumes Level 1</span></div>' : g.k === 'f' ? '<div class="lvhead">CE Level 3 <span>· Bass Ch 117–140 · assumes Levels 1 and 2</span></div>' : g.k === 'r' ? '<div class="lvhead">Scholarship <span>· Bass Ch 141–154 · assumes Levels 1 to 3</span></div>' : '') + `<label class="tick"><input type="checkbox" data-g="${g.k}"><span class="box"></span><span>${esc(g.name)}<span class="ch">${esc(g.ch)}</span></span></label>`).join('');
   $('qtypes').innerHTML = QTYPES.map(q => `<label class="tick"><input type="checkbox" data-t="${q.k}"><span class="box"></span><span>${esc(q.name)}</span></label>`).join('');
   $('presets').addEventListener('click', e => { const b = e.target.closest('[data-preset]'); if (!b) return; const p = b.dataset.preset; ticked = new Set(p === 'clear' ? [] : PRESETS[+p].keys.split('')); syncSetup(); });
   $('ticks').addEventListener('change', e => { const k = e.target.dataset.g; if (!k) return; e.target.checked ? ticked.add(k) : ticked.delete(k); syncSetup(); });
